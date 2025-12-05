@@ -3,5 +3,11 @@
 ## Project Description 
 ## How to run the project 
 ## Include Credits 
-## 
-<img width="906" height="807" alt="image" src="https://github.com/user-attachments/assets/848124e5-0181-4e26-815c-378bede05337" />
+## trang chủ
+
+<img width="1755" height="1754" alt="image" src="https://github.com/user-attachments/assets/9e080ade-c137-484b-8a6c-34c707255f5a" />
+
+## Xem chi tiết
+
+<img width="1755" height="1208" alt="image" src="https://github.com/user-attachments/assets/abcf6a25-3b74-4d71-8349-a86612471265" />
+
