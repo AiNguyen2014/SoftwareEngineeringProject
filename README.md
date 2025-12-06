@@ -23,6 +23,22 @@ src/main/java/com/ecommerce/shoestore
  │   ├── OrderService.java
  │   ├── OrderController.java
  │   └── OrderRepository.java
+ src/main/resources/
+ ├── templates/                     # HTML views hiển thị qua Controller
+ │   ├── index.html                 # Trang Home
+ │   ├── product-list.html          # Danh sách sản phẩm
+ │   ├── product-detail.html        # Chi tiết sản phẩm
+ │   ├── cart.html                  # Giỏ hàng
+ │   ├── order.html                 # Trang đặt hàng
+ │   └── login.html                 # Đăng nhập / đăng ký
+ │
+ └── static/                        # Bộ tài nguyên tĩnh (CSS + Images)
+     ├── css/
+     │   ├── style.css              # CSS chính cho toàn trang
+     │   ├── product.css            # CSS cho trang sản phẩm (optional)
+     │
+     └── images/                    # Tài nguyên hình ảnh
+
 ```
 ---
 ## How to run the project 
