@@ -1,4 +1,4 @@
-package ecommerce.shoestore.backend;
+package ecommerce.shoestore;
 
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
