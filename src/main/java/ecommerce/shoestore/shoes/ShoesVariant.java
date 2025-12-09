@@ -19,16 +19,13 @@ public class ShoesVariant {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // ✅ ĐÚNG: Có variantId riêng
     @Column(name = "variant_id")
     private Long variantId;
 
-    // ✅ ĐÚNG: size là ENUM Size (không phải String)
     @Enumerated(EnumType.STRING)
     @Column(name = "size", nullable = false)
     private Size size;
 
-    // ✅ ĐÚNG: color là ENUM Color (không phải String)
     @Enumerated(EnumType.STRING)
     @Column(name = "color", nullable = false)
     private Color color;
@@ -47,7 +44,6 @@ public class ShoesVariant {
         }
     }
 
-    // ✅ QUAN TRỌNG: Helper methods để convert sang String (cho DTO)
     public String getSizeValue() {
         return size != null ? size.getValue() : null;
     }

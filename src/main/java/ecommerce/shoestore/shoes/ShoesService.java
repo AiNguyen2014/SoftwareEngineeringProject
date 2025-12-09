@@ -23,20 +23,16 @@ public class ShoesService {
     private final ShoesVariantRepository variantRepository;
 
     /**
-     * Lấy danh sách sản phẩm có phân trang + filter category
+     * Lấy TOÀN BỘ sản phẩm có phân trang
      */
     @Transactional(readOnly = true)
-    public ShoesListDto getShoesList(int page, int size, String category) {
-        log.info("Fetching shoes list - page: {}, size: {}, category: {}", page, size, category);
+    public ShoesListDto getShoesList(int page, int size) {
+        log.info("Fetching ALL shoes - page: {}, size: {}", page, size);
 
         Pageable pageable = PageRequest.of(page - 1, size);
-        Page<Shoes> shoesPage;
 
-        if (category != null && !category.isEmpty()) {
-            shoesPage = shoesRepository.findByCategory_Name(category, pageable);
-        } else {
-            shoesPage = shoesRepository.findAll(pageable);
-        }
+        // CHỈ GỌI findAll()
+        Page<Shoes> shoesPage = shoesRepository.findAll(pageable);
 
         List<ShoesSummaryDto> dtos = shoesPage.getContent().stream()
                 .map(this::convertToSummaryDto)
@@ -57,7 +53,8 @@ public class ShoesService {
     public ShoesDetailDto getShoesDetail(Long id) {
         log.info("Fetching shoes detail for ID: {}", id);
 
-        Shoes shoes = shoesRepository.findById(id)
+        // Sử dụng repository mới đã fix lỗi MultipleBagFetch (nếu bạn dùng @EntityGraph hoặc Set)
+        Shoes shoes = shoesRepository.findByIdWithDetails(id)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy sản phẩm ID: " + id));
 
         return convertToDetailDto(shoes);
@@ -69,10 +66,7 @@ public class ShoesService {
      * Convert Shoes Entity -> ShoesSummaryDto (cho List View)
      */
     private ShoesSummaryDto convertToSummaryDto(Shoes shoes) {
-        // Lấy thumbnail
         String thumbnailUrl = getThumbnailUrl(shoes);
-
-        // Kiểm tra còn hàng không
         boolean outOfStock = isOutOfStock(shoes.getId());
 
         return ShoesSummaryDto.builder()
@@ -96,11 +90,12 @@ public class ShoesService {
             categoryName = shoes.getCategory().getName();
         }
 
-        // Xử lý Images
+        // Xử lý Images (Set -> List String)
         List<String> imageUrls = new ArrayList<>();
         String thumbnailUrl = null;
 
         if (shoes.getImages() != null && !shoes.getImages().isEmpty()) {
+            // Set có thể loop bình thường
             for (ShoesImage img : shoes.getImages()) {
                 imageUrls.add(img.getUrl());
                 if (Boolean.TRUE.equals(img.getIsThumbnail())) {
@@ -109,12 +104,12 @@ public class ShoesService {
             }
         }
 
-        // Nếu không có thumbnail, lấy ảnh đầu tiên
+        // Nếu không có thumbnail set cứng, lấy ảnh đầu tiên trong list vừa tạo
         if (thumbnailUrl == null && !imageUrls.isEmpty()) {
             thumbnailUrl = imageUrls.get(0);
         }
 
-        // Nếu không có ảnh nào, dùng placeholder
+        // Nếu không có ảnh nào, dùng ảnh placehold
         if (imageUrls.isEmpty()) {
             imageUrls.add("https://placehold.co/600x600?text=No+Image");
             thumbnailUrl = imageUrls.get(0);
@@ -128,16 +123,19 @@ public class ShoesService {
         if (shoes.getVariants() != null && !shoes.getVariants().isEmpty()) {
             for (ShoesVariant variant : shoes.getVariants()) {
                 if (variant.getSize() != null) {
-                    sizes.add(variant.getSizeValue());
+                    sizes.add(variant.getSize().getValue());
                 }
                 if (variant.getColor() != null) {
-                    colors.add(variant.getColorValue());
+                    colors.add(variant.getColor().name());
                 }
                 if (variant.getStock() != null) {
                     totalStock += variant.getStock();
                 }
             }
         }
+
+        //  Lấy Related Products
+        List<ShoesSummaryDto> relatedProducts = getRelatedProducts(shoes);
 
         return ShoesDetailDto.builder()
                 .id(shoes.getId())
@@ -152,12 +150,12 @@ public class ShoesService {
                 .sizes(sizes)
                 .colors(colors)
                 .totalStock(totalStock)
-                .relatedProducts(new ArrayList<>()) // TODO: Implement later
+                .relatedProducts(relatedProducts)
                 .build();
     }
 
     /**
-     * Lấy thumbnail URL từ Images
+     * Lấy thumbnail URL từ Images (Xử lý Set)
      */
     private String getThumbnailUrl(Shoes shoes) {
         if (shoes.getImages() != null && !shoes.getImages().isEmpty()) {
@@ -168,8 +166,7 @@ public class ShoesService {
             if (thumbnail.isPresent()) {
                 return thumbnail.get().getUrl();
             }
-
-            return shoes.getImages().get(0).getUrl();
+            return shoes.getImages().iterator().next().getUrl();
         }
 
         return "https://placehold.co/400x400?text=No+Image";
@@ -181,5 +178,30 @@ public class ShoesService {
     private boolean isOutOfStock(Long shoesId) {
         Integer totalStock = variantRepository.getTotalStockByShoeId(shoesId);
         return totalStock == null || totalStock <= 0;
+    }
+
+    /**
+     * Lấy 5 sản phẩm liên quan từ cùng category
+     */
+    private List<ShoesSummaryDto> getRelatedProducts(Shoes shoes) {
+        if (shoes.getCategory() == null) {
+            return new ArrayList<>();
+        }
+
+        try {
+            Pageable pageable = PageRequest.of(0, 5);
+            Page<Shoes> relatedPage = shoesRepository.findRelatedProducts(
+                    shoes.getCategory().getId(),
+                    shoes.getId(),
+                    pageable
+            );
+
+            return relatedPage.getContent().stream()
+                    .map(this::convertToSummaryDto)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.warn("Error fetching related products for shoe ID: {}", shoes.getId(), e);
+            return new ArrayList<>();
+        }
     }
 }

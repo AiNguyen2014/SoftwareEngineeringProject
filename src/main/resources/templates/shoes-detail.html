@@ -3,6 +3,8 @@
 <head>
     <title th:text="${product.name} + ' - WebShoe'">Chi tiết sản phẩm</title>
     <th:block th:replace="fragments :: head_header"></th:block>
+    <!-- ✅ IMPORT shoes.css (Detail/Grid) -->
+    <link th:href="@{/css/shoes.css}" rel="stylesheet">
 </head>
 <body>
 
@@ -14,7 +16,8 @@
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/" th:href="@{/}">Trang chủ</a></li>
             <li class="breadcrumb-item">
-                <a href="#" th:href="@{/(category=${product.category})}" th:text="${product.category}">Nam</a>
+                <!-- ❌ BỎ LINK category -->
+                <span th:text="${product.category}">Category</span>
             </li>
             <li class="breadcrumb-item active" th:text="${product.name}">Sản phẩm</li>
         </ol>
@@ -176,7 +179,7 @@
         </div>
     </div>
 
-    <!-- RELATED PRODUCTS (Tạm ẩn vì chưa implement) -->
+    <!-- ✅ RELATED PRODUCTS (Sản phẩm liên quan từ cùng category) -->
     <div class="related-section" th:if="${product.relatedProducts != null and !product.relatedProducts.isEmpty()}">
         <h3 class="section-title text-center mb-5">Sản phẩm tương tự</h3>
         <div class="product-grid">
@@ -186,6 +189,12 @@
                          th:alt="${related.name}"
                          loading="lazy"
                          onerror="this.src='https://placehold.co/400x400?text=No+Image'">
+
+                    <div class="badge-overlay">
+                        <span class="badge-new" th:if="${related.type == 'FOR_MALE'}">NAM</span>
+                        <span class="badge-new badge-pink" th:if="${related.type == 'FOR_FEMALE'}">NỮ</span>
+                        <span class="badge-new badge-green" th:if="${related.type == 'FOR_UNISEX'}">TRẺ EM</span>
+                    </div>
                 </a>
                 <div class="product-info">
                     <div class="product-brand" th:text="${related.brand ?: 'WEBSHOE'}">Brand</div>

@@ -19,11 +19,9 @@ public class ShoesImage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // ✅ ĐÚNG: Có imageId riêng
     @Column(name = "image_id")
     private Long imageId;
 
-    // ✅ ĐÚNG: Tên cột là "url" không phải "image_url"
     @Column(name = "url", length = 1000, nullable = false)
     private String url;
 
@@ -45,7 +43,6 @@ public class ShoesImage {
         return this.url;
     }
 
-    // Backward compatible với code cũ
     public String getImageUrl() {
         return this.url;
     }

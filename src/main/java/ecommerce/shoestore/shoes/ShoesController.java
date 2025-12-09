@@ -15,26 +15,25 @@ public class ShoesController {
     private final ShoesService shoesService;
 
     /**
-     * Trang chủ - Hiển thị danh sách sản phẩm
-     * URL: / hoặc /?category=MEN&page=1
+     * Trang chủ - Hiển thị TOÀN BỘ sản phẩm
+     * CHỈ CÓ PAGINATION - KHÔNG CÓ FILTER
+     *
+     * URL: /
+     * URL: /?page=2
      */
     @GetMapping("/")
     public String homePage(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "12") int size,
-            @RequestParam(required = false) String category,
             Model model) {
-
-        ShoesListDto data = shoesService.getShoesList(page, size, category);
+        ShoesListDto data = shoesService.getShoesList(page, size);
 
         // Đẩy dữ liệu ra View
         model.addAttribute("products", data.getProducts());
         model.addAttribute("currentPage", data.getCurrentPage());
         model.addAttribute("totalPages", data.getTotalPages());
         model.addAttribute("totalItems", data.getTotalItems());
-        model.addAttribute("currentCategory", category);
-
-        return "index"; // ✅ File templates/index.html
+        return "shoes-list";
     }
 
     /**
@@ -44,6 +43,6 @@ public class ShoesController {
     @GetMapping("/product/{id}")
     public String productDetail(@PathVariable Long id, Model model) {
         model.addAttribute("product", shoesService.getShoesDetail(id));
-        return "shoes-detail"; // ✅ ĐÚNG: File templates/shoes-detail.html
+        return "shoes-detail";
     }
 }
