@@ -12,11 +12,11 @@ While the current implementation focuses mainly on core functionality, the syste
 ## Project Struture
 ```text
 src/main/java/com/ecommerce/shoestore
- ├── product
- │   ├── Product.java
- │   ├── ProductController.java
- │   ├── ProductService.java
- │   ├── ProductRepository.java
+ ├── shoes
+ │   ├── Shoes.java
+ │   ├── ShoesController.java
+ │   ├── ShoesService.java
+ │   ├── ShoesRepository.java
  │   └── dto/
  ├── order
  │   ├── Order.java
@@ -26,8 +26,8 @@ src/main/java/com/ecommerce/shoestore
  src/main/resources/
  ├── templates/                     # HTML views hiển thị qua Controller
  │   ├── index.html                 # Trang Home
- │   ├── product-list.html          # Danh sách sản phẩm
- │   ├── product-detail.html        # Chi tiết sản phẩm
+ │   ├── shoes-list.html          # Danh sách sản phẩm
+ │   ├── shoes-detail.html        # Chi tiết sản phẩm
  │   ├── cart.html                  # Giỏ hàng
  │   ├── order.html                 # Trang đặt hàng
  │   └── login.html                 # Đăng nhập / đăng ký
