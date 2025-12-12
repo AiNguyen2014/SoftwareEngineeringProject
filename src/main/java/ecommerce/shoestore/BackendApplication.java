@@ -1,4 +1,4 @@
-package ecommerce.shoestore; // 1. Package phải ở đầu tiên
+package ecommerce.shoestore; 
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -8,7 +8,7 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfi
  * Main Spring Boot Application Class
  * Entry point của application
  */
-// 3. Đặt Annotation ở đây mới đúng
+
 @SpringBootApplication(exclude = { SecurityAutoConfiguration.class })
 public class BackendApplication {
 
@@ -16,6 +16,7 @@ public class BackendApplication {
         SpringApplication.run(BackendApplication.class, args);
 
         System.out.println("\n" +
+
                 "╔═══════════════════════════════════════════════════════════╗\n" +
                 "║                                                           ║\n" +
                 "║           🎉 WebShoe Application Started! 🎉             ║\n" +
@@ -23,10 +24,11 @@ public class BackendApplication {
                 "║   ➜ Local:   http://localhost:8080                       ║\n" +
                 "║   ➜ API:     http://localhost:8080/api                   ║\n" +
                 "║                                                           ║\n" +
-                "║   Use Cases Implemented:                                 ║\n" +
-                "║   ✓ View Product List (/)                                ║\n" +
-                "║   ✓ View Product Detail (/product/{id})                 ║\n" +
+                "║   Use Cases Implemented:                                  ║\n" +
+                "║   ✓ View Product List (/)                                 ║\n" +
+                "║   ✓ View Product Detail (/product/{id})                   ║\n" +
                 "║                                                           ║\n" +
                 "╚═══════════════════════════════════════════════════════════╝\n");
+
     }
 }
