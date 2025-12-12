@@ -2,6 +2,9 @@ package ecommerce.shoestore.shoes;
 
 import ecommerce.shoestore.common.NotFoundException;
 import ecommerce.shoestore.shoes.dto.*;
+import ecommerce.shoestore.shoesimage.ShoesImage;
+import ecommerce.shoestore.shoesvariant.ShoesVariant;
+import ecommerce.shoestore.shoesvariant.ShoesVariantRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -31,7 +34,7 @@ public class ShoesService {
 
         Pageable pageable = PageRequest.of(page - 1, size);
 
-        // CHỈ GỌI findAll()
+        // Gọi findAll() từ Repository
         Page<Shoes> shoesPage = shoesRepository.findAll(pageable);
 
         List<ShoesSummaryDto> dtos = shoesPage.getContent().stream()
@@ -48,14 +51,15 @@ public class ShoesService {
 
     /**
      * Lấy chi tiết sản phẩm
+     * Sửa: tham số id -> shoeId
      */
     @Transactional(readOnly = true)
-    public ShoesDetailDto getShoesDetail(Long id) {
-        log.info("Fetching shoes detail for ID: {}", id);
+    public ShoesDetailDto getShoesDetail(Long shoeId) {
+        log.info("Fetching shoes detail for shoeId: {}", shoeId);
 
-        // Sử dụng repository mới đã fix lỗi MultipleBagFetch (nếu bạn dùng @EntityGraph hoặc Set)
-        Shoes shoes = shoesRepository.findByIdWithDetails(id)
-                .orElseThrow(() -> new NotFoundException("Không tìm thấy sản phẩm ID: " + id));
+        // Sửa: Dùng findByIdWithDetails với tham số shoeId
+        Shoes shoes = shoesRepository.findByIdWithDetails(shoeId)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy sản phẩm ID: " + shoeId));
 
         return convertToDetailDto(shoes);
     }
@@ -67,10 +71,12 @@ public class ShoesService {
      */
     private ShoesSummaryDto convertToSummaryDto(Shoes shoes) {
         String thumbnailUrl = getThumbnailUrl(shoes);
-        boolean outOfStock = isOutOfStock(shoes.getId());
+
+        // Sửa: shoes.getId() -> shoes.getShoeId()
+        boolean outOfStock = isOutOfStock(shoes.getShoeId());
 
         return ShoesSummaryDto.builder()
-                .id(shoes.getId())
+                .shoeId(shoes.getShoeId())
                 .name(shoes.getName())
                 .brand(shoes.getBrand())
                 .price(shoes.getBasePrice() != null ? shoes.getBasePrice() : BigDecimal.ZERO)
@@ -95,24 +101,22 @@ public class ShoesService {
         String thumbnailUrl = null;
 
         if (shoes.getImages() != null && !shoes.getImages().isEmpty()) {
-            // Set có thể loop bình thường
             for (ShoesImage img : shoes.getImages()) {
                 imageUrls.add(img.getUrl());
+                // Sửa: getIsThumbnail() (Do Lombok sinh ra cho field Boolean object)
                 if (Boolean.TRUE.equals(img.getIsThumbnail())) {
                     thumbnailUrl = img.getUrl();
                 }
             }
         }
 
-        // Nếu không có thumbnail set cứng, lấy ảnh đầu tiên trong list vừa tạo
+        // Nếu không có thumbnail set cứng, lấy ảnh đầu tiên
         if (thumbnailUrl == null && !imageUrls.isEmpty()) {
             thumbnailUrl = imageUrls.get(0);
         }
 
-        // Nếu không có ảnh nào, dùng ảnh placehold
         if (imageUrls.isEmpty()) {
             imageUrls.add("https://placehold.co/600x600?text=No+Image");
-            thumbnailUrl = imageUrls.get(0);
         }
 
         // Xử lý Variants (Sizes & Colors)
@@ -122,11 +126,12 @@ public class ShoesService {
 
         if (shoes.getVariants() != null && !shoes.getVariants().isEmpty()) {
             for (ShoesVariant variant : shoes.getVariants()) {
-                if (variant.getSize() != null) {
-                    sizes.add(variant.getSize().getValue());
+                // Sửa: Dùng helper method từ Entity ShoesVariant
+                if (variant.getSizeValue() != null) {
+                    sizes.add(variant.getSizeValue());
                 }
-                if (variant.getColor() != null) {
-                    colors.add(variant.getColor().name());
+                if (variant.getColorValue() != null) {
+                    colors.add(variant.getColorValue());
                 }
                 if (variant.getStock() != null) {
                     totalStock += variant.getStock();
@@ -134,14 +139,14 @@ public class ShoesService {
             }
         }
 
-        //  Lấy Related Products
+        // Lấy Related Products
         List<ShoesSummaryDto> relatedProducts = getRelatedProducts(shoes);
 
         return ShoesDetailDto.builder()
-                .id(shoes.getId())
+                .shoeId(shoes.getShoeId())
                 .name(shoes.getName())
                 .brand(shoes.getBrand())
-                .basePrice(shoes.getBasePrice() != null ? shoes.getBasePrice() : BigDecimal.ZERO)
+                .basePrice(shoes.getBasePrice() != null ? shoes.getBasePrice() : BigDecimal.ZERO) // ✅ Sửa: getBasePrice
                 .description(shoes.getDescription())
                 .category(categoryName)
                 .type(shoes.getType() != null ? shoes.getType().name() : null)
@@ -155,7 +160,7 @@ public class ShoesService {
     }
 
     /**
-     * Lấy thumbnail URL từ Images (Xử lý Set)
+     * Lấy thumbnail URL
      */
     private String getThumbnailUrl(Shoes shoes) {
         if (shoes.getImages() != null && !shoes.getImages().isEmpty()) {
@@ -173,15 +178,16 @@ public class ShoesService {
     }
 
     /**
-     * Kiểm tra sản phẩm còn hàng không
+     * Kiểm tra tồn kho
      */
-    private boolean isOutOfStock(Long shoesId) {
-        Integer totalStock = variantRepository.getTotalStockByShoeId(shoesId);
+    private boolean isOutOfStock(Long shoeId) { // Sửa tên tham số
+        // Lưu ý: Cần đảm bảo ShoesVariantRepository cũng đã đổi method query theo shoeId
+        Integer totalStock = variantRepository.getTotalStockByShoeId(shoeId);
         return totalStock == null || totalStock <= 0;
     }
 
     /**
-     * Lấy 5 sản phẩm liên quan từ cùng category
+     * Lấy 5 sản phẩm liên quan
      */
     private List<ShoesSummaryDto> getRelatedProducts(Shoes shoes) {
         if (shoes.getCategory() == null) {
@@ -190,9 +196,12 @@ public class ShoesService {
 
         try {
             Pageable pageable = PageRequest.of(0, 5);
+
+            // Sửa: getCategoryId() và getShoeId()
+            // Lưu ý: Cần đảm bảo Category Entity đã có field categoryId
             Page<Shoes> relatedPage = shoesRepository.findRelatedProducts(
-                    shoes.getCategory().getId(),
-                    shoes.getId(),
+                    shoes.getCategory().getCategoryId(),
+                    shoes.getShoeId(),
                     pageable
             );
 
@@ -200,7 +209,7 @@ public class ShoesService {
                     .map(this::convertToSummaryDto)
                     .collect(Collectors.toList());
         } catch (Exception e) {
-            log.warn("Error fetching related products for shoe ID: {}", shoes.getId(), e);
+            log.warn("Error fetching related products for shoe ID: {}", shoes.getShoeId(), e);
             return new ArrayList<>();
         }
     }

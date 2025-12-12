@@ -1,4 +1,4 @@
-package ecommerce.shoestore.shoes;
+package ecommerce.shoestore.shoesimage;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

@@ -29,10 +29,9 @@
         <button class="btn-filter"><i class="fas fa-filter"></i> Bộ lọc</button>
     </div>
 
-    <!-- PRODUCT GRID -->
     <div class="product-grid">
         <div class="product-card" th:each="product : ${products}">
-            <a th:href="@{/product/{id}(id=${product.id})}" class="product-img-wrap">
+            <a th:href="@{/product/{shoeId}(shoeId=${product.shoeId})}" class="product-img-wrap">
                 <img th:src="${product.thumbnailUrl}"
                      th:alt="${product.name}"
                      loading="lazy"
@@ -43,7 +42,7 @@
             </a>
             <div class="product-info">
                 <div class="product-brand" th:text="${product.brand ?: 'WEBSHOE'}">NIKE</div>
-                <a th:href="@{/product/{id}(id=${product.id})}"
+                <a th:href="@{/product/{shoeId}(shoeId=${product.shoeId})}"
                    class="product-title"
                    th:text="${product.name}">Tên Giày</a>
                 <div class="product-price">
@@ -56,10 +55,8 @@
         </div>
     </div>
 
-    <!-- ✅ PAGINATION - FIXED VERSION -->
     <nav th:if="${totalPages > 1}" class="pagination-wrapper">
         <ul class="pagination">
-            <!-- Previous Button -->
             <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
                 <a class="page-link"
                    th:href="${currentPage > 1} ? @{/(page=${currentPage - 1})} : '#'"
@@ -68,17 +65,14 @@
                 </a>
             </li>
 
-            <!-- First Page -->
             <li class="page-item" th:classappend="${currentPage == 1} ? 'active'">
                 <a class="page-link" th:href="@{/(page=1)}">1</a>
             </li>
 
-            <!-- Dots if needed -->
             <li class="page-item disabled" th:if="${currentPage > 3}">
                 <span class="page-link">...</span>
             </li>
 
-            <!-- Pages around current (Hiển thị trang trước và sau trang hiện tại) -->
             <li class="page-item"
                 th:each="i : ${#numbers.sequence(currentPage == 1 ? 2 : (currentPage - 1), currentPage == totalPages ? (totalPages - 1) : (currentPage + 1))}"
                 th:if="${i > 1 && i < totalPages}"
@@ -86,19 +80,16 @@
                 <a class="page-link" th:href="@{/(page=${i})}" th:text="${i}">2</a>
             </li>
 
-            <!-- Dots if needed -->
             <li class="page-item disabled" th:if="${currentPage < totalPages - 2}">
                 <span class="page-link">...</span>
             </li>
 
-            <!-- Last Page -->
             <li class="page-item"
                 th:if="${totalPages > 1}"
                 th:classappend="${currentPage == totalPages} ? 'active'">
                 <a class="page-link" th:href="@{/(page=${totalPages})}" th:text="${totalPages}">10</a>
             </li>
 
-            <!-- Next Button -->
             <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
                 <a class="page-link"
                    th:href="${currentPage < totalPages} ? @{/(page=${currentPage + 1})} : '#'"

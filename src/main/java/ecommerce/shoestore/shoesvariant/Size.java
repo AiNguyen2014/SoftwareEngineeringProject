@@ -1,4 +1,4 @@
-package ecommerce.shoestore.shoes;
+package ecommerce.shoestore.shoesvariant;
 
 /**
  * ENUM Size - ĐÚNG THEO CLASS DIAGRAM

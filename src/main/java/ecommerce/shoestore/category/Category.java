@@ -1,4 +1,4 @@
-package ecommerce.shoestore.category; // 1. Khai báo package category
+package ecommerce.shoestore.category;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -9,16 +9,18 @@ import ecommerce.shoestore.shoes.Shoes;
 @Table(name = "category")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Category {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "\"categoryId\"")
+    private Long categoryId;
 
+    @Column(nullable = false, unique = true)
     private String name;
 
-    @Column(name = "display_name")
+    @Column(name = "\"displayName\"")
     private String displayName;
 
-    // Lúc này đã hiểu List<Shoes> là gì nhờ dòng import trên
     @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
     private List<Shoes> shoes;
 }
