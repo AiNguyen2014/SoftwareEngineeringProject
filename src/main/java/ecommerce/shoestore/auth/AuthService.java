@@ -1,5 +1,5 @@
 package ecommerce.shoestore.auth;
 
-public class SecirityConfig {
+public class AuthService {
     
 }
