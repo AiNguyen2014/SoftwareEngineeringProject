@@ -3,7 +3,6 @@
 <head>
     <title>WebShoe - Tất cả sản phẩm</title>
     <th:block th:replace="fragments :: head_header"></th:block>
-
     <link th:href="@{/css/shoes.css}" rel="stylesheet">
 </head>
 <body>
@@ -30,31 +29,83 @@
         <button class="btn-filter"><i class="fas fa-filter"></i> Bộ lọc</button>
     </div>
 
+    <!-- PRODUCT GRID -->
     <div class="product-grid">
         <div class="product-card" th:each="product : ${products}">
             <a th:href="@{/product/{id}(id=${product.id})}" class="product-img-wrap">
-                <img th:src="${product.thumbnailUrl}" th:alt="${product.name}"
+                <img th:src="${product.thumbnailUrl}"
+                     th:alt="${product.name}"
+                     loading="lazy"
                      onerror="this.src='https://placehold.co/400x400?text=No+Image'">
                 <div class="badge-overlay">
                     <span class="badge-new">NEW</span>
                 </div>
             </a>
             <div class="product-info">
-                <div class="product-brand" th:text="${product.brand}">NIKE</div>
-                <a th:href="@{/product/{id}(id=${product.id})}" class="product-title" th:text="${product.name}">Tên Giày</a>
+                <div class="product-brand" th:text="${product.brand ?: 'WEBSHOE'}">NIKE</div>
+                <a th:href="@{/product/{id}(id=${product.id})}"
+                   class="product-title"
+                   th:text="${product.name}">Tên Giày</a>
                 <div class="product-price">
-                    <span class="price-current" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + '₫'">3.000.000₫</span>
+                    <span class="price-current"
+                          th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + '₫'">
+                        3.000.000₫
+                    </span>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- ✅ PAGINATION - FIXED VERSION -->
     <nav th:if="${totalPages > 1}" class="pagination-wrapper">
         <ul class="pagination">
-            <li class="page-item"><a class="page-link" href="#"><i class="fas fa-chevron-left"></i></a></li>
-            <li class="page-item active"><a class="page-link" href="#">1</a></li>
-            <li class="page-item"><a class="page-link" href="#">2</a></li>
-            <li class="page-item"><a class="page-link" href="#"><i class="fas fa-chevron-right"></i></a></li>
+            <!-- Previous Button -->
+            <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
+                <a class="page-link"
+                   th:href="${currentPage > 1} ? @{/(page=${currentPage - 1})} : '#'"
+                   aria-label="Previous">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+
+            <!-- First Page -->
+            <li class="page-item" th:classappend="${currentPage == 1} ? 'active'">
+                <a class="page-link" th:href="@{/(page=1)}">1</a>
+            </li>
+
+            <!-- Dots if needed -->
+            <li class="page-item disabled" th:if="${currentPage > 3}">
+                <span class="page-link">...</span>
+            </li>
+
+            <!-- Pages around current (Hiển thị trang trước và sau trang hiện tại) -->
+            <li class="page-item"
+                th:each="i : ${#numbers.sequence(currentPage == 1 ? 2 : (currentPage - 1), currentPage == totalPages ? (totalPages - 1) : (currentPage + 1))}"
+                th:if="${i > 1 && i < totalPages}"
+                th:classappend="${i == currentPage} ? 'active'">
+                <a class="page-link" th:href="@{/(page=${i})}" th:text="${i}">2</a>
+            </li>
+
+            <!-- Dots if needed -->
+            <li class="page-item disabled" th:if="${currentPage < totalPages - 2}">
+                <span class="page-link">...</span>
+            </li>
+
+            <!-- Last Page -->
+            <li class="page-item"
+                th:if="${totalPages > 1}"
+                th:classappend="${currentPage == totalPages} ? 'active'">
+                <a class="page-link" th:href="@{/(page=${totalPages})}" th:text="${totalPages}">10</a>
+            </li>
+
+            <!-- Next Button -->
+            <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
+                <a class="page-link"
+                   th:href="${currentPage < totalPages} ? @{/(page=${currentPage + 1})} : '#'"
+                   aria-label="Next">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
         </ul>
     </nav>
 </main>
