@@ -26,6 +26,7 @@ public class ShoesController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "12") int size,
             Model model) {
+        // Service trả về DTO đã chuẩn, không cần sửa gì ở đây
         ShoesListDto data = shoesService.getShoesList(page, size);
 
         // Đẩy dữ liệu ra View
@@ -38,11 +39,13 @@ public class ShoesController {
 
     /**
      * Trang chi tiết sản phẩm
-     * URL: /product/{id}
+     * URL: /product/{shoeId}
+     * Sửa: {id} -> {shoeId} để đồng bộ với Backend
      */
-    @GetMapping("/product/{id}")
-    public String productDetail(@PathVariable Long id, Model model) {
-        model.addAttribute("product", shoesService.getShoesDetail(id));
+    @GetMapping("/product/{shoeId}")
+    public String productDetail(@PathVariable Long shoeId, Model model) {
+        // Gọi Service với tham số shoeId
+        model.addAttribute("product", shoesService.getShoesDetail(shoeId));
         return "shoes-detail";
     }
 }

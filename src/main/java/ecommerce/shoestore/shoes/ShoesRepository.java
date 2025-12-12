@@ -12,7 +12,7 @@ import java.util.Optional;
 public interface ShoesRepository extends JpaRepository<Shoes, Long> {
 
     /**
-     *  Tìm tất cả với JOIN FETCH để tránh N+1 query
+     * Tìm tất cả với JOIN FETCH để tránh N+1 query
      */
     @Query("SELECT DISTINCT s FROM Shoes s " +
             "LEFT JOIN FETCH s.category " +
@@ -20,26 +20,28 @@ public interface ShoesRepository extends JpaRepository<Shoes, Long> {
     Page<Shoes> findAll(Pageable pageable);
 
     /**
-     *  Tìm theo ID với EAGER fetch images và variants
+     * Tìm theo ID với EAGER fetch images và variants
+     * Sửa: s.id -> s.shoeId
      */
     @Query("SELECT s FROM Shoes s " +
             "LEFT JOIN FETCH s.images " +
             "LEFT JOIN FETCH s.variants " +
-            "WHERE s.id = :id")
-    Optional<Shoes> findByIdWithDetails(Long id);
+            "WHERE s.shoeId = :shoeId")
+    Optional<Shoes> findByIdWithDetails(@Param("shoeId") Long shoeId);
 
     /**
-     *  Tìm sản phẩm liên quan (cùng category, khác ID)
-     * Dùng cho Related Products trong trang chi tiết
+     * Tìm sản phẩm liên quan (cùng category, khác ID)
+     * Sửa: s.category.id -> s.category.categoryId
+     * Sửa: s.id -> s.shoeId
      */
     @Query("SELECT DISTINCT s FROM Shoes s " +
             "LEFT JOIN FETCH s.category " +
             "LEFT JOIN FETCH s.images " +
-            "WHERE s.category.id = :categoryId " +
-            "AND s.id <> :excludeId")
+            "WHERE s.category.categoryId = :categoryId " +
+            "AND s.shoeId <> :excludeShoeId")
     Page<Shoes> findRelatedProducts(
             @Param("categoryId") Long categoryId,
-            @Param("excludeId") Long excludeId,
+            @Param("excludeShoeId") Long excludeShoeId,
             Pageable pageable
     );
 }

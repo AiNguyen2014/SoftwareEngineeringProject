@@ -4,7 +4,7 @@ import lombok.*;
 import java.util.List;
 
 /**
- * DTO cho Paginated Product List
+ * DTO chứa danh sách sản phẩm + thông tin phân trang
  */
 @Data
 @Builder
