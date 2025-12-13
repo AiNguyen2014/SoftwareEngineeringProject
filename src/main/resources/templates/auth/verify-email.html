@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Xác thực Email</title>
+</head>
+<body style="text-align: center; font-family: sans-serif; padding-top: 50px;">
+    <h2>Nhập mã xác thực</h2>
+    <p>Vui lòng kiểm tra email của bạn để lấy mã code.</p>
+    
+    <p th:if="${error}" th:text="${error}" style="color: red;"></p>
+    <p th:if="${message}" th:text="${message}" style="color: green;"></p>
+
+    <form th:action="@{/auth/verify-email}" th:object="${verifyRequest}" method="post" style="display: inline-block; border: 1px solid #ccc; padding: 20px;">
+        <div style="margin-bottom: 10px;">
+            <label>Email:</label><br>
+            <input type="email" th:field="*{email}" placeholder="Nhập lại email..." required>
+        </div>
+        <div style="margin-bottom: 10px;">
+            <label>Mã Code:</label><br>
+            <input type="text" th:field="*{code}" placeholder="Nhập mã 6 số..." required>
+        </div>
+        <button type="submit" style="background: orange; color: white; padding: 8px 15px; border: none;">Xác thực</button>
+    </form>
+</body>
+</html>

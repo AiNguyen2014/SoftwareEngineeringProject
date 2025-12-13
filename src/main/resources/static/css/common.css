@@ -61,6 +61,18 @@ a:hover {
     padding: 15px 0;
 }
 
+.navbar .container {
+    display: flex;
+    align-items: center;
+}
+
+.navbar .btn {
+    height: 42px;
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+}
+
 .navbar-brand {
     font-weight: 900;
     font-size: 1.75rem;
@@ -156,4 +168,22 @@ footer {
     margin-top: 50px;
     font-size: 0.9rem;
     font-weight: 500;
+}
+
+.user-toggle {
+    height: 42px;                 
+    display: flex;
+    align-items: center;         
+    gap: 6px;
+    padding: 0 12px;
+    border-radius: 50px;
+}
+
+.user-toggle i {
+    font-size: 1.5rem;            
+    line-height: 1;
+}
+
+.user-toggle span {
+    line-height: 1;
 }

@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import jakarta.servlet.http.HttpSession;
+
 @Controller
 @RequiredArgsConstructor
 public class ShoesController {
@@ -25,7 +27,18 @@ public class ShoesController {
     public String homePage(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "12") int size,
-            Model model) {
+            Model model, HttpSession session) {
+
+        // Quốc thêm cho phần login
+        String fullname = (String) session.getAttribute("FULLNAME");
+        if (fullname != null) {
+            model.addAttribute("isLoggedIn", true);
+            model.addAttribute("fullname", fullname);
+            model.addAttribute("role", session.getAttribute("ROLE"));
+        } else {
+            model.addAttribute("isLoggedIn", false);
+        }
+
         // Service trả về DTO đã chuẩn, không cần sửa gì ở đây
         ShoesListDto data = shoesService.getShoesList(page, size);
 
@@ -43,7 +56,18 @@ public class ShoesController {
      * Sửa: {id} -> {shoeId} để đồng bộ với Backend
      */
     @GetMapping("/product/{shoeId}")
-    public String productDetail(@PathVariable Long shoeId, Model model) {
+    public String productDetail(@PathVariable Long shoeId, Model model, HttpSession session) {
+        
+        // Quốc thêm cho phần login
+        String fullname = (String) session.getAttribute("FULLNAME");
+        if (fullname != null) {
+            model.addAttribute("isLoggedIn", true);
+            model.addAttribute("fullname", fullname);
+            model.addAttribute("role", session.getAttribute("ROLE"));
+        } else {
+            model.addAttribute("isLoggedIn", false);
+        }
+
         // Gọi Service với tham số shoeId
         model.addAttribute("product", shoesService.getShoesDetail(shoeId));
         return "shoes-detail";

@@ -1,5 +1,5 @@
 package ecommerce.shoestore.auth.user;
 
-public class UserGender {
-    
+public enum UserGender {
+    MALE, FEMALE
 }
