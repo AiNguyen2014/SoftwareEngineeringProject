@@ -1,9 +1,13 @@
 package ecommerce.shoestore.shoes;
 
 import ecommerce.shoestore.common.NotFoundException;
-import ecommerce.shoestore.shoes.dto.*;
+import ecommerce.shoestore.shoes.dto.ShoesDetailDto;
+import ecommerce.shoestore.shoes.dto.ShoesListDto;
+import ecommerce.shoestore.shoes.dto.ShoesSummaryDto;
+import ecommerce.shoestore.shoesimage.ShoesImage;
+import ecommerce.shoestore.shoesvariant.ShoesVariant;
+import ecommerce.shoestore.shoesvariant.ShoesVariantRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -16,26 +20,21 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class ShoesService {
 
     private final ShoesRepository shoesRepository;
     private final ShoesVariantRepository variantRepository;
 
-    /**
-     * Lấy TOÀN BỘ sản phẩm có phân trang
-     */
     @Transactional(readOnly = true)
     public ShoesListDto getShoesList(int page, int size) {
-        log.info("Fetching ALL shoes - page: {}, size: {}", page, size);
-
         Pageable pageable = PageRequest.of(page - 1, size);
-
-        // CHỈ GỌI findAll()
         Page<Shoes> shoesPage = shoesRepository.findAll(pageable);
+        List<Shoes> shoesList = shoesPage.getContent();
 
-        List<ShoesSummaryDto> dtos = shoesPage.getContent().stream()
-                .map(this::convertToSummaryDto)
+        Map<Long, Integer> stockMap = getStockMapForShoes(shoesList);
+
+        List<ShoesSummaryDto> dtos = shoesList.stream()
+                .map(shoes -> convertToSummaryDto(shoes, stockMap))
                 .collect(Collectors.toList());
 
         return ShoesListDto.builder()
@@ -46,87 +45,81 @@ public class ShoesService {
                 .build();
     }
 
-    /**
-     * Lấy chi tiết sản phẩm
-     */
     @Transactional(readOnly = true)
-    public ShoesDetailDto getShoesDetail(Long id) {
-        log.info("Fetching shoes detail for ID: {}", id);
-
-        // Sử dụng repository mới đã fix lỗi MultipleBagFetch (nếu bạn dùng @EntityGraph hoặc Set)
-        Shoes shoes = shoesRepository.findByIdWithDetails(id)
-                .orElseThrow(() -> new NotFoundException("Không tìm thấy sản phẩm ID: " + id));
+    public ShoesDetailDto getShoesDetail(Long shoeId) {
+        Shoes shoes = shoesRepository.findByIdWithDetails(shoeId)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy sản phẩm ID: " + shoeId));
 
         return convertToDetailDto(shoes);
     }
 
-    // ==================== PRIVATE MAPPERS ====================
+    private Map<Long, Integer> getStockMapForShoes(List<Shoes> shoesList) {
+        if (shoesList.isEmpty()) {
+            return Collections.emptyMap();
+        }
 
-    /**
-     * Convert Shoes Entity -> ShoesSummaryDto (cho List View)
-     */
-    private ShoesSummaryDto convertToSummaryDto(Shoes shoes) {
+        List<Long> shoeIds = shoesList.stream()
+                .map(Shoes::getShoeId)
+                .collect(Collectors.toList());
+
+        List<Object[]> stockResults = variantRepository.getTotalStocksByShoeIds(shoeIds);
+
+        return stockResults.stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> ((Number) row[1]).intValue()
+                ));
+    }
+
+    private ShoesSummaryDto convertToSummaryDto(Shoes shoes, Map<Long, Integer> stockMap) {
         String thumbnailUrl = getThumbnailUrl(shoes);
-        boolean outOfStock = isOutOfStock(shoes.getId());
+        int stock = stockMap.getOrDefault(shoes.getShoeId(), 0);
 
         return ShoesSummaryDto.builder()
-                .id(shoes.getId())
+                .shoeId(shoes.getShoeId())
                 .name(shoes.getName())
                 .brand(shoes.getBrand())
                 .price(shoes.getBasePrice() != null ? shoes.getBasePrice() : BigDecimal.ZERO)
                 .thumbnailUrl(thumbnailUrl)
-                .outOfStock(outOfStock)
+                .outOfStock(stock <= 0)
                 .type(shoes.getType() != null ? shoes.getType().name() : null)
                 .build();
     }
 
-    /**
-     * Convert Shoes Entity -> ShoesDetailDto (cho Detail View)
-     */
     private ShoesDetailDto convertToDetailDto(Shoes shoes) {
-        // Xử lý Category
-        String categoryName = "General";
-        if (shoes.getCategory() != null) {
-            categoryName = shoes.getCategory().getName();
-        }
+        String categoryName = shoes.getCategory() != null ? shoes.getCategory().getName() : "General";
 
-        // Xử lý Images (Set -> List String)
         List<String> imageUrls = new ArrayList<>();
         String thumbnailUrl = null;
 
         if (shoes.getImages() != null && !shoes.getImages().isEmpty()) {
-            // Set có thể loop bình thường
             for (ShoesImage img : shoes.getImages()) {
                 imageUrls.add(img.getUrl());
-                if (Boolean.TRUE.equals(img.getIsThumbnail())) {
+                if (img.isThumbnail()) {
                     thumbnailUrl = img.getUrl();
                 }
             }
         }
 
-        // Nếu không có thumbnail set cứng, lấy ảnh đầu tiên trong list vừa tạo
         if (thumbnailUrl == null && !imageUrls.isEmpty()) {
             thumbnailUrl = imageUrls.get(0);
         }
 
-        // Nếu không có ảnh nào, dùng ảnh placehold
         if (imageUrls.isEmpty()) {
             imageUrls.add("https://placehold.co/600x600?text=No+Image");
-            thumbnailUrl = imageUrls.get(0);
         }
 
-        // Xử lý Variants (Sizes & Colors)
         Set<String> sizes = new HashSet<>();
         Set<String> colors = new HashSet<>();
         int totalStock = 0;
 
         if (shoes.getVariants() != null && !shoes.getVariants().isEmpty()) {
             for (ShoesVariant variant : shoes.getVariants()) {
-                if (variant.getSize() != null) {
-                    sizes.add(variant.getSize().getValue());
+                if (variant.getSizeValue() != null) {
+                    sizes.add(variant.getSizeValue());
                 }
-                if (variant.getColor() != null) {
-                    colors.add(variant.getColor().name());
+                if (variant.getColorValue() != null) {
+                    colors.add(variant.getColorValue());
                 }
                 if (variant.getStock() != null) {
                     totalStock += variant.getStock();
@@ -134,11 +127,10 @@ public class ShoesService {
             }
         }
 
-        //  Lấy Related Products
         List<ShoesSummaryDto> relatedProducts = getRelatedProducts(shoes);
 
         return ShoesDetailDto.builder()
-                .id(shoes.getId())
+                .shoeId(shoes.getShoeId())
                 .name(shoes.getName())
                 .brand(shoes.getBrand())
                 .basePrice(shoes.getBasePrice() != null ? shoes.getBasePrice() : BigDecimal.ZERO)
@@ -154,13 +146,10 @@ public class ShoesService {
                 .build();
     }
 
-    /**
-     * Lấy thumbnail URL từ Images (Xử lý Set)
-     */
     private String getThumbnailUrl(Shoes shoes) {
         if (shoes.getImages() != null && !shoes.getImages().isEmpty()) {
             Optional<ShoesImage> thumbnail = shoes.getImages().stream()
-                    .filter(img -> Boolean.TRUE.equals(img.getIsThumbnail()))
+                    .filter(ShoesImage::isThumbnail)
                     .findFirst();
 
             if (thumbnail.isPresent()) {
@@ -168,40 +157,27 @@ public class ShoesService {
             }
             return shoes.getImages().iterator().next().getUrl();
         }
-
         return "https://placehold.co/400x400?text=No+Image";
     }
 
-    /**
-     * Kiểm tra sản phẩm còn hàng không
-     */
-    private boolean isOutOfStock(Long shoesId) {
-        Integer totalStock = variantRepository.getTotalStockByShoeId(shoesId);
-        return totalStock == null || totalStock <= 0;
-    }
-
-    /**
-     * Lấy 5 sản phẩm liên quan từ cùng category
-     */
     private List<ShoesSummaryDto> getRelatedProducts(Shoes shoes) {
         if (shoes.getCategory() == null) {
             return new ArrayList<>();
         }
 
-        try {
-            Pageable pageable = PageRequest.of(0, 5);
-            Page<Shoes> relatedPage = shoesRepository.findRelatedProducts(
-                    shoes.getCategory().getId(),
-                    shoes.getId(),
-                    pageable
-            );
+        Pageable pageable = PageRequest.of(0, 5);
 
-            return relatedPage.getContent().stream()
-                    .map(this::convertToSummaryDto)
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            log.warn("Error fetching related products for shoe ID: {}", shoes.getId(), e);
-            return new ArrayList<>();
-        }
+        Page<Shoes> relatedPage = shoesRepository.findRelatedProducts(
+                shoes.getCategory().getCategoryId(),
+                shoes.getShoeId(),
+                pageable
+        );
+
+        List<Shoes> relatedList = relatedPage.getContent();
+        Map<Long, Integer> stockMap = getStockMapForShoes(relatedList);
+
+        return relatedList.stream()
+                .map(s -> convertToSummaryDto(s, stockMap))
+                .collect(Collectors.toList());
     }
 }

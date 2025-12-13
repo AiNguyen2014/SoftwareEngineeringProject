@@ -11,33 +11,26 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
  */
 @ControllerAdvice
 @Slf4j
+
 public class GlobalExceptionHandler {
 
     /**
      * Xử lý NotFoundException
-     * Return view error-404.html
+     * Redirect về trang chủ
      */
     @ExceptionHandler(NotFoundException.class)
     public String handleNotFoundException(NotFoundException ex, Model model) {
         log.error("NotFoundException: {}", ex.getMessage());
-
-        model.addAttribute("errorMessage", ex.getMessage());
-        model.addAttribute("errorCode", "404");
-
-        return "error-404";
+        return "redirect:/";
     }
 
     /**
      * Xử lý tất cả các Exception khác
-     * Return view error-404.html với message chung
+     * Redirect về trang chủ
      */
     @ExceptionHandler(Exception.class)
     public String handleGeneralException(Exception ex, Model model) {
         log.error("Unexpected error occurred", ex);
-
-        model.addAttribute("errorMessage", "Đã xảy ra lỗi. Vui lòng thử lại sau.");
-        model.addAttribute("errorCode", "500");
-
-        return "error-404";
+        return "redirect:/";
     }
 }

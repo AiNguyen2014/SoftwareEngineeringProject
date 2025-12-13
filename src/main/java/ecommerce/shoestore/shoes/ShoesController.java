@@ -14,35 +14,25 @@ public class ShoesController {
 
     private final ShoesService shoesService;
 
-    /**
-     * Trang chủ - Hiển thị TOÀN BỘ sản phẩm
-     * CHỈ CÓ PAGINATION - KHÔNG CÓ FILTER
-     *
-     * URL: /
-     * URL: /?page=2
-     */
     @GetMapping("/")
     public String homePage(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "12") int size,
             Model model) {
+
         ShoesListDto data = shoesService.getShoesList(page, size);
 
-        // Đẩy dữ liệu ra View
         model.addAttribute("products", data.getProducts());
         model.addAttribute("currentPage", data.getCurrentPage());
         model.addAttribute("totalPages", data.getTotalPages());
         model.addAttribute("totalItems", data.getTotalItems());
+
         return "shoes-list";
     }
 
-    /**
-     * Trang chi tiết sản phẩm
-     * URL: /product/{id}
-     */
-    @GetMapping("/product/{id}")
-    public String productDetail(@PathVariable Long id, Model model) {
-        model.addAttribute("product", shoesService.getShoesDetail(id));
+    @GetMapping("/product/{shoeId}")
+    public String productDetail(@PathVariable Long shoeId, Model model) {
+        model.addAttribute("product", shoesService.getShoesDetail(shoeId));
         return "shoes-detail";
     }
 }
