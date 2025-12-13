@@ -10,12 +10,20 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+
 public class ShoesSummaryDto {
+
     private Long shoeId;
+
     private String name;
+
     private String brand;
+
     private BigDecimal price;
+
     private String thumbnailUrl;
+
     private boolean outOfStock;
+    
     private String type;
 }

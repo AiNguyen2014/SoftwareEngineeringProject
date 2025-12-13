@@ -6,7 +6,11 @@ import lombok.*;
 
 @Entity
 @Table(name = "shoes_image")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class ShoesImage {
 
     @Id
@@ -18,7 +22,7 @@ public class ShoesImage {
     private String url;
 
     @Column(name = "\"isThumbnail\"")
-    private Boolean isThumbnail;
+    private boolean isThumbnail;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "\"shoeId\"", nullable = false)

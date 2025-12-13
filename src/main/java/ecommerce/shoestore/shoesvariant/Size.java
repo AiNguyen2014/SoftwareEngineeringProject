@@ -1,8 +1,5 @@
 package ecommerce.shoestore.shoesvariant;
 
-/**
- * ENUM Size - ĐÚNG THEO CLASS DIAGRAM
- */
 public enum Size {
     SIZE_35("35"),
     SIZE_36("36"),
@@ -13,8 +10,7 @@ public enum Size {
     SIZE_41("41"),
     SIZE_42("42"),
     SIZE_43("43"),
-    SIZE_44("44"),
-    SIZE_45("45");
+    SIZE_44("44");
 
     private final String value;
 

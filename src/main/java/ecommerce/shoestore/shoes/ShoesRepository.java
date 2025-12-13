@@ -6,42 +6,30 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
 import java.util.Optional;
 
 @Repository
 public interface ShoesRepository extends JpaRepository<Shoes, Long> {
 
-    /**
-     * Tìm tất cả với JOIN FETCH để tránh N+1 query
-     */
     @Query("SELECT DISTINCT s FROM Shoes s " +
-            "LEFT JOIN FETCH s.category " +
-            "LEFT JOIN FETCH s.images")
+           "LEFT JOIN FETCH s.category " +
+           "LEFT JOIN FETCH s.images")
     Page<Shoes> findAll(Pageable pageable);
 
-    /**
-     * Tìm theo ID với EAGER fetch images và variants
-     * Sửa: s.id -> s.shoeId
-     */
     @Query("SELECT s FROM Shoes s " +
-            "LEFT JOIN FETCH s.images " +
-            "LEFT JOIN FETCH s.variants " +
-            "WHERE s.shoeId = :shoeId")
+           "LEFT JOIN FETCH s.images " +
+           "LEFT JOIN FETCH s.variants " +
+           "WHERE s.shoeId = :shoeId")
     Optional<Shoes> findByIdWithDetails(@Param("shoeId") Long shoeId);
 
-    /**
-     * Tìm sản phẩm liên quan (cùng category, khác ID)
-     * Sửa: s.category.id -> s.category.categoryId
-     * Sửa: s.id -> s.shoeId
-     */
     @Query("SELECT DISTINCT s FROM Shoes s " +
-            "LEFT JOIN FETCH s.category " +
-            "LEFT JOIN FETCH s.images " +
-            "WHERE s.category.categoryId = :categoryId " +
-            "AND s.shoeId <> :excludeShoeId")
+           "LEFT JOIN FETCH s.category " +
+           "LEFT JOIN FETCH s.images " +
+           "WHERE s.category.categoryId = :categoryId " +
+           "AND s.shoeId <> :excludeShoeId")
     Page<Shoes> findRelatedProducts(
             @Param("categoryId") Long categoryId,
             @Param("excludeShoeId") Long excludeShoeId,
-            Pageable pageable
-    );
+            Pageable pageable);
 }
