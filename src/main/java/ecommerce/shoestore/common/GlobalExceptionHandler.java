@@ -16,12 +16,14 @@ public class GlobalExceptionHandler {
 
     /**
      * Xử lý NotFoundException
-     * Redirect về trang chủ
+     * Hiển thị trang lỗi 404 thay vì redirect về trang chủ
      */
     @ExceptionHandler(NotFoundException.class)
     public String handleNotFoundException(NotFoundException ex, Model model) {
         log.error("NotFoundException: {}", ex.getMessage());
-        return "redirect:/";
+        model.addAttribute("errorMessage", ex.getMessage());
+        model.addAttribute("errorCode", "404");
+        return "error";  // Trả về trang lỗi để debug, sau này có thể thay đổi
     }
 
     /**

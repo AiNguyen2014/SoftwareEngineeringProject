@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Hồ sơ cá nhân</title>
+    <th:block th:replace="fragments :: head_header"></th:block>
+    <style>
+        .profile-card { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.1); }
+        .form-label { font-weight: 600; }
+    </style>
+</head>
+<body class="bg-light">
+
+<!-- Gọi Header -->
+<div th:replace="fragments :: header"></div>
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="profile-card">
+                <h3 class="text-center mb-4">Hồ Sơ Cá Nhân</h3>
+
+                <!-- Thông báo -->
+                <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+                <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+                <form th:action="@{/user/profile/update}" th:object="${profile}" method="post">
+                    
+                    <div class="row">
+                        <!-- Cột trái -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Họ và tên</label>
+                            <input type="text" class="form-control" th:field="*{fullname}" required>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email (Không thể sửa)</label>
+                            <!-- READONLY -->
+                            <input type="email" class="form-control bg-secondary-subtle" th:field="*{email}" readonly>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Số điện thoại</label>
+                            <input type="text" class="form-control" th:field="*{phone}" required>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Ngày sinh</label>
+                            <input type="date" class="form-control" th:field="*{dateOfBirth}" required>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Giới tính</label>
+                            <select class="form-select" th:field="*{gender}">
+                                <option value="MALE">Nam</option>
+                                <option value="FEMALE">Nữ</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+                    <h5 class="mb-3">Địa chỉ nhận hàng</h5>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label>Tỉnh / Thành phố</label>
+                            <input type="text" class="form-control" th:field="*{province}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label>Quận / Huyện</label>
+                            <input type="text" class="form-control" th:field="*{district}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label>Phường / Xã</label>
+                            <input type="text" class="form-control" th:field="*{commune}">
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label>Địa chỉ chi tiết (Số nhà, đường...)</label>
+                            <input type="text" class="form-control" th:field="*{streetDetail}">
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-primary px-5">Lưu Thay Đổi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gọi Footer -->
+<div th:replace="fragments :: footer"></div>
+
+</body>
+</html>

@@ -35,11 +35,48 @@
             </ul>
         </div>
 
-        <div class="d-flex gap-3">
+        <div class="d-flex gap-3 align-items-center">
             <div class="nav-icon"><i class="fas fa-search"></i></div>
             <div class="nav-icon position-relative">
                 <i class="fas fa-shopping-bag"></i>
                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem">2</span>
+            </div>
+
+            <div th:if="${isLoggedIn == null or !isLoggedIn}" class="d-flex gap-2 align-items-center">
+                <a th:href="@{/auth/login}" class="btn btn-outline-dark btn-sm rounded-pill px-3">Đăng nhập</a>
+
+                <a th:href="@{/auth/register}" class="btn btn-outline-dark btn-sm rounded-pill px-3">Đăng ký</a>
+            </div>
+
+            <div th:if="${isLoggedIn}" class="dropdown">
+                <a href="#" class="dropdown-toggle text-dark text-decoration-none user-toggle"
+                    id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-user-circle fs-4 me-1"></i>
+                        <span class="fw-bold d-none d-md-inline" th:text="${fullname}">User</span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
+                    <li><h6 class="dropdown-header">Tài khoản</h6></li>
+                    <li><a class="dropdown-item" th:href="@{/user/profile}"><i class="fas fa-user me-2"></i>Hồ sơ</a></li>
+                    
+                    <!-- Hiện menu Admin nếu có quyền -->
+                    <li th:if="${role != null && role.toString() == 'ADMIN'}">
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li th:if="${role != null && role.toString() == 'ADMIN'}">
+                        <a class="dropdown-item text-primary" href="/admin">
+                            <i class="fas fa-cogs me-2"></i>Quản trị
+                        </a>
+                    </li>
+
+                    <li><hr class="dropdown-divider"></li>
+                    
+                    <!-- Nút Đăng xuất -->
+                    <li>
+                        <a class="dropdown-item text-danger" th:href="@{/auth/logout}">
+                            <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                        </a>
+                    </li>
+                </ul>
             </div>
         </div>
     </div>

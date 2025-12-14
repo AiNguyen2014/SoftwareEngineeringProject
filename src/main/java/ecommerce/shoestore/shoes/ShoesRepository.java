@@ -18,6 +18,7 @@ public interface ShoesRepository extends JpaRepository<Shoes, Long> {
     Page<Shoes> findAll(Pageable pageable);
 
     @Query("SELECT s FROM Shoes s " +
+           "LEFT JOIN FETCH s.category " +
            "LEFT JOIN FETCH s.images " +
            "LEFT JOIN FETCH s.variants " +
            "WHERE s.shoeId = :shoeId")

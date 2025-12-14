@@ -18,13 +18,11 @@ public class ShoesVariant {
     @Column(name = "\"variantId\"")
     private Long variantId;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Size size;
+    private String size;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Color color;
+    private String color;
 
     private Integer stock;
 
@@ -33,10 +31,14 @@ public class ShoesVariant {
     private Shoes shoes;
 
     public String getSizeValue() {
-        return size != null ? size.name() : null;
+        // Trích xuất giá trị số từ size (ví dụ: "SIZE 35" -> "35", "SIZE_35" -> "35")
+        if (size == null) return null;
+        return size.replaceAll(".*?(\\d+).*", "$1");
     }
 
     public String getColorValue() {
-        return color != null ? color.name() : null;
+        // Trích xuất tên màu (ví dụ: "COLOR_BLACK" -> "BLACK", "BLACK" -> "BLACK")
+        if (color == null) return null;
+        return color.replaceAll("^(COLOR_)?", "").replace("_", " ");
     }
 }

@@ -1,0 +1,97 @@
+@startuml DataFlow_Complete
+!theme plain
+
+title Data Flow Architecture: Complete User Journey
+
+package "Frontend Layer" {
+    component "shoes-list.html" as listView
+    component "shoes-detail.html" as detailView
+}
+
+package "Controller Layer" {
+    component ":ShoesController" as shoesCtrl
+}
+
+package "Service Layer" {
+    component ":ShoesService" as shoesSvc
+}
+
+package "Repository Layer" {
+    component ":ShoesRepository" as shoesRepo
+    component ":ShoesVariantRepository" as variantRepo
+}
+
+database "PostgreSQL\nDatabase" as postgres {
+    folder "Tables" {
+        table "shoes\n(10 columns)" as shoes_table
+        table "shoes_image\n(5 columns)" as image_table
+        table "shoes_variant\n(6 columns)" as variant_table
+        table "category\n(3 columns)" as category_table
+    }
+}
+
+' View flows
+listView -down-> shoesCtrl: GET /
+detailView -down-> shoesCtrl: GET /product/{id}
+
+' Controller to Service
+shoesCtrl -right-> shoesSvc: getShoesList()\ngetShoesDetail()
+
+' Service to Repositories
+shoesSvc -down-> shoesRepo: findAll()\nfindByIdWithDetails()\nfindRelatedProducts()\ngetAllStocksByIds()
+
+shoesSvc -down-> variantRepo: ❌ OLD: getTotalStockByShoeId()\n✅ NEW: getAllStocksByIds()
+
+' Repositories to Database
+shoesRepo -down-> postgres: SELECT queries\nJOIN FETCH optimization
+variantRepo -down-> postgres: Batch aggregation query
+
+' Data relationships
+shoes_table -left- image_table: 1:N
+shoes_table -left- variant_table: 1:N
+shoes_table -right- category_table: N:1
+
+note bottom of shoes_table
+    Schema:
+    id, shoes_id, name, brand,
+    type, base_price, description,
+    collection, category_id,
+    created_at, updated_at
+end note
+
+note bottom of image_table
+    Schema:
+    id, image_id, url, is_thumbnail,
+    shoes_id (FK), display_order,
+    created_at, updated_at
+end note
+
+note bottom of variant_table
+    Schema:
+    id, variant_id, size, color,
+    stock, shoes_id (FK),
+    created_at, updated_at
+end note
+
+note right of shoesSvc
+    Service Responsibilities:
+    • Coordinate repository calls
+    • Calculate derived data
+    • Convert Entity → DTO
+    • Handle business logic
+    
+    ✅ Optimization:
+    • Batch load stocks
+    • Map-based lookups
+    • Transaction management
+end note
+
+note right of shoesRepo
+    Query Optimization:
+    1. JOIN FETCH for eager loading
+    2. DISTINCT to avoid duplicates
+    3. getAllStocksByIds() for batch
+    4. Pagination support
+end note
+
+@enduml

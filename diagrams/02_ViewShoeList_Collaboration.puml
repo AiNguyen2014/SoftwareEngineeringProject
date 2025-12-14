@@ -1,0 +1,78 @@
+@startuml ViewShoeList_Collaboration
+!theme plain
+
+title Collaboration Diagram: View Product List (Optimized)
+
+actor "User" as user
+boundary ":shoes-list.html\n(Thymeleaf)" as view
+control ":ShoesController" as controller
+control ":ShoesService" as service
+entity ":ShoesRepository" as repo
+entity ":ShoesVariantRepository" as varRepo
+database ":PostgreSQL" as db
+
+' User interactions
+user -right-> view: 1. Access /
+user -right-> view: Click page navigation
+
+' View to Controller
+view -right-> controller: 2. GET / (page, size)
+view -right-> controller: Forward request
+
+' Controller to Service
+controller -down-> service: 3. getShoesList(page, size)
+note on link
+  Convert page to 0-based index
+  Create Pageable object
+end note
+
+' Service to Repository - Main query
+service -down-> repo: 4. findAll(pageable)
+note on link
+  Query products with JOIN FETCH
+  Load images in same query
+end note
+
+' Service to VariantRepo - Batch query
+service -down-> varRepo: 5. getAllStocksByIds(List<Long>)
+note on link
+  ✅ NEW: Batch load all stocks
+  Returns Map<Long, Integer>
+end note
+
+' Repositories to Database
+repo -down-> db: Query #1: SELECT DISTINCT s\nLEFT JOIN FETCH images
+varRepo -down-> db: Query #2: SELECT shoes_id,\nSUM(stock) GROUP BY
+
+' Database returns data
+db -up-> repo: Page<Shoes> (12 products)
+db -up-> varRepo: Map<Long, Integer> (stock data)
+
+' Return path
+repo -up-> service: Shoes entities with images
+varRepo -up-> service: Stock map for all products
+
+' Service processing
+service -right-> service: 6. Loop 12 products\nconvertToSummaryDto()\nwith Map lookup (NO DB)
+note on link
+  ✅ KEY: In-memory Map.get()\n  NO additional queries!
+end note
+
+' Return to Controller
+service -up-> controller: 7. Return ShoesListDto
+
+' Controller to View
+controller -up-> view: 8. model.addAttribute()\nproducts, pagination
+
+' View to User
+view -up-> user: 9. Render shoes-list.html\nwith product cards
+
+note over user, db
+    🟢 OPTIMIZATIONS:
+    • Batch stock loading: 1 query for all products
+    • Join fetch: Images loaded with products
+    • No N+1 problem: In-memory lookup
+    • Total queries: 2 (was 13)
+end note
+
+@enduml
