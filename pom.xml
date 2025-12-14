@@ -12,7 +12,7 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.shoestroe</groupId>
+    <groupId>com.shoestore</groupId>
     <artifactId>webshoe</artifactId>
     <version>1.0.0</version>
     <name>WebShoe</name>

@@ -1,0 +1,52 @@
+<div xmlns:th="http://www.thymeleaf.org" th:fragment="sidebar">
+    <div class="sidebar-inner">
+
+        <!-- LOGO / TITLE -->
+        <div class="logo-wrap">
+            <h2 class="logo">WebShoe</h2>
+            <span class="logo-sub">Admin</span>
+        </div>
+
+        <!-- MENU -->
+        <nav class="menu">
+
+            <a th:href="@{/admin}"
+               class="menu-item"
+               th:classappend="${activeMenu == 'dashboard'} ? 'active' : ''">
+                <span class="menu-icon">🏠</span>
+                <span class="menu-label">Dashboard</span>
+            </a>
+
+            <a th:href="@{/admin/products}"
+               class="menu-item"
+               th:classappend="${activeMenu == 'products'} ? 'active' : ''">
+                <span class="menu-icon">🛍️</span>
+                <span class="menu-label">Quản lý sản phẩm</span>
+            </a>
+
+            <hr>
+
+            <a href="#" class="menu-item disabled">
+                <span class="menu-icon">🎯</span>
+                <span class="menu-label">Quản lý khuyến mãi</span>
+            </a>
+
+            <a href="#" class="menu-item disabled">
+                <span class="menu-icon">📦</span>
+                <span class="menu-label">Quản lý đơn hàng</span>
+            </a>
+
+            <a href="#" class="menu-item disabled">
+                <span class="menu-icon">📊</span>
+                <span class="menu-label">Báo cáo</span>
+            </a>
+
+        </nav>
+
+        <!-- FOOTER -->
+        <div class="sidebar-footer">
+            <span>© WebShoe</span>
+        </div>
+
+    </div>
+</div>

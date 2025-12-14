@@ -1,0 +1,33 @@
+<div th:fragment="content">
+    <h2>Quản lý sản phẩm</h2>
+
+    <form method="get">
+        <input type="text" name="keyword" placeholder="Tìm sản phẩm...">
+        <button type="submit">Tìm kiếm</button>
+    </form>
+
+    <a th:href="@{/admin/products/create}">+ Thêm sản phẩm</a>
+
+    <table border="1">
+        <tr>
+            <th>Tên</th>
+            <th>Thương hiệu</th>
+            <th>Danh mục</th>
+            <th>Giá</th>
+            <th>Trạng thái</th>
+            <th>Hành động</th>
+        </tr>
+        <tr>
+            <td>Demo Shoe</td>
+            <td>Nike</td>
+            <td>Nam</td>
+            <td>1.200.000</td>
+            <td>Đang bán</td>
+            <td>
+                <a href="#">Sửa</a> |
+                <a href="#">Ngừng bán</a> |
+                <a href="#">Xóa</a>
+            </td>
+        </tr>
+    </table>
+</div>
