@@ -108,13 +108,13 @@ public class AuthController {
         try {
             User user = authService.login(request);
 
-            // ===== SESSION (GIỮ NGUYÊN CODE CŨ) =====
+            // ===== SESSION (DÙNG CHO VIEW) =====
             session.setAttribute("USER_ID", user.getUserId());
             session.setAttribute("FULLNAME", user.getFullname());
             session.setAttribute("ROLE", user.getAccount().getRole());
             session.setAttribute("AVATAR", user.getAvatar());
 
-            // ===== SPRING SECURITY AUTH (THÊM) =====
+            // ===== SPRING SECURITY AUTH =====
             UsernamePasswordAuthenticationToken token =
                     new UsernamePasswordAuthenticationToken(
                             user.getEmail(),
@@ -124,20 +124,16 @@ public class AuthController {
                             )
                     );
 
+            // TẠO SECURITY CONTEXT
             SecurityContext context = SecurityContextHolder.createEmptyContext();
             context.setAuthentication(token);
             SecurityContextHolder.setContext(context);
 
-            // 🔥 CỰC QUAN TRỌNG – LƯU VÀO SESSION
+            // LƯU SECURITY CONTEXT VÀO SESSION 
             session.setAttribute(
                     HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
                     context
             );
-
-            // ===== REDIRECT ADMIN (THÊM) =====
-            if (user.getAccount().getRole().name().equals("ADMIN")) {
-                return "redirect:/admin";
-            }
 
             return "redirect:/";
 
