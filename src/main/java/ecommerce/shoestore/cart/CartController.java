@@ -1,34 +1,20 @@
 package ecommerce.shoestore.cart;
 
-<<<<<<< HEAD
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-
-
-@Controller
-public class CartController {
-
-    @GetMapping("/cart")
-    public String cartPage() {
-        return "cart";
-    }
-=======
 import ecommerce.shoestore.auth.user.User;
 import ecommerce.shoestore.shoes.Shoes;
 import ecommerce.shoestore.shoes.ShoesRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/cart")
 
 public class CartController {
-    
+
     private final CartService cartService;
     private final ShoesRepository shoesRepository;
 
@@ -39,7 +25,7 @@ public class CartController {
             Model model
     ) {
         if (customer == null) {
-        return "redirect:/login";
+            return "redirect:/auth/login";
         }
 
         Cart cart = cartService.getOrCreateCart(customer);
@@ -70,5 +56,4 @@ public class CartController {
         cartService.removeItem(customer, shoeId);
         return "redirect:/cart";
     }
->>>>>>> a9097a0 (Update Cart and CartItem object)
 }
