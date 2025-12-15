@@ -1,0 +1,53 @@
+@startuml Use_Case_Diagram
+!theme plain
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor #E1F5FE
+    BorderColor #01579B
+    FontColor #000000
+}
+
+left to right direction
+
+actor "Customer" as Customer
+actor "System" as System
+
+rectangle "WebShoe E-commerce System - Shoes Module" {
+    usecase "View Shoe List" as UC1
+    usecase "View Shoe Detail" as UC2
+    usecase "Search Products" as UC3
+    usecase "Filter by Category" as UC4
+    usecase "Filter by Type" as UC5
+    usecase "Add to Cart" as UC6
+    usecase "View Related Products" as UC7
+    
+    usecase "Retrieve Shoes Data" as UC8
+    usecase "Calculate Stock" as UC9
+    usecase "Load Product Images" as UC10
+    usecase "Extract Product Variants" as UC11
+}
+
+Customer --> UC1 : browse products
+Customer --> UC2 : view details
+Customer --> UC3 : search keyword
+Customer --> UC4 : filter category
+Customer --> UC5 : filter type
+Customer --> UC6 : add to cart
+UC2 --> UC7 : view alternatives
+
+UC1 ..> UC8 : uses
+UC1 ..> UC9 : uses
+UC2 ..> UC8 : uses
+UC2 ..> UC9 : uses
+UC2 ..> UC10 : uses
+UC2 ..> UC11 : uses
+UC2 ..> UC7 : includes
+UC7 ..> UC8 : uses
+UC7 ..> UC9 : uses
+
+UC8 --> System : database query
+UC9 --> System : aggregate calculation
+UC10 --> System : data retrieval
+UC11 --> System : data extraction
+
+@enduml

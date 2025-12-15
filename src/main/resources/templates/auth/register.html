@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Đăng ký</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; padding-top: 20px; }
+        form { border: 1px solid #ccc; padding: 20px; border-radius: 5px; width: 350px; }
+        div { margin-bottom: 10px; }
+        label { display: block; font-size: 0.9em; }
+        input, select { width: 100%; padding: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background: #007bff; color: white; border: none; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <form th:action="@{/auth/register}" th:object="${registerRequest}" method="post">
+        <h2 style="text-align: center;">Đăng Ký Tài Khoản</h2>
+        
+        <p th:if="${error}" th:text="${error}" class="error"></p>
+
+        <div><label>Họ và tên:</label><input type="text" th:field="*{fullname}" required></div>
+        <div><label>Email:</label><input type="email" th:field="*{email}" required></div>
+        <div><label>SĐT:</label><input type="text" th:field="*{phone}" required></div>
+        <div><label>Ngày sinh:</label><input type="date" th:field="*{dateOfBirth}" required></div>
+        
+        <div>
+            <label>Giới tính:</label>
+            <select th:field="*{gender}">
+                <option value="MALE">Nam</option>
+                <option value="FEMALE">Nữ</option>
+            </select>
+        </div>
+
+        <div><label>Tên đăng nhập:</label><input type="text" th:field="*{username}" required></div>
+        <div><label>Mật khẩu:</label><input type="password" th:field="*{password}" required></div>
+        <div><label>Nhập lại mật khẩu:</label><input type="password" th:field="*{confirmPassword}" required></div>
+
+        <!-- Địa chỉ -->
+        <div><label>Tỉnh/TP:</label><input type="text" th:field="*{province}"></div>
+        <div><label>Quận/Huyện:</label><input type="text" th:field="*{district}"></div>
+        <div><label>Xã/Phường:</label><input type="text" th:field="*{commune}"></div>
+        <div><label>Chi tiết:</label><input type="text" th:field="*{streetDetail}"></div>
+
+        <button type="submit">Đăng Ký</button>
+        <div style="text-align: center; margin-top: 10px;">
+            <a th:href="@{/auth/login}">Đã có tài khoản? Đăng nhập</a>
+        </div>
+    </form>
+</body>
+</html>

@@ -10,9 +10,13 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+
 public class ShoesListDto {
     private List<ShoesSummaryDto> products;
+
     private int currentPage;
+
     private int totalPages;
+    
     private long totalItems;
 }

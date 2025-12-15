@@ -35,6 +35,10 @@
             </ul>
         </div>
 
+        <div class="d-flex gap-3 align-items-center">
+            <div class="nav-icon"><i class="fas fa-search"></i></div>
+            <div class="nav-icon position-relative">
+                <i class="fas fa-shopping-bag"></i>
         
         <div class="d-flex gap-3 align-items-center">
             <div class="nav-icon">
@@ -51,6 +55,50 @@
                 <a th:href="@{/auth/login}" class="btn btn-outline-dark btn-sm rounded-pill px-3">Đăng nhập</a>
 
                 <a th:href="@{/auth/register}" class="btn btn-outline-dark btn-sm rounded-pill px-3">Đăng ký</a>
+            </div>
+
+            <div th:if="${isLoggedIn == null or !isLoggedIn}" class="d-flex gap-2 align-items-center">
+                <a th:href="@{/auth/login}" class="btn btn-outline-dark btn-sm rounded-pill px-3">Đăng nhập</a>
+
+                <a th:href="@{/auth/register}" class="btn btn-outline-dark btn-sm rounded-pill px-3">Đăng ký</a>
+            </div>
+
+            <div th:if="${isLoggedIn}" class="dropdown">
+                <a href="#" class="dropdown-toggle text-dark text-decoration-none user-toggle"
+                    id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <img th:if="${avatar != null && !#strings.isEmpty(avatar)}"
+                         th:src="${avatar}"
+                         class="rounded-circle border me-2"
+                         style="width: 32px; height: 32px; object-fit: cover;"
+                         alt="Avatar">
+
+                        <i th:if="${avatar == null || #strings.isEmpty(avatar)}" 
+                        class="fas fa-user-circle fs-4 me-1 text-secondary"></i>
+                        <span class="fw-bold d-none d-md-inline" th:text="${fullname}">User</span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
+                    <li><h6 class="dropdown-header">Tài khoản</h6></li>
+                    <li><a class="dropdown-item" th:href="@{/user/profile}"><i class="fas fa-user me-2"></i>Hồ sơ</a></li>
+                    
+                    <!-- Hiện menu Admin nếu có quyền -->
+                    <li th:if="${role != null && role.toString() == 'ADMIN'}">
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li th:if="${role != null && role.toString() == 'ADMIN'}">
+                        <a class="dropdown-item text-primary" href="/admin">
+                            <i class="fas fa-cogs me-2"></i>Quản trị
+                        </a>
+                    </li>
+
+                    <li><hr class="dropdown-divider"></li>
+                    
+                    <!-- Nút Đăng xuất -->
+                    <li>
+                        <a class="dropdown-item text-danger" th:href="@{/auth/logout}">
+                            <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                        </a>
+                    </li>
+                </ul>
             </div>
 
 

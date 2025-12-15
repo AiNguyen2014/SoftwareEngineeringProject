@@ -1,20 +1,21 @@
 package ecommerce.shoestore.auth.dto;
 
+import ecommerce.shoestore.auth.user.UserGender;
 import lombok.Data;
 import java.time.LocalDate;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
 @Data
-public class RegisterRequest {
+public class UserProfileDto {
     private String fullname;
-    private String email;
+    private String email; 
     private String phone;
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate dateOfBirth;
-    private String gender; 
-    
-    private String username;
-    private String password;
-    private String confirmPassword; 
-    
+    private UserGender gender;
+    private String avatar;
+
     private String province;
     private String district;
     private String commune;
