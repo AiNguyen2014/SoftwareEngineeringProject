@@ -35,12 +35,17 @@
             </ul>
         </div>
 
+        
         <div class="d-flex gap-3 align-items-center">
-            <div class="nav-icon"><i class="fas fa-search"></i></div>
-            <div class="nav-icon position-relative">
-                <i class="fas fa-shopping-bag"></i>
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem">2</span>
+            <div class="nav-icon">
+                <i class="fas fa-search"></i>
             </div>
+
+            <!--Cart icon  -->
+            <a th:href="@{/cart}" class="nav-icon position-relative text-dark">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem">2</span>
+            </a>
 
             <div th:if="${isLoggedIn == null or !isLoggedIn}" class="d-flex gap-2 align-items-center">
                 <a th:href="@{/auth/login}" class="btn btn-outline-dark btn-sm rounded-pill px-3">Đăng nhập</a>

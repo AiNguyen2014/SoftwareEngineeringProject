@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Shoe Store Cart</title>
+
+    <!-- CSS: global + cart -->
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/cart.css}">
+
+    <!-- Font Awesome cho icon -->
+    <script src="https://kit.fontawesome.com/a2c9b6c4b1.js" crossorigin="anonymous"></script>
+</head>
+
+<!-- ================== NAVBAR (dùng CSS của bạn, KHÔNG Bootstrap) ================== -->
+<header>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a class="navbar-brand" th:href="@{/}">
+                <i class="fas fa-gem text-warning me-2"></i>WEBSHOE
+            </a>
+
+            <div class="nav-links">
+                <a class="nav-link" th:href="@{/}">Home</a>
+                <a class="nav-link" th:href="@{/shoes}">Shoes</a>
+                <a class="nav-link active" th:href="@{/cart}">Cart</a>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<!-- ================== MAIN CART ================== -->
+<main class="cart-page">
+
+    <!-- GIỎ HÀNG TRỐNG -->
+    <section th:if="${#lists.isEmpty(cartItems)}">
+        <div class="cart-empty">
+            <div class="cart-empty-icon">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <h3>Giỏ hàng của bạn đang trống</h3>
+            <p>Hãy khám phá bộ sưu tập giày và thêm vài đôi thật xịn vào giỏ nhé!</p>
+            <a th:href="@{/shoes}" class="btn-cart-primary">Khám phá sản phẩm</a>
+        </div>
+    </section>
+
+    <!-- CÓ SẢN PHẨM TRONG GIỎ -->
+    <section th:if="${!#lists.isEmpty(cartItems)}">
+
+        <!-- Phần danh sách sản phẩm -->
+        <div class="cart-card">
+            <div class="cart-card-header">
+                <span>Sản phẩm</span>
+                <span>Đơn giá</span>
+                <span>Số lượng</span>
+                <span>Thành tiền</span>
+                <span></span>
+            </div>
+
+            <div class="cart-items">
+                <div class="cart-item-row" th:each="item : ${cartItems}">
+                    <!-- Sản phẩm -->
+                    <div class="cart-item-product">
+                        <div class="cart-item-img">
+                            <a th:href="@{/shoes/{id}(id=${item.product.id})}">
+                                <img th:src="${item.product.imageUrl}"
+                                     th:alt="${item.product.name}">
+                            </a>
+                        </div>
+                        <div class="cart-item-info">
+                            <a class="cart-item-name"
+                               th:href="@{/shoes/{id}(id=${item.product.id})}"
+                               th:text="${item.product.name}">
+                                Tên sản phẩm
+                            </a>
+                            <div class="cart-item-meta">
+                                <span class="brand"
+                                      th:text="${item.product.brand}">Brand</span>
+                                <span class="dot">•</span>
+                                <span>Size:
+                                    <span th:text="${item.size}">42</span>
+                                </span>
+                                <span class="dot">•</span>
+                                <span>Màu:
+                                    <span th:text="${item.color}">White</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Đơn giá -->
+                    <div class="cart-item-price">
+                        <span th:text="${#numbers.formatDecimal(item.unitPrice, 0, 'POINT', 0, 'COMMA')} + '₫'">
+                            1.200.000₫
+                        </span>
+                    </div>
+
+                    <!-- Số lượng -->
+                    <div class="cart-item-qty">
+                        <form th:action="@{/cart/update}" method="post" class="qty-form">
+                            <input type="hidden" name="productId"
+                                   th:value="${item.product.id}">
+
+                            <button type="submit" name="action" value="decrease"
+                                    class="qty-btn-cart">-</button>
+
+                            <input type="text" class="qty-input-cart" name="quantity"
+                                   th:value="${item.quantity}" readonly>
+
+                            <button type="submit" name="action" value="increase"
+                                    class="qty-btn-cart">+</button>
+                        </form>
+                    </div>
+
+                    <!-- Thành tiền -->
+                    <div class="cart-item-total">
+                        <span th:text="${#numbers.formatDecimal(item.totalPrice, 0, 'POINT', 0, 'COMMA')} + '₫'">
+                            2.400.000₫
+                        </span>
+                    </div>
+
+                    <!-- Xóa -->
+                    <div class="cart-item-remove">
+                        <form th:action="@{/cart/remove}" method="post">
+                            <input type="hidden" name="productId"
+                                   th:value="${item.product.id}">
+                            <button type="submit" class="btn-remove" title="Xóa sản phẩm">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div> <!-- /cart-item-row -->
+            </div> <!-- /cart-items -->
+        </div> <!-- /cart-card -->
+
+        <!-- Phần tóm tắt đơn hàng -->
+        <div class="cart-summary-card">
+            <h3 class="summary-title">Tóm tắt đơn hàng</h3>
+
+            <div class="summary-row">
+                <span>Tạm tính</span>
+                <span th:text="${#numbers.formatDecimal(cartSubtotal, 0, 'POINT', 0, 'COMMA')} + '₫'">
+                    4.800.000₫
+                </span>
+            </div>
+
+            <div class="summary-row">
+                <span>Phí vận chuyển</span>
+                <span th:text="${#numbers.formatDecimal(cartShipping, 0, 'POINT', 0, 'COMMA')} + '₫'">
+                    30.000₫
+                </span>
+            </div>
+
+            <div class="summary-divider"></div>
+
+            <div class="summary-row total">
+                <span>Tổng cộng</span>
+                <span th:text="${#numbers.formatDecimal(cartTotal, 0, 'POINT', 0, 'COMMA')} + '₫'">
+                    4.830.000₫
+                </span>
+            </div>
+
+            <!-- Mã giảm giá -->
+            <form class="coupon-form" th:action="@{/cart/apply-coupon}" method="post">
+                <label for="couponCode">Mã giảm giá</label>
+                <div class="coupon-input-group">
+                    <input id="couponCode" name="couponCode" type="text"
+                           placeholder="Nhập mã giảm giá">
+                    <button type="submit">Áp dụng</button>
+                </div>
+            </form>
+
+            <!-- Nút -->
+            <button class="btn-cart-primary w-100" type="button"
+                    th:onclick="'window.location.href=\'' + @{/checkout} + '\';'">
+                Tiến hành thanh toán
+            </button>
+
+            <button class="btn-cart-secondary w-100" type="button"
+                    th:onclick="'window.location.href=\'' + @{/shoes} + '\';'">
+                <i class="fas fa-arrow-left"></i>
+                Tiếp tục mua sắm
+            </button>
+        </div>
+
+    </section>
+</main>
+
+<!-- ================== FOOTER ================== -->
+<footer>
+    <div class="footer-bottom">
+        © 2025 WEBSHOE. All rights reserved.
+    </div>
+</footer>
+
+</body>
+</html>
