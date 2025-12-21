@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Voucher</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+<body>
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+</div>
+
+<div class="admin-layout">
+    <aside class="sidebar">
+        <div th:replace="~{admin/sidebar :: sidebar}"></div>
+    </aside>
+    <div class="main">
+        <header class="topbar">
+            <div class="topbar-inner">
+                <div class="topbar-left">
+                    <button class="menu-toggle" aria-label="Toggle menu">☰</button>
+                    <div>
+                        <h3 class="section-title">Voucher</h3>
+                        <p class="section-sub">Danh sách voucher theo từng chiến dịch.</p>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <a class="btn btn-primary" th:href="@{/admin/promotions/vouchers/create}">Thêm voucher</a>
+                </div>
+            </div>
+        </header>
+        <main class="page-content">
+            <div class="tab-header">
+                <a th:href="@{/admin/promotions/campaigns}" class="tab"
+                   th:classappend="${tab} == 'campaigns' ? 'active' : ''">Chiến dịch</a>
+                <a th:href="@{/admin/promotions/vouchers}" class="tab"
+                   th:classappend="${tab} == 'vouchers' ? 'active' : ''">Voucher</a>
+            </div>
+
+            <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+            <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+
+            <!-- Filter Section -->
+            <div class="card" style="margin-bottom: 24px;">
+                <div class="card-header">
+                    <h4 style="margin: 0; font-size: 16px; font-weight: 600;">Tìm kiếm & Lọc</h4>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/admin/promotions/vouchers}" method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: end;">
+                        <div class="form-group">
+                            <label>Từ khóa</label>
+                            <input type="text" name="keyword" th:value="${keyword}" placeholder="Mã voucher hoặc tiêu đề...">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Chiến dịch</label>
+                            <select name="campaignId">
+                                <option value="">Tất cả chiến dịch</option>
+                                <option th:each="camp : ${campaigns}" 
+                                        th:value="${camp.campaignId}" 
+                                        th:text="${camp.name}"
+                                        th:selected="${campaignId != null && campaignId == camp.campaignId}">
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Loại giảm giá</label>
+                            <select name="discountType">
+                                <option value="">Tất cả loại giảm</option>
+                                <option value="PERCENT" th:selected="${discountType == 'PERCENT'}">Giảm theo phần trăm (%)</option>
+                                <option value="FIXED_AMOUNT" th:selected="${discountType == 'FIXED_AMOUNT'}">Giảm số tiền cố định (VNĐ)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Kích hoạt</label>
+                            <select name="enabled">
+                                <option value="">Tất cả</option>
+                                <option value="true" th:selected="${enabled != null && enabled == true}">Đang bật</option>
+                                <option value="false" th:selected="${enabled != null && enabled == false}">Đang tắt</option>
+                            </select>
+                        </div>
+
+                        <div style="display: flex; gap: 10px;">
+                            <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+                            <a th:href="@{/admin/promotions/vouchers}" class="btn btn-secondary">Xóa bộ lọc</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>Mã</th>
+                            <th>Tiêu đề</th>
+                            <th>Chiến dịch</th>
+                            <th>Hiệu lực</th>
+                            <th>Giảm</th>
+                            <th>Bật/Tắt</th>
+                            <th style="width: 200px;">Thao tác</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="v : ${vouchers}">
+                            <td>
+                                <a th:href="@{|/admin/promotions/vouchers/${v.voucherId}|}" 
+                                   style="color: #1e40af; font-weight: 600; text-decoration: none; display: block;"
+                                   th:text="${v.code}">CODE</a>
+                            </td>
+                            <td th:text="${v.title}">Title</td>
+                            <td th:text="${v.campaign != null ? v.campaign.name : ''}">Campaign</td>
+                            <td th:text="${v.startDate + ' → ' + v.endDate}">2024-01-01</td>
+                            <td>
+                                <span th:text="${v.discountType.name() == 'PERCENT' ? v.discountValue : #numbers.formatDecimal(v.discountValue, 0, 'COMMA', 0, 'POINT')}"></span>
+                                <span th:if="${v.discountType.name() == 'PERCENT'}">%</span>
+                                <span th:if="${v.discountType.name() == 'FIXED_AMOUNT'}"> VNĐ</span>
+                            </td>
+                            <td>
+                                <form th:action="@{|/admin/promotions/vouchers/${v.voucherId}/toggle|}" method="post" style="margin: 0;">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" th:checked="${v.enabled}" onchange="this.form.submit()">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </form>
+                            </td>
+                            <td>
+                                <a class="btn btn-secondary" style="padding: 6px 12px; font-size: 13px;" th:href="@{|/admin/promotions/vouchers/${v.voucherId}/edit|}">Sửa</a>
+                                <form th:action="@{|/admin/promotions/vouchers/${v.voucherId}/delete|}" method="post" style="display:inline" onsubmit="return confirm('Xóa voucher này?');">
+                                    <button type="submit" class="btn btn-danger" style="padding: 6px 12px; font-size: 13px;">Xóa</button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(vouchers)}">
+                            <td colspan="7">Chưa có voucher nào.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+<script>
+    // Toast notification system
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        const icon = type === 'success' ? '✓' : '×';
+        const title = type === 'success' ? 'Thành công' : 'Lỗi';
+        
+        toast.innerHTML = `
+            <div class="toast-icon">${icon}</div>
+            <div class="toast-content">
+                <div class="toast-title">${title}</div>
+                <div class="toast-message">${message}</div>
+            </div>
+            <button class="toast-close" onclick="closeToast(this)">×</button>
+            <div class="toast-progress"></div>
+        `;
+        
+        container.appendChild(toast);
+        
+        // Auto remove after 10s
+        setTimeout(() => {
+            closeToast(toast.querySelector('.toast-close'));
+        }, 10000);
+    }
+    
+    function closeToast(button) {
+        const toast = button.closest('.toast');
+        toast.classList.add('hiding');
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }
+    
+    // Show flash messages
+    document.addEventListener('DOMContentLoaded', function() {
+        const successMsg = /*[[${successMessage}]]*/ null;
+        const errorMsg = /*[[${errorMessage}]]*/ null;
+        
+        if (successMsg) {
+            showToast(successMsg, 'success');
+        }
+        if (errorMsg) {
+            showToast(errorMsg, 'error');
+        }
+    });
+    
+    document.addEventListener('click', function (e) {
+        if (!e.target.matches('.menu-toggle')) return;
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) sidebar.classList.toggle('collapsed');
+    });
+    
+    // Loading indicator for forms
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.classList.add('show');
+            }
+        });
+    });
+</script>
+</body>
+</html>

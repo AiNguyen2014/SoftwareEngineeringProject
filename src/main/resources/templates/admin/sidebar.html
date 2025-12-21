@@ -26,7 +26,9 @@
 
             <hr>
 
-            <a href="#" class="menu-item disabled">
+            <a th:href="@{/admin/promotions/campaigns}"
+               class="menu-item"
+               th:classappend="${activeMenu == 'promotions'} ? 'active' : ''">
                 <span class="menu-icon">🎯</span>
                 <span class="menu-label">Quản lý khuyến mãi</span>
             </a>
