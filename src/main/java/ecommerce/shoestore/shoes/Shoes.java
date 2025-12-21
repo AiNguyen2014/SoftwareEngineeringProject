@@ -26,6 +26,7 @@ public class Shoes {
     @Column(nullable = false, length = 500)
     private String name;
 
+    @Column(name = "brand")
     private String brand;
 
     @Enumerated(EnumType.STRING)

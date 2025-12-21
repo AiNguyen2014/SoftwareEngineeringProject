@@ -29,10 +29,19 @@ public class GlobalExceptionHandler {
     /**
      * Xử lý tất cả các Exception khác
      * Redirect về trang chủ
-     */
+
     @ExceptionHandler(Exception.class)
     public String handleGeneralException(Exception ex, Model model) {
         log.error("Unexpected error occurred", ex);
         return "redirect:/";
     }
+    */
+
+    @ExceptionHandler(Exception.class)
+    public String handleGeneralException(Exception ex, Model model) {
+        log.error("Unexpected error occurred", ex);
+        model.addAttribute("errorMessage", ex.getMessage());
+        return "error";
+    }
+
 }

@@ -20,15 +20,16 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) 
+            .csrf(csrf -> csrf.disable())
+                .requestCache(cache -> cache.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/index", "/auth/**", "/css/**", "/js/**", "/images/**", "/error", "/product/**", "/user/**").permitAll()
+                .requestMatchers("/", "/index", "/auth/**", "/css/**", "/js/**", "/images/**", "/error", "/product/**", "/user/**", "/api/search-suggestions", "/search/**", "/products").permitAll()
                 .anyRequest().authenticated() 
             )
             .formLogin(form -> form
                 .loginPage("/auth/login") 
-                .loginProcessingUrl("/j_spring_security_check") 
-                .defaultSuccessUrl("/") 
+                .loginProcessingUrl("/j_spring_security_check")
+                .defaultSuccessUrl("/", true)
                 .failureUrl("/auth/login?error=true")  
                 .permitAll()
             )
