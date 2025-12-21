@@ -1,7 +1,6 @@
 package ecommerce.shoestore.shoes;
 
 import ecommerce.shoestore.shoes.dto.ShoesListDto;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,19 +18,9 @@ public class ShoesController {
     public String homePage(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "12") int size,
-            Model model, HttpSession session) {
-        
-        // Quốc thêm cho phần login xong thì hiện ra trang chủ
-        String fullname = (String) session.getAttribute("FULLNAME");
-        if (fullname != null) {
-            model.addAttribute("isLoggedIn", true);
-            model.addAttribute("fullname", fullname);
-            model.addAttribute("role", session.getAttribute("ROLE"));
-
-            model.addAttribute("avatar", session.getAttribute("AVATAR"));
-        } else {
-            model.addAttribute("isLoggedIn", false);
-        }
+            Model model) {
+        // Session attributes (isLoggedIn, fullname, role, avatar) 
+        // được tự động thêm bởi SessionModelAdvice
 
         ShoesListDto data = shoesService.getShoesList(page, size);
 
@@ -44,20 +33,9 @@ public class ShoesController {
     }
 
     @GetMapping("/product/{shoeId}")
-    public String productDetail(@PathVariable Long shoeId, Model model,HttpSession session) {
-
-        // Quốc thêm cho phần login
-        String fullname = (String) session.getAttribute("FULLNAME");
-        if (fullname != null) {
-            model.addAttribute("isLoggedIn", true);
-            model.addAttribute("fullname", fullname);
-            model.addAttribute("role", session.getAttribute("ROLE"));
-
-            model.addAttribute("avatar", session.getAttribute("AVATAR"));
-        } else {
-            model.addAttribute("isLoggedIn", false);
-        }
-
+    public String productDetail(@PathVariable Long shoeId, Model model) {
+        // Session attributes được tự động thêm bởi SessionModelAdvice
+        
         model.addAttribute("product", shoesService.getShoesDetail(shoeId));
         return "shoes-detail";
     }

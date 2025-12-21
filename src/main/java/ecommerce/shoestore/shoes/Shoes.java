@@ -7,6 +7,9 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -48,11 +51,12 @@ public class Shoes {
 
     @Builder.Default
     @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT true")
-    private Boolean status = true; // true = ĐANG BÁN, false = NGỪNG BÁN
+    private Boolean status = true;
 
     @OneToMany(mappedBy = "shoes", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private Set<ShoesImage> images;
+    @OrderBy("isThumbnail DESC, imageId ASC")
+    private List<ShoesImage> images = new ArrayList<>();
 
     @OneToMany(mappedBy = "shoes", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private Set<ShoesVariant> variants;
+    private Set<ShoesVariant> variants = new HashSet<>();
 }

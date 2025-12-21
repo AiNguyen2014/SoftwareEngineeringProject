@@ -8,7 +8,6 @@ import ecommerce.shoestore.category.Category;
 import ecommerce.shoestore.category.CategoryRepository;
 import ecommerce.shoestore.common.NotFoundException;
 import ecommerce.shoestore.shoes.Shoes;
-import ecommerce.shoestore.shoes.ShoesRepository;
 import ecommerce.shoestore.shoesimage.ShoesImage;
 import ecommerce.shoestore.shoesvariant.ShoesVariant;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +34,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AdminProductService {
 
-    private final ShoesRepository shoesRepository;
+    private final AdminShoesRepository adminShoesRepository;
     private final CategoryRepository categoryRepository;
 
     private String normalizeSize(String raw) {
@@ -68,7 +67,7 @@ public class AdminProductService {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by("shoeId").descending());
         Boolean statusFilter = (status == null || status.isBlank()) ? null : Boolean.valueOf(status);
 
-        Page<Shoes> shoesPage = shoesRepository.searchForAdminBasic(
+        Page<Shoes> shoesPage = adminShoesRepository.searchProducts(
                 keyword,
                 categoryId,
                 brand,
@@ -91,8 +90,8 @@ public class AdminProductService {
        ========================= */
     @Transactional(readOnly = true)
     public AdminShoesDetailDto getAdminShoesDetail(Long shoeId) {
-        Shoes shoes = shoesRepository.findByIdForAdmin(shoeId)
-                .orElseGet(() -> shoesRepository.findById(shoeId)
+        Shoes shoes = adminShoesRepository.findByIdWithAllDetails(shoeId)
+                .orElseGet(() -> adminShoesRepository.findById(shoeId)
                         .orElseThrow(() -> new NotFoundException("Không tìm thấy sản phẩm ID: " + shoeId)));
 
         List<AdminShoesDetailDto.ImageDto> imageDtos = shoes.getImages() != null
@@ -150,10 +149,10 @@ public class AdminProductService {
                 .status(Boolean.TRUE)
                 .build();
 
-        shoes = shoesRepository.save(shoes);
+        shoes = adminShoesRepository.save(shoes);
 
         if (request.getImages() != null && !request.getImages().isEmpty()) {
-            Set<ShoesImage> images = new HashSet<>();
+            List<ShoesImage> images = new ArrayList<>();
             for (CreateShoesRequest.ImageDto imgDto : request.getImages()) {
                 if (imgDto == null || !StringUtils.hasText(imgDto.getUrl())) {
                     continue; // bỏ qua ảnh không có URL
@@ -208,7 +207,7 @@ public class AdminProductService {
             shoes.setVariants(variants);
         }
 
-        shoes = shoesRepository.save(shoes);
+        shoes = adminShoesRepository.save(shoes);
         log.info("Admin created product: {} with ID: {}", shoes.getName(), shoes.getShoeId());
         return shoes.getShoeId();
     }
@@ -218,7 +217,7 @@ public class AdminProductService {
        ========================= */
     @Transactional
     public void updateShoes(Long shoeId, UpdateShoesRequest request) {
-        Shoes shoes = shoesRepository.findById(shoeId)
+        Shoes shoes = adminShoesRepository.findById(shoeId)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy sản phẩm ID: " + shoeId));
 
         Category category = categoryRepository.findById(request.getCategoryId())
@@ -233,7 +232,7 @@ public class AdminProductService {
         shoes.setCategory(category);
 
         if (request.getImages() != null) {
-            Set<ShoesImage> newImages = new HashSet<>();
+            List<ShoesImage> newImages = new ArrayList<>();
             for (UpdateShoesRequest.ImageDto imgDto : request.getImages()) {
                 if (imgDto == null || !StringUtils.hasText(imgDto.getUrl())) {
                     continue; // bỏ qua ảnh không có URL
@@ -247,7 +246,7 @@ public class AdminProductService {
                 newImages.add(image);
             }
             if (shoes.getImages() == null) {
-                shoes.setImages(new HashSet<>());
+                shoes.setImages(new ArrayList<>());
             }
             shoes.getImages().clear();
             shoes.getImages().addAll(newImages);
@@ -309,7 +308,7 @@ public class AdminProductService {
             shoes.getVariants().addAll(newVariants);
         }
 
-        shoesRepository.save(shoes);
+        adminShoesRepository.save(shoes);
         log.info("Admin updated product ID: {}", shoeId);
     }
 
@@ -318,11 +317,11 @@ public class AdminProductService {
        ========================= */
     @Transactional
     public void changeProductStatus(Long shoeId, Boolean status) {
-        Shoes shoes = shoesRepository.findById(shoeId)
+        Shoes shoes = adminShoesRepository.findById(shoeId)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy sản phẩm ID: " + shoeId));
 
         shoes.setStatus(status);
-        shoesRepository.save(shoes);
+        adminShoesRepository.save(shoes);
 
         String statusText = status ? "ĐANG BÁN" : "NGỪNG BÁN";
         log.info("Admin thay đổi trạng thái sản phẩm ID: {} thành {}", shoeId, statusText);
@@ -330,12 +329,12 @@ public class AdminProductService {
 
     @Transactional
     public void toggleStatus(Long shoeId) {
-        Shoes shoes = shoesRepository.findById(shoeId)
+        Shoes shoes = adminShoesRepository.findById(shoeId)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy sản phẩm ID: " + shoeId));
 
         boolean current = shoes.getStatus() != null && shoes.getStatus();
         shoes.setStatus(!current);
-        shoesRepository.save(shoes);
+        adminShoesRepository.save(shoes);
         log.info("Admin toggled status for product ID: {} to {}", shoeId, !current ? "ĐANG BÁN" : "NGỪNG BÁN");
     }
 }
