@@ -21,6 +21,9 @@ import org.springframework.util.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import ecommerce.shoestore.shoesvariant.Color;
+import ecommerce.shoestore.shoesvariant.Size;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -103,14 +106,14 @@ public class AdminProductService {
                 : new ArrayList<>();
 
         List<AdminShoesDetailDto.VariantDto> variantDtos = shoes.getVariants() != null
-                ? shoes.getVariants().stream()
-                .map(v -> AdminShoesDetailDto.VariantDto.builder()
-                        .variantId(v.getVariantId())
-                        .color(v.getColor())
-                        .size(v.getSize())
-                        .build())
-                .collect(Collectors.toList())
-                : new ArrayList<>();
+            ? shoes.getVariants().stream()
+            .map(v -> AdminShoesDetailDto.VariantDto.builder()
+                .variantId(v.getVariantId())
+                .color(v.getColor() != null ? v.getColor().name() : null)
+                .size(v.getSize() != null ? v.getSize().getValue() : null)
+                .build())
+            .collect(Collectors.toList())
+            : new ArrayList<>();
 
         return AdminShoesDetailDto.builder()
                 .shoeId(shoes.getShoeId())
@@ -195,8 +198,8 @@ public class AdminProductService {
             Set<ShoesVariant> variants = new HashSet<>();
             for (CreateShoesRequest.VariantDto vDto : validVariants) {
                 ShoesVariant variant = ShoesVariant.builder()
-                        .color(vDto.getColor())
-                        .size(vDto.getSize())
+                        .color(Color.valueOf(vDto.getColor().trim().toUpperCase()))
+                        .size(Size.valueOf(vDto.getSize().trim().toUpperCase()))
                         .stock(0) // quản lý tồn kho tách riêng, mặc định 0
                         .shoes(shoes)
                         .build();
@@ -292,8 +295,8 @@ public class AdminProductService {
                 }
                 ShoesVariant variant = ShoesVariant.builder()
                         .variantId(vDto.getVariantId())
-                        .color(vDto.getColor())
-                        .size(vDto.getSize())
+                        .color(Color.valueOf(vDto.getColor().trim().toUpperCase()))
+                        .size(Size.valueOf(vDto.getSize().trim().toUpperCase()))
                         .stock(stockVal)
                         .shoes(shoes)
                         .build();
