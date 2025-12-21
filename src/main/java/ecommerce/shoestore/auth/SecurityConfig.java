@@ -20,24 +20,27 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) 
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/index", "/auth/**", "/css/**", "/js/**", "/images/**", "/error", "/product/**", "/user/**").permitAll()
-                .anyRequest().authenticated() 
-            )
-            .formLogin(form -> form
-                .loginPage("/auth/login") 
-                .loginProcessingUrl("/j_spring_security_check") 
-                .defaultSuccessUrl("/") 
-                .failureUrl("/auth/login?error=true")  
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session
+                        -> session.sessionFixation().none()
+                )
+                .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/", "/shoes", "/index", "/auth/**", "/css/**", "/js/**", "/images/**", "/error", "/product/**", "/user/**", "/cart/**").permitAll()
+                .anyRequest().authenticated()
+                )
+                .formLogin(form -> form
+                .loginPage("/auth/login")
+                .loginProcessingUrl("/j_spring_security_check")
+                .defaultSuccessUrl("/")
+                .failureUrl("/auth/login?error=true")
                 .permitAll()
-            )
-            .logout(logout -> logout
+                )
+                .logout(logout -> logout
                 .logoutUrl("/auth/logout")
-                .logoutSuccessUrl("/auth/login?logout") 
+                .logoutSuccessUrl("/auth/login?logout")
                 .permitAll()
-            );
-            
+                );
+
         return http.build();
     }
 }

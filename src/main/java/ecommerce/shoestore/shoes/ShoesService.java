@@ -6,6 +6,7 @@ import ecommerce.shoestore.shoes.dto.ShoesListDto;
 import ecommerce.shoestore.shoes.dto.ShoesSummaryDto;
 import ecommerce.shoestore.shoesimage.ShoesImage;
 import ecommerce.shoestore.shoesvariant.ShoesVariant;
+import ecommerce.shoestore.shoesvariant.ShoesVariantDto;
 import ecommerce.shoestore.shoesvariant.ShoesVariantRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -28,8 +29,17 @@ public class ShoesService {
     @Transactional(readOnly = true)
     public ShoesListDto getShoesList(int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size);
-        Page<Shoes> shoesPage = shoesRepository.findAll(pageable);
-        List<Shoes> shoesList = shoesPage.getContent();
+
+        // First, get paginated basic shoe data
+        Page<Shoes> shoesPage = shoesRepository.findAllPaged(pageable);
+        List<Long> shoeIds = shoesPage.getContent().stream()
+                .map(Shoes::getShoeId)
+                .collect(Collectors.toList());
+
+        // Then fetch with details for the specific IDs
+        List<Shoes> shoesList = shoeIds.isEmpty()
+                ? new ArrayList<>()
+                : shoesRepository.findAllWithDetailsByIds(shoeIds);
 
         Map<Long, Integer> stockMap = getStockMapForShoes(shoesList);
 
@@ -129,6 +139,19 @@ public class ShoesService {
 
         List<ShoesSummaryDto> relatedProducts = getRelatedProducts(shoes);
 
+        List<ShoesVariantDto> variants = new ArrayList<>();
+
+        if (shoes.getVariants() != null && !shoes.getVariants().isEmpty()) {
+            for (ShoesVariant v : shoes.getVariants()) {
+                variants.add(ShoesVariantDto.builder()
+                        .variantId(v.getVariantId())
+                        .size(v.getSizeValue())
+                        .color(v.getColorValue())
+                        .stock(v.getStock())
+                        .build());
+            }
+        }
+
         return ShoesDetailDto.builder()
                 .shoeId(shoes.getShoeId())
                 .name(shoes.getName())
@@ -141,6 +164,7 @@ public class ShoesService {
                 .imageUrls(imageUrls)
                 .sizes(sizes)
                 .colors(colors)
+                .variants(variants)
                 .totalStock(totalStock)
                 .relatedProducts(relatedProducts)
                 .build();

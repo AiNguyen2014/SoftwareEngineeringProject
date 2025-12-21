@@ -2,10 +2,8 @@ package ecommerce.shoestore.cart;
 
 import ecommerce.shoestore.auth.user.User;
 import ecommerce.shoestore.cartitem.CartItem;
-import ecommerce.shoestore.shoes.Shoes;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,14 +12,16 @@ import java.util.List;
 @Table(name = "cart")
 @NoArgsConstructor
 @Getter
+@Setter
 public class Cart {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "\"cartId\"")
+    private Long cartId;
 
     @ManyToOne
-    @JoinColumn(name = "userId")
+    @JoinColumn(name = "\"userId\"", nullable = false)
     private User customer;
 
     @OneToMany(
@@ -34,18 +34,5 @@ public class Cart {
 
     public Cart(User customer) {
         this.customer = customer;
-    }
-
-    public void addItem(Shoes shoes, int quantity) {
-        for (CartItem item : items) {
-            if (item.getShoes().getShoeId().equals(shoes.getShoeId())) {
-                item.increaseQuantity(quantity);
-                return;
-            }
-        }
-    }
-
-    public void removeItem(Long shoeId) {
-        items.removeIf(item -> item.getShoes().getShoeId().equals(shoeId));
     }
 }
