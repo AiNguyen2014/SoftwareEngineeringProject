@@ -199,7 +199,6 @@ public class AdminProductService {
                 ShoesVariant variant = ShoesVariant.builder()
                         .color(Color.valueOf(vDto.getColor().trim().toUpperCase()))
                         .size(Size.valueOf(vDto.getSize().trim().toUpperCase()))
-                        .stock(0) // quản lý tồn kho tách riêng, mặc định 0
                         .shoes(shoes)
                         .build();
                 variants.add(variant);
@@ -279,24 +278,12 @@ public class AdminProductService {
                 }
             }
 
-            // Giữ stock cũ nếu có, default 0 cho biến thể mới
-            var oldVariants = shoes.getVariants() != null
-                    ? shoes.getVariants().stream()
-                        .filter(v -> v.getVariantId() != null)
-                        .collect(Collectors.toMap(ShoesVariant::getVariantId, v -> v))
-                    : java.util.Collections.<Long, ShoesVariant>emptyMap();
-
             Set<ShoesVariant> newVariants = new HashSet<>();
             for (UpdateShoesRequest.VariantDto vDto : validVariants) {
-                Integer stockVal = 0;
-                if (vDto.getVariantId() != null && oldVariants.containsKey(vDto.getVariantId())) {
-                    stockVal = oldVariants.get(vDto.getVariantId()).getStock();
-                }
                 ShoesVariant variant = ShoesVariant.builder()
                         .variantId(vDto.getVariantId())
                         .color(Color.valueOf(vDto.getColor().trim().toUpperCase()))
                         .size(Size.valueOf(vDto.getSize().trim().toUpperCase()))
-                        .stock(stockVal)
                         .shoes(shoes)
                         .build();
                 newVariants.add(variant);
