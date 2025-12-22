@@ -56,7 +56,14 @@
             <div th:if="${isLoggedIn}" class="dropdown">
                 <a href="#" class="dropdown-toggle text-dark text-decoration-none user-toggle"
                     id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fas fa-user-circle fs-4 me-1"></i>
+                        <img th:if="${avatar != null && !#strings.isEmpty(avatar)}"
+                         th:src="${avatar}"
+                         class="rounded-circle border me-2"
+                         style="width: 32px; height: 32px; object-fit: cover;"
+                         alt="Avatar">
+
+                        <i th:if="${avatar == null || #strings.isEmpty(avatar)}" 
+                        class="fas fa-user-circle fs-4 me-1 text-secondary"></i>
                         <span class="fw-bold d-none d-md-inline" th:text="${fullname}">User</span>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">

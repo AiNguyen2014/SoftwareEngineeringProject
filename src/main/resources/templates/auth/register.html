@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Đăng ký - WebShoe</title>
+    <th:block th:replace="fragments :: head_header"></th:block>
+    <link th:href="@{/css/auth.css}" rel="stylesheet">
+</head>
+<body>
+
+    <nav class="navbar bg-white shadow-sm">
+        <div class="container justify-content-center">
+            <a class="navbar-brand fw-bold" href="/" style="font-size: 1.5rem;">👟 WEBSHOE</a>
+        </div>
+    </nav>
+
+    <div class="auth-container">
+        <div class="auth-card" style="max-width: 800px;"> <!-- Card to hơn -->
+            <div class="auth-header">
+                <h3 class="auth-title">Tạo tài khoản mới</h3>
+                <p class="text-muted small">Điền thông tin để tham gia cộng đồng WebShoe</p>
+            </div>
+
+            <div class="auth-body">
+                <div th:if="${error}" th:text="${error}" class="alert alert-danger text-center small py-2"></div>
+
+                <form th:action="@{/auth/register}" th:object="${registerRequest}" method="post">
+                    <div class="row g-3">
+                        <!-- CỘT TRÁI: Thông tin cá nhân -->
+                        <div class="col-md-6">
+                            <h6 class="border-bottom pb-2 mb-3 text-muted">Thông tin cá nhân</h6>
+                            
+                            <div class="mb-2">
+                                <label class="form-label small fw-bold">Họ và tên <span class="text-danger">*</span></label>
+                                <input type="text" th:field="*{fullname}" class="form-control form-control-sm" required>
+                                <div class="text-danger small" th:if="${#fields.hasErrors('fullname')}" th:errors="*{fullname}"></div>
+                            </div>
+
+                            <div class="mb-2">
+                                <label class="form-label small fw-bold">Email <span class="text-danger">*</span></label>
+                                <input type="email" th:field="*{email}" class="form-control form-control-sm" required>
+                                <div class="text-danger small" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-6 mb-2">
+                                    <label class="form-label small fw-bold">Số điện thoại</label>
+                                    <input type="text" th:field="*{phone}" class="form-control form-control-sm" required>
+                                </div>
+                                <div class="col-6 mb-2">
+                                    <label class="form-label small fw-bold">Ngày sinh</label>
+                                    <input type="date" th:field="*{dateOfBirth}" class="form-control form-control-sm" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-2">
+                                <label class="form-label small fw-bold">Giới tính</label>
+                                <div class="d-flex gap-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" th:field="*{gender}" value="MALE" id="male" checked>
+                                        <label class="form-check-label small" for="male">Nam</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" th:field="*{gender}" value="FEMALE" id="female">
+                                        <label class="form-check-label small" for="female">Nữ</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CỘT PHẢI: Tài khoản & Địa chỉ -->
+                        <div class="col-md-6">
+                            <h6 class="border-bottom pb-2 mb-3 text-muted">Tài khoản & Địa chỉ</h6>
+
+                            <div class="mb-2">
+                                <label class="form-label small fw-bold">Tên đăng nhập <span class="text-danger">*</span></label>
+                                <input type="text" th:field="*{username}" class="form-control form-control-sm" required>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-6 mb-2">
+                                    <label class="form-label small fw-bold">Mật khẩu <span class="text-danger">*</span></label>
+                                    <input type="password" th:field="*{password}" class="form-control form-control-sm" required>
+                                </div>
+                                <div class="col-6 mb-2">
+                                    <label class="form-label small fw-bold">Nhập lại MK <span class="text-danger">*</span></label>
+                                    <input type="password" th:field="*{confirmPassword}" class="form-control form-control-sm" required>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-6 mb-2">
+                                    <input type="text" th:field="*{province}" class="form-control form-control-sm" placeholder="Tỉnh/Thành">
+                                </div>
+                                <div class="col-6 mb-2">
+                                    <input type="text" th:field="*{district}" class="form-control form-control-sm" placeholder="Quận/Huyện">
+                                </div>
+                                <div class="col-6 mb-2">
+                                    <input type="text" th:field="*{commune}" class="form-control form-control-sm" placeholder="Phường/Xã">
+                                </div>
+                                <div class="col-6 mb-2">
+                                    <input type="text" th:field="*{streetDetail}" class="form-control form-control-sm" placeholder="Chi tiết...">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-auth">ĐĂNG KÝ NGAY</button>
+                    </div>
+                </form>
+
+                <div class="auth-footer">
+                    Đã có tài khoản? <a th:href="@{/auth/login}">Đăng nhập</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

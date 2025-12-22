@@ -19,6 +19,8 @@ public class ShoesController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "12") int size,
             Model model) {
+        // Session attributes (isLoggedIn, fullname, role, avatar) 
+        // được tự động thêm bởi SessionModelAdvice
 
         ShoesListDto data = shoesService.getShoesList(page, size);
 
@@ -32,6 +34,8 @@ public class ShoesController {
 
     @GetMapping("/product/{shoeId}")
     public String productDetail(@PathVariable Long shoeId, Model model) {
+        // Session attributes được tự động thêm bởi SessionModelAdvice
+        
         model.addAttribute("product", shoesService.getShoesDetail(shoeId));
         return "shoes-detail";
     }

@@ -12,7 +12,7 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.shoestroe</groupId>
+    <groupId>com.shoestore</groupId>
     <artifactId>webshoe</artifactId>
     <version>1.0.0</version>
     <name>WebShoe</name>
@@ -85,6 +85,12 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-mail</artifactId>
 		</dependency>
+
+        <dependency>
+            <groupId>com.cloudinary</groupId>
+            <artifactId>cloudinary-http44</artifactId>
+            <version>1.36.0</version>
+        </dependency>
     </dependencies>
 
     <build>

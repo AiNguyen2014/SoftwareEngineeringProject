@@ -1,0 +1,82 @@
+body {
+    background-color: #f0f2f5;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.auth-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 0;
+}
+
+.auth-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    overflow: hidden;
+    width: 100%;
+    border: none;
+}
+
+.auth-header {
+    background-color: #fff;
+    padding: 30px 30px 10px 30px;
+    text-align: center;
+}
+
+.auth-title {
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.auth-body {
+    padding: 30px;
+}
+
+.form-control {
+    padding: 10px 15px;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+}
+
+.form-control:focus {
+    box-shadow: 0 0 0 3px rgba(33, 37, 41, 0.1);
+    border-color: #212529;
+}
+
+.btn-auth {
+    background-color: #0519cb; /* Màu đen chủ đạo */
+    color: white;
+    padding: 10px;
+    font-weight: 600;
+    width: 100%;
+    border-radius: 6px;
+    transition: all 0.3s;
+}
+
+.btn-auth:hover {
+    background-color: #000;
+    transform: translateY(-1px);
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.auth-footer a {
+    color: #212529;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.auth-footer a:hover {
+    text-decoration: underline;
+}

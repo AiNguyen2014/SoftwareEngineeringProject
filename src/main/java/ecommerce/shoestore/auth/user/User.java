@@ -17,6 +17,11 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "\"userId\"")
+
     private Long userId;
 
     @Column(nullable = false)
@@ -26,6 +31,8 @@ public class User {
     private String email;
 
     @Column(nullable = false)
+
+    @Column(name = "\"dateOfBirth\"", nullable = false)
     private LocalDate dateOfBirth;
 
     @Enumerated(EnumType.STRING)
@@ -46,6 +53,16 @@ public class User {
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "addressId", referencedColumnName = "addressId")
+
+    @Column(name = "\"registrationDate\"", updatable = false)
+    private LocalDateTime registrationDate;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "\"accountId\"", referencedColumnName = "\"accountId\"")
+    private Account account;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "\"addressId\"", referencedColumnName = "\"addressId\"")
     private Address address;
 
     @PrePersist

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${errorCode} ?: 'Lỗi'">Lỗi</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <style>
+        body { margin:0; font-family: 'Segoe UI', Tahoma, sans-serif; background:#0f172a; color:#e2e8f0; display:flex; align-items:center; justify-content:center; min-height:100vh; }
+        .card { background:#111827; border:1px solid #1f2937; border-radius:16px; padding:32px 28px; max-width:640px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.35); }
+        .code { display:inline-flex; align-items:center; justify-content:center; width:64px; height:64px; border-radius:14px; background:#1d4ed8; color:#e0f2fe; font-size:22px; font-weight:700; margin-bottom:18px; box-shadow:0 12px 30px rgba(59,130,246,0.35); }
+        h1 { margin:0 0 10px; font-size:24px; letter-spacing:0.3px; }
+        p { margin:0 0 18px; color:#cbd5e1; line-height:1.6; }
+        .actions { display:flex; gap:12px; flex-wrap:wrap; }
+        .btn { display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:10px; border:1px solid transparent; font-weight:600; text-decoration:none; transition:all 0.18s ease; }
+        .primary { background:#2563eb; color:#e0f2fe; border-color:#1d4ed8; }
+        .primary:hover { background:#1d4ed8; }
+        .ghost { background:transparent; color:#e2e8f0; border-color:#334155; }
+        .ghost:hover { border-color:#475569; }
+        .small { font-size:13px; color:#94a3b8; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="code" th:text="${errorCode} ?: '500'"></div>
+    <h1 th:text="${errorMessage} ?: 'Đã có lỗi xảy ra'"></h1>
+    <p class="small">Nếu bạn vừa thử thao tác gì đó, hãy thử lại sau vài phút. Nếu lỗi tiếp diễn, báo cho quản trị hệ thống.</p>
+    <div class="actions">
+        <a class="btn primary" href="/">⬅️ Về trang chủ</a>
+        <a class="btn ghost" href="javascript:history.back()">↩️ Quay lại</a>
+    </div>
+</div>
+</body>
+</html>

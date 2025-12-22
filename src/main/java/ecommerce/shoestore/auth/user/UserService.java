@@ -2,8 +2,6 @@ package ecommerce.shoestore.auth.user;
 
 import ecommerce.shoestore.auth.address.Address;
 import ecommerce.shoestore.auth.dto.UserProfileDto;
-import ecommerce.shoestore.auth.user.User;
-import ecommerce.shoestore.auth.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +23,7 @@ public class UserService {
         dto.setPhone(user.getPhone());
         dto.setDateOfBirth(user.getDateOfBirth());
         dto.setGender(user.getGender());
+        dto.setAvatar(user.getAvatar());
 
         // Map địa chỉ (nếu có)
         if (user.getAddress() != null) {
@@ -48,6 +47,10 @@ public class UserService {
         user.setDateOfBirth(req.getDateOfBirth());
         user.setGender(req.getGender());
 
+        if (req.getAvatar() != null && !req.getAvatar().isEmpty()) {
+            user.setAvatar(req.getAvatar());
+        }
+        
         // Cập nhật địa chỉ
         Address address = user.getAddress();
         if (address == null) {

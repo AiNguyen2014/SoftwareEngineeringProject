@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chi tiết chiến dịch</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+<body>
+<div class="admin-layout">
+    <aside class="sidebar">
+        <div th:replace="~{admin/sidebar :: sidebar}"></div>
+    </aside>
+    <div class="main">
+        <header class="topbar">
+            <div class="topbar-inner">
+                <div class="topbar-left">
+                    <button class="menu-toggle" aria-label="Toggle menu">☰</button>
+                    <h3>Chi tiết chiến dịch</h3>
+                </div>
+                <div class="topbar-right">
+                    <a class="btn btn-secondary" th:href="@{/admin/promotions/campaigns}">Quay lại</a>
+                    <a class="btn btn-primary" th:href="@{|/admin/promotions/campaigns/${campaign.campaignId}/edit|}">Sửa</a>
+                </div>
+            </div>
+        </header>
+        <main class="page-content">
+            <div class="card" style="max-width: 900px; margin: 0 auto;">
+                <!-- Header Section -->
+                <div style="border-bottom: 2px solid #e5e7eb; padding-bottom: 20px; margin-bottom: 24px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                        <h2 style="margin: 0; font-size: 28px; font-weight: 700;" th:text="${campaign.name}">Tên chiến dịch</h2>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <span class="badge"
+                                  th:classappend="${campaign.status.name() == 'ACTIVE'} ? ' badge-success' : (${campaign.status.name() == 'ENDED' || campaign.status.name() == 'CANCELLED'} ? ' badge-danger' : ' badge-warning')">
+                                <span th:if="${campaign.status.name() == 'DRAFT'}">Nháp</span>
+                                <span th:if="${campaign.status.name() == 'ACTIVE'}">Đang hoạt động</span>
+                                <span th:if="${campaign.status.name() == 'ENDED'}">Đã kết thúc</span>
+                                <span th:if="${campaign.status.name() == 'CANCELLED'}">Đã hủy</span>
+                            </span>
+                            <span th:if="${campaign.enabled}" class="chip-on">● Đang bật</span>
+                            <span th:unless="${campaign.enabled}" class="chip-off">● Đã tắt</span>
+                        </div>
+                    </div>
+                    <p style="color: #6b7280; font-size: 15px; margin: 0;" th:text="${campaign.description}">Mô tả chiến dịch</p>
+                </div>
+
+                <!-- Info Grid -->
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-bottom: 32px;">
+                    <!-- Thời gian -->
+                    <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-radius: 12px; padding: 20px; border-left: 4px solid #0284c7;">
+                        <div style="color: #075985; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Thời gian hiệu lực</div>
+                        <div style="font-size: 16px; font-weight: 600; color: #0c4a6e;">
+                            <span th:text="${#temporals.format(campaign.startDate, 'dd/MM/yyyy')}">01/01/2024</span>
+                            <span style="color: #64748b; margin: 0 8px;">→</span>
+                            <span th:text="${#temporals.format(campaign.endDate, 'dd/MM/yyyy')}">31/12/2024</span>
+                        </div>
+                    </div>
+
+                    <!-- ID -->
+                    <div style="background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%); border-radius: 12px; padding: 20px; border-left: 4px solid #ca8a04;">
+                        <div style="color: #713f12; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Campaign ID</div>
+                        <div style="font-size: 18px; font-weight: 700; color: #854d0e;" th:text="${campaign.campaignId}">1</div>
+                    </div>
+                </div>
+
+                <!-- Discount Rules -->
+                <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 2px solid #86efac; border-radius: 12px; padding: 24px; margin-bottom: 32px;">
+                    <h3 style="margin: 0 0 20px 0; font-size: 18px; font-weight: 700; color: #166534;">Quy tắc giảm giá</h3>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                        <div>
+                            <div style="color: #15803d; font-size: 13px; font-weight: 600; margin-bottom: 4px;">Loại giảm giá</div>
+                            <div style="font-size: 16px; font-weight: 600; color: #166534;">
+                                <span th:if="${campaign.discountType.name() == 'PERCENT'}">Phần trăm (%)</span>
+                                <span th:if="${campaign.discountType.name() == 'FIXED_AMOUNT'}">Số tiền cố định (VNĐ)</span>
+                            </div>
+                        </div>
+                        <div>
+                            <div style="color: #15803d; font-size: 13px; font-weight: 600; margin-bottom: 4px;">Giá trị giảm</div>
+                            <div style="font-size: 24px; font-weight: 700; color: #166534;">
+                                <span th:text="${campaign.discountValue}">10</span>
+                                <span th:if="${campaign.discountType.name() == 'PERCENT'}">%</span>
+                                <span th:if="${campaign.discountType.name() == 'FIXED_AMOUNT'}"> VNĐ</span>
+                            </div>
+                        </div>
+                        <div>
+                            <div style="color: #15803d; font-size: 13px; font-weight: 600; margin-bottom: 4px;">Giảm tối đa</div>
+                            <div style="font-size: 16px; font-weight: 600; color: #166534;">
+                                <span th:if="${campaign.maxDiscountAmount != null}">
+                                    <span th:text="${#numbers.formatDecimal(campaign.maxDiscountAmount, 0, 'COMMA', 0, 'POINT')}">100,000</span> VNĐ
+                                </span>
+                                <span th:unless="${campaign.maxDiscountAmount != null}" style="color: #9ca3af;">Không giới hạn</span>
+                            </div>
+                        </div>
+                        <div>
+                            <div style="color: #15803d; font-size: 13px; font-weight: 600; margin-bottom: 4px;">Đơn hàng tối thiểu</div>
+                            <div style="font-size: 16px; font-weight: 600; color: #166534;">
+                                <span th:if="${campaign.minOrderValue != null}">
+                                    <span th:text="${#numbers.formatDecimal(campaign.minOrderValue, 0, 'COMMA', 0, 'POINT')}">500,000</span> VNĐ
+                                </span>
+                                <span th:unless="${campaign.minOrderValue != null}" style="color: #9ca3af;">Không yêu cầu</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Target Application Section -->
+                <div style="background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); border: 2px solid #d8b4fe; border-radius: 12px; padding: 24px; margin-bottom: 32px;">
+                    <h3 style="margin: 0 0 20px 0; font-size: 18px; font-weight: 700; color: #6b21a8;">Phạm vi áp dụng</h3>
+                    <div th:if="${campaign.targets != null and !campaign.targets.isEmpty()}">
+                        <div style="color: #7c3aed; font-size: 13px; font-weight: 600; margin-bottom: 8px;">Loại áp dụng</div>
+                        <div style="font-size: 16px; font-weight: 600; color: #6b21a8; margin-bottom: 16px;">
+                            <span th:if="${campaign.targets[0].targetType.name() == 'ALL'}">Tất cả sản phẩm</span>
+                            <span th:if="${campaign.targets[0].targetType.name() == 'PRODUCT'}">Sản phẩm cụ thể</span>
+                            <span th:if="${campaign.targets[0].targetType.name() == 'CATEGORY'}">Theo danh mục</span>
+                        </div>
+                        
+                        <!-- Show specific products -->
+                        <div th:if="${campaign.targets[0].targetType.name() == 'PRODUCT'}">
+                            <div style="color: #7c3aed; font-size: 13px; font-weight: 600; margin-bottom: 8px;">Sản phẩm được áp dụng</div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                <span th:each="target : ${campaign.targets}" 
+                                      th:if="${target.shoe != null}"
+                                      style="background: white; border: 1px solid #c084fc; border-radius: 6px; padding: 6px 12px; font-size: 14px; color: #6b21a8;"
+                                      th:text="${target.shoe.name}">
+                                    Sản phẩm
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Show categories -->
+                        <div th:if="${campaign.targets[0].targetType.name() == 'CATEGORY'}">
+                            <div style="color: #7c3aed; font-size: 13px; font-weight: 600; margin-bottom: 8px;">Danh mục được áp dụng</div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                <span th:each="target : ${campaign.targets}" 
+                                      th:if="${target.category != null}"
+                                      style="background: white; border: 1px solid #c084fc; border-radius: 6px; padding: 6px 12px; font-size: 14px; color: #6b21a8;"
+                                      th:text="${target.category.categoryName}">
+                                    Danh mục
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div th:unless="${campaign.targets != null and !campaign.targets.isEmpty()}" style="color: #9ca3af; font-style: italic;">
+                        Chưa thiết lập phạm vi áp dụng
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="detail-actions">
+                    <a th:href="@{|/admin/promotions/campaigns/${campaign.campaignId}/edit|}" class="btn btn-primary" style="padding: 10px 24px;">
+                        Chỉnh sửa chiến dịch
+                    </a>
+                    <a th:href="@{/admin/promotions/campaigns}" class="btn btn-secondary" style="padding: 10px 24px; margin-left: auto;">
+                        Quay lại danh sách
+                    </a>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+<script>
+    document.addEventListener('click', function (e) {
+        if (!e.target.matches('.menu-toggle')) return;
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) sidebar.classList.toggle('collapsed');
+    });
+</script>
+</body>
+</html>

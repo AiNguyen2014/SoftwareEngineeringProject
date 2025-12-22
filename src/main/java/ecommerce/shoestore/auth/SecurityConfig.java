@@ -19,25 +19,37 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
         http
-            .csrf(csrf -> csrf.disable()) 
+            .csrf(csrf -> csrf.disable())
+
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/index", "/auth/**", "/css/**", "/js/**", "/images/**", "/error", "/product/**", "/user/**").permitAll()
-                .anyRequest().authenticated() 
+                // PUBLIC
+                .requestMatchers(
+                    "/", "/index",
+                    "/auth/**",
+                    "/css/**", "/js/**", "/images/**",
+                    "/error",
+                    "/product/**",
+                    "/user/**"
+                ).permitAll()
+
+                // ADMIN ONLY
+                .requestMatchers("/admin/**").hasRole("ADMIN")
+
+                // CÒN LẠI: CẦN LOGIN
+                .anyRequest().authenticated()
             )
-            .formLogin(form -> form
-                .loginPage("/auth/login") 
-                .loginProcessingUrl("/j_spring_security_check") 
-                .defaultSuccessUrl("/") 
-                .failureUrl("/auth/login?error=true")  
-                .permitAll()
-            )
+
+            // QUAN TRỌNG: TẮT formLogin
+            .formLogin(form -> form.disable())
+
             .logout(logout -> logout
                 .logoutUrl("/auth/logout")
-                .logoutSuccessUrl("/auth/login?logout") 
+                .logoutSuccessUrl("/auth/login?logout")
                 .permitAll()
             );
-            
+
         return http.build();
     }
 }
