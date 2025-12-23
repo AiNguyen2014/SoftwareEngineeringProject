@@ -15,6 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.stream.Collectors;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -36,17 +37,6 @@ public class ShoesService {
     @Transactional(readOnly = true)
     public ShoesListDto getShoesList(int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size);
-
-        // First, get paginated basic shoe data
-        Page<Shoes> shoesPage = shoesRepository.findAllPaged(pageable);
-        List<Long> shoeIds = shoesPage.getContent().stream()
-                .map(Shoes::getShoeId)
-                .collect(Collectors.toList());
-
-        // Then fetch with details for the specific IDs
-        List<Shoes> shoesList = shoeIds.isEmpty()
-                ? new ArrayList<>()
-                : shoesRepository.findAllWithDetailsByIds(shoeIds);
 
         // Lấy danh sách sản phẩm từ database
         Page<Shoes> shoesPage = shoesRepository.findAllActive(pageable);
