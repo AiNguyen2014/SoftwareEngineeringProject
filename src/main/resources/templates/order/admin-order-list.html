@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý đơn hàng - WEBSHOE Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/order-history.css}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+</head>
+<body>
+    <!-- Header -->
+    <header th:replace="fragments :: header"></header>
+
+    <main class="container my-5">
+        <div class="row">
+            <div class="col-12">
+                <!-- Page Header -->
+                <div class="page-header mb-4">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h2 class="page-title">
+                                <i class="bi bi-gear me-2"></i>
+                                Quản lý đơn hàng
+                            </h2>
+                            <p class="text-muted mb-0">Quản lý và theo dõi tất cả đơn hàng trong hệ thống</p>
+                        </div>
+                        <div class="col-auto">
+                            <div class="d-flex gap-2 align-items-center">
+                                <span class="badge bg-info" th:text="${totalElements != null ? totalElements : 0} + ' đơn hàng'">0 đơn hàng</span>
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" 
+                                            data-bs-toggle="dropdown">
+                                        <i class="bi bi-filter me-1"></i>Bộ lọc
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="?status=WAITING_PAYMENT">Chờ thanh toán</a></li>
+                                        <li><a class="dropdown-item" href="?status=CONFIRMED">Đã xác nhận</a></li>
+                                        <li><a class="dropdown-item" href="?status=SHIPPING">Đang giao hàng</a></li>
+                                        <li><a class="dropdown-item" href="?status=COMPLETE_DELIVERY">Hoàn thành</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" href="/order/admin/all">Tất cả</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error Alert - Only show for real errors, not empty data -->
+                <div th:if="${error != null and !#strings.contains(error,'JDBC') and !#strings.contains(error,'SQL')}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <span th:text="${error}">Có lỗi xảy ra</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <!-- Empty State -->
+                <div th:if="${#lists.isEmpty(orders)}" class="empty-state text-center py-5">
+                    <i class="bi bi-inbox display-1 text-muted mb-3"></i>
+                    <h4 class="text-muted">Không có đơn hàng nào</h4>
+                    <p class="text-muted">Hiện tại chưa có đơn hàng nào trong hệ thống.</p>
+                </div>
+
+                <!-- Orders Table -->
+                <div th:if="${!#lists.isEmpty(orders)}" class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">Mã đơn hàng</th>
+                                <th scope="col">Khách hàng</th>
+                                <th scope="col">Ngày đặt</th>
+                                <th scope="col">Trạng thái</th>
+                                <th scope="col">Tổng tiền</th>
+                                <th scope="col" class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="order : ${orders}" class="order-row">
+                                <td>
+                                    <strong class="text-primary">#<span th:text="${order.orderId}">12345</span></strong>
+                                </td>
+                                <td>
+                                    <div>
+                                        <div class="fw-bold" th:text="${order.customerName}">Nguyễn Văn A</div>
+                                        <small class="text-muted" th:text="${order.customerEmail}">customer@email.com</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span th:text="${#temporals.format(order.createAt, 'dd/MM/yyyy')}">20/12/2024</span>
+                                    <br>
+                                    <small class="text-muted" th:text="${#temporals.format(order.createAt, 'HH:mm')}">14:30</small>
+                                </td>
+                                <td>
+                                    <span class="badge rounded-pill" 
+                                          th:classappend="'bg-' + ${order.statusColorClass}"
+                                          th:text="${order.statusDisplay}">
+                                        Đang xử lý
+                                    </span>
+                                </td>
+                                <td>
+                                    <strong th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + '₫'">2.000.000₫</strong>
+                                    <div th:if="${order.discountAmount != null && order.discountAmount > 0}">
+                                        <small class="text-muted">
+                                            Giảm: <span class="text-success" th:text="${#numbers.formatDecimal(order.discountAmount, 0, 'COMMA', 0, 'POINT')} + '₫'">500.000₫</span>
+                                        </small>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <a th:href="@{/order/tracking/{orderId}(orderId=${order.orderId})}" 
+                                           class="btn btn-outline-primary btn-sm" title="Xem chi tiết">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        
+                                        <!-- Quick status update buttons -->
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" 
+                                                    data-bs-toggle="dropdown" title="Cập nhật nhanh">
+                                                <i class="bi bi-gear"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li th:if="${order.status.name() == 'WAITING_PAYMENT'}">
+                                                    <form th:action="@{/order/admin/update-status}" method="post" class="d-inline">
+                                                        <input type="hidden" name="orderId" th:value="${order.orderId}">
+                                                        <input type="hidden" name="newStatus" value="PAID">
+                                                        <button type="submit" class="dropdown-item">
+                                                            <i class="bi bi-check-circle text-success me-2"></i>Đã thanh toán
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                <li th:if="${order.status.name() == 'PAID'}">
+                                                    <form th:action="@{/order/admin/update-status}" method="post" class="d-inline">
+                                                        <input type="hidden" name="orderId" th:value="${order.orderId}">
+                                                        <input type="hidden" name="newStatus" value="CONFIRMED">
+                                                        <button type="submit" class="dropdown-item">
+                                                            <i class="bi bi-check text-primary me-2"></i>Xác nhận
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                <li th:if="${order.status.name() == 'CONFIRMED'}">
+                                                    <form th:action="@{/order/admin/update-status}" method="post" class="d-inline">
+                                                        <input type="hidden" name="orderId" th:value="${order.orderId}">
+                                                        <input type="hidden" name="newStatus" value="SHIPPING">
+                                                        <button type="submit" class="dropdown-item">
+                                                            <i class="bi bi-truck text-info me-2"></i>Đang giao
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                <li th:if="${order.status.name() == 'SHIPPING'}">
+                                                    <form th:action="@{/order/admin/update-status}" method="post" class="d-inline">
+                                                        <input type="hidden" name="orderId" th:value="${order.orderId}">
+                                                        <input type="hidden" name="newStatus" value="COMPLETE_DELIVERY">
+                                                        <button type="submit" class="dropdown-item">
+                                                            <i class="bi bi-check-circle text-success me-2"></i>Hoàn thành
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <a th:href="@{/order/tracking/{orderId}(orderId=${order.orderId})}" 
+                                                       class="dropdown-item">
+                                                        <i class="bi bi-eye text-secondary me-2"></i>Xem chi tiết
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <nav th:if="${totalPages > 1}" aria-label="Admin orders pagination">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item" th:classappend="${!hasPrevious} ? 'disabled'">
+                            <a class="page-link" th:href="@{/order/admin/all(page=${currentPage - 1})}" 
+                               aria-label="Previous" th:if="${hasPrevious}">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                            <span class="page-link" th:unless="${hasPrevious}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </span>
+                        </li>
+                        
+                        <li th:each="i : ${#numbers.sequence(0, totalPages-1)}" 
+                            class="page-item" th:classappend="${i == currentPage} ? 'active'">
+                            <a class="page-link" th:href="@{/order/admin/all(page=${i})}" 
+                               th:text="${i + 1}">1</a>
+                        </li>
+                        
+                        <li class="page-item" th:classappend="${!hasNext} ? 'disabled'">
+                            <a class="page-link" th:href="@{/order/admin/all(page=${currentPage + 1})}" 
+                               aria-label="Next" th:if="${hasNext}">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                            <span class="page-link" th:unless="${hasNext}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </span>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer th:replace="fragments :: footer"></footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Auto-submit form when status is changed
+        document.querySelectorAll('.dropdown-item form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                const confirmMessage = 'Bạn có chắc chắn muốn cập nhật trạng thái đơn hàng này?';
+                if (!confirm(confirmMessage)) {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
