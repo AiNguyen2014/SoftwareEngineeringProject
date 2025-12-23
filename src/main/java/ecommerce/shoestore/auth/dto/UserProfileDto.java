@@ -8,8 +8,9 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 @Data
 public class UserProfileDto {
+
     private String fullname;
-    private String email; 
+    private String email;
     private String phone;
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate dateOfBirth;
