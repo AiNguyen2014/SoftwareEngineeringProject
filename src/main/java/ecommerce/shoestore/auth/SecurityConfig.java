@@ -19,49 +19,39 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
         http
             .csrf(csrf -> csrf.disable())
-
             .authorizeHttpRequests(auth -> auth
-<<<<<<< Updated upstream
-                // PUBLIC
+                // PUBLIC - thêm /order/mock/**
                 .requestMatchers(
                     "/", "/index",
                     "/auth/**",
                     "/css/**", "/js/**", "/images/**",
                     "/error",
                     "/product/**",
-                    "/user/**"
+                    "/user/**",
+                    "/order/history", "/order/tracking/**" // Cho phép Order pages
                 ).permitAll()
 
-                // ADMIN ONLY
+                // ADMIN ONLY 
                 .requestMatchers("/admin/**").hasRole("ADMIN")
 
-                // CÒN LẠI: CẦN LOGIN
+                // CÒN LẠI: CẦN LOGIN 
                 .anyRequest().authenticated()
-=======
-                .requestMatchers("/", "/index", "/auth/**", "/css/**", "/js/**", "/images/**", "/error", "/product/**", "/user/**", "/order/mock/**").permitAll()
-                .anyRequest().authenticated() 
             )
             .formLogin(form -> form
-                .loginPage("/auth/login") 
-                .loginProcessingUrl("/j_spring_security_check") 
+                .loginPage("/auth/login")
+                .loginProcessingUrl("/j_spring_security_check")
                 .defaultSuccessUrl("/")
-                .failureUrl("/auth/login?error=true")  
+                .failureUrl("/auth/login?error=true")
                 .permitAll()
->>>>>>> Stashed changes
             )
-
-            // QUAN TRỌNG: TẮT formLogin
-            .formLogin(form -> form.disable())
-
             .logout(logout -> logout
                 .logoutUrl("/auth/logout")
                 .logoutSuccessUrl("/auth/login?logout")
                 .permitAll()
             );
-
+            
         return http.build();
     }
 }
