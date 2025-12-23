@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 @Repository
 public interface InventoryRepository extends JpaRepository<Inventory, Long> {
+    Optional<Inventory> findByShoeId(Long shoeId);
     @Query(value = """
             SELECT i.* FROM inventory i
             LEFT JOIN shoes s ON i."shoeId" = s."shoeId"
