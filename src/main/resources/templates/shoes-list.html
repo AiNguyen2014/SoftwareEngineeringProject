@@ -30,14 +30,15 @@
     </div>
 
     <div class="product-grid">
-        <div class="product-card" th:each="product : ${products}">
+        <div class="product-card" th:each="product : ${products}" th:classappend="${product.outOfStock} ? 'out-of-stock' : ''">
             <a th:href="@{/product/{shoeId}(shoeId=${product.shoeId})}" class="product-img-wrap">
                 <img th:src="${product.thumbnailUrl}"
                      th:alt="${product.name}"
                      loading="lazy"
                      onerror="this.src='https://placehold.co/400x400?text=No+Image'">
                 <div class="badge-overlay">
-                    <span class="badge-new">NEW</span>
+                    <span class="badge-new" th:if="${product.isNew}">NEW</span>
+                    <span class="badge-soldout" th:if="${product.outOfStock}">HẾT HÀNG</span>
                 </div>
             </a>
             <div class="product-info">

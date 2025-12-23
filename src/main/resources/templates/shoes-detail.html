@@ -98,19 +98,21 @@
                     </div>
 
                     <div class="action-group">
-                        <div class="quantity-selector">
-                            <button type="button" class="qty-btn" onclick="decreaseQty()">
+                        <div class="quantity-selector" th:classappend="${product.totalStock le 0} ? 'disabled' : ''">
+                            <button type="button" class="qty-btn" onclick="decreaseQty()" th:attr="disabled=${product.totalStock le 0} ? 'disabled' : null">
                                 <i class="fas fa-minus"></i>
                             </button>
                             <input type="number" id="quantity" class="qty-input" value="1" min="1" max="10" readonly>
-                            <button type="button" class="qty-btn" onclick="increaseQty()">
+                            <button type="button" class="qty-btn" onclick="increaseQty()" th:attr="disabled=${product.totalStock le 0} ? 'disabled' : null">
                                 <i class="fas fa-plus"></i>
                             </button>
                         </div>
 
-                        <button type="submit" class="btn-add-cart">
+                        <button type="submit" class="btn-add-cart" 
+                                th:attr="disabled=${product.totalStock le 0} ? 'disabled' : null"
+                                th:classappend="${product.totalStock le 0} ? 'btn-disabled' : ''">
                             <i class="fas fa-shopping-bag me-2"></i>
-                            Thêm vào giỏ
+                            <span th:text="${product.totalStock le 0} ? 'Hết hàng' : 'Thêm vào giỏ'">Thêm vào giỏ</span>
                         </button>
                     </div>
                 </form>

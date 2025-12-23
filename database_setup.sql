@@ -36,6 +36,7 @@ CREATE TABLE shoes (
     description TEXT,
     collection VARCHAR(255),
     "categoryId" BIGINT REFERENCES category("categoryId") ON DELETE SET NULL,
+    "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     
     CONSTRAINT chk_shoes_type CHECK (type IN ('FOR_MALE', 'FOR_FEMALE', 'FOR_UNISEX'))
 );

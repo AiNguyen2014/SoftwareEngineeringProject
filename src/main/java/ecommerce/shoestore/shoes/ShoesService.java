@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -28,6 +29,9 @@ public class ShoesService {
 
     private final ShoesRepository shoesRepository;
     private final ShoesVariantRepository variantRepository;
+    
+    /** Số ngày để xác định sản phẩm là "mới" */
+    private static final int NEW_PRODUCT_DAYS = 14;
 
     /**
      * Lấy danh sách sản phẩm (có phân trang)
@@ -96,6 +100,9 @@ public class ShoesService {
         
         // Kiểm tra hết hàng
         boolean outOfStock = isOutOfStock(shoes.getShoeId());
+        
+        // Kiểm tra sản phẩm mới (trong vòng 14 ngày)
+        boolean isNew = isNewProduct(shoes);
 
         return ShoesSummaryDto.builder()
                 .shoeId(shoes.getShoeId())
@@ -104,6 +111,7 @@ public class ShoesService {
                 .price(shoes.getBasePrice() != null ? shoes.getBasePrice() : BigDecimal.ZERO)
                 .thumbnailUrl(thumbnailUrl)
                 .outOfStock(outOfStock)
+                .isNew(isNew)
                 .type(shoes.getType() != null ? shoes.getType().name() : null)
                 .build();
     }
@@ -193,6 +201,18 @@ public class ShoesService {
     private boolean isOutOfStock(Long shoeId) {
         Integer totalStock = variantRepository.getTotalStockByShoeId(shoeId);
         return totalStock == null || totalStock <= 0;
+    }
+    
+    /**
+     * Kiểm tra sản phẩm có phải là sản phẩm mới không
+     * Sản phẩm mới = được tạo trong vòng NEW_PRODUCT_DAYS ngày
+     */
+    private boolean isNewProduct(Shoes shoes) {
+        if (shoes.getCreatedAt() == null) {
+            return false;
+        }
+        OffsetDateTime cutoffDate = OffsetDateTime.now().minusDays(NEW_PRODUCT_DAYS);
+        return shoes.getCreatedAt().isAfter(cutoffDate);
     }
 
     /**
