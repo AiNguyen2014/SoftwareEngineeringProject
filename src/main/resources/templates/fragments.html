@@ -42,7 +42,8 @@
             </div>
 
             <!--Cart icon  -->
-            <a th:href="@{/cart}" class="nav-icon position-relative text-dark">
+            <a th:if="${role == null || role.toString() != 'ADMIN'}"
+            th:href="@{/cart}" class="nav-icon position-relative text-dark">
                 <i class="fas fa-shopping-cart"></i>
                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem">2</span>
             </a>
