@@ -2,6 +2,7 @@ package ecommerce.shoestore.cartitem;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 import ecommerce.shoestore.cart.Cart;
 import ecommerce.shoestore.shoesvariant.ShoesVariant;
@@ -61,6 +62,19 @@ public class CartItem {
         this.variant = variant;
         this.quantity = quantity;
         this.unitPrice = unitPrice;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CartItem cartItem = (CartItem) o;
+        return Objects.equals(cartItemId, cartItem.cartItemId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(cartItemId);
     }
 
 }

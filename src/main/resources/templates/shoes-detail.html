@@ -109,6 +109,12 @@
                     </div>
                 </form>
 
+                <!-- Nút Mua Ngay -->
+                <button type="button" class="btn-buy-now mt-3" onclick="buyNow()">
+                    <i class="fas fa-bolt me-2"></i>
+                    Mua Ngay
+                </button>
+
                 <div class="product-details-section">
                     <h5 class="details-heading">
                         <i class="fas fa-info-circle"></i> Thông tin sản phẩm
@@ -196,6 +202,34 @@
         document.getElementById('quantityInput').value = input.value;
     }
 
+    /**
+     * Chức năng Mua Ngay
+     * - Kiểm tra người dùng đã chọn size chưa
+     * - Kiểm tra số lượng hợp lệ
+     * - Chuyển hướng đến trang checkout với thông tin đã chọn
+     */
+    function buyNow() {
+        // 1. Kiểm tra đã chọn size chưa
+        const selectedVariant = document.querySelector('input[name="variantId"]:checked');
+        if (!selectedVariant) {
+            alert('⚠️ Vui lòng chọn kích thước!');
+            return;
+        }
+
+        // 2. Lấy thông tin số lượng
+        const quantity = document.getElementById('quantity').value;
+        if (!quantity || parseInt(quantity) <= 0) {
+            alert('⚠️ Số lượng phải lớn hơn 0!');
+            return;
+        }
+
+        // 3. Lấy variantId đã chọn
+        const variantId = selectedVariant.value;
+
+        // 4. Chuyển hướng đến trang checkout với type=BUY_NOW
+        // Backend sẽ kiểm tra đăng nhập và xử lý redirect nếu cần
+        window.location.href = `/order/checkout?type=BUY_NOW&variantId=${variantId}&quantity=${quantity}`;
+    }
     
 </script>
 </body>

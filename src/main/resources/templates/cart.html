@@ -169,10 +169,9 @@
                 </div>
 
                 <!-- CHECKOUT -->
-                <a th:href="@{/order/create}" class="btn-cart-primary w-100">
-                    Thanh toán
+                <a th:href="@{/order/checkout(type='CART')}" class="btn-cart-primary w-100">
+                    <i class="fas fa-shopping-bag"></i> Đặt hàng
                 </a>
-
 
                 <!-- CONTINUE SHOPPING -->
                 <a th:href="@{/shoes}" class="btn-cart-secondary w-100">

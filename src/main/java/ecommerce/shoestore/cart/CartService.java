@@ -126,7 +126,10 @@ public class CartService {
     public CartSummaryView getCartSummaryForView(User user) {
 
         Cart cart = cartRepository.findCartWithItems(user)
-                .orElseGet(() -> cartRepository.save(new Cart(user)));
+                .orElseGet(() -> {
+                    Cart newCart = new Cart(user);
+                    return cartRepository.save(newCart);
+                });
 
         List<CartItemView> items = cart.getItems().stream().map(item -> {
 

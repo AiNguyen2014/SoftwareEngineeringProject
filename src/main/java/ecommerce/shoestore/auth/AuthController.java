@@ -7,7 +7,9 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult; 
@@ -87,25 +89,50 @@ public class AuthController {
 
    @PostMapping("/login")
     public String processLogin(@ModelAttribute LoginRequest request, HttpSession session, Model model) {
+        System.out.println("\n===== LOGIN PROCESS START =====");
+        System.out.println("Session ID: " + session.getId());
+        System.out.println("REDIRECT_AFTER_LOGIN before login: " + session.getAttribute("REDIRECT_AFTER_LOGIN"));
+        
         try {
             User user = authService.login(request);
+            System.out.println("Login successful for user: " + user.getEmail());
             
+            // Lưu thông tin user vào session
             session.setAttribute("USER_ID", user.getUserId());
             session.setAttribute("FULLNAME", user.getFullname());
             session.setAttribute("ROLE", user.getAccount().getRole());
-
             session.setAttribute("AVATAR", user.getAvatar());
             
-            UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(
-                    user.getEmail(), 
-                    null,            
-                    AuthorityUtils.createAuthorityList("ROLE_" + user.getAccount().getRole().name()) // Quyền
-            );
-            SecurityContextHolder.getContext().setAuthentication(token);
-            // -------------------------------------------------------------
+            System.out.println("✅ Saved USER_ID to session: " + user.getUserId());
+            System.out.println("Session attributes after login:");
+            System.out.println("  - USER_ID: " + session.getAttribute("USER_ID"));
+            System.out.println("  - FULLNAME: " + session.getAttribute("FULLNAME"));
+            System.out.println("  - REDIRECT_AFTER_LOGIN: " + session.getAttribute("REDIRECT_AFTER_LOGIN"));
             
+            // Tạo authentication token cho Spring Security
+            UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(
+                    user.getAccount().getUsername(),
+                    null,
+                    AuthorityUtils.createAuthorityList("ROLE_" + user.getAccount().getRole().name())
+            );
+            
+            SecurityContextHolder.getContext().setAuthentication(token);
+            
+            // Kiểm tra có redirect URL sau khi login không (cho chức năng Mua Ngay)
+            String redirectUrl = (String) session.getAttribute("REDIRECT_AFTER_LOGIN");
+            if (redirectUrl != null) {
+                session.removeAttribute("REDIRECT_AFTER_LOGIN");
+                System.out.println("🔄 Found redirect URL: " + redirectUrl);
+                System.out.println("===== LOGIN PROCESS END (REDIRECTING) =====");
+                return "redirect:" + redirectUrl;
+            }
+            
+            System.out.println("No redirect URL - going to home page");
+            System.out.println("===== LOGIN PROCESS END =====");
             return "redirect:/"; 
         } catch (Exception e) {
+            System.out.println("❌ Login failed: " + e.getMessage());
+            System.out.println("===== LOGIN PROCESS END (ERROR) =====");
             e.printStackTrace(); 
             model.addAttribute("error", e.getMessage());
             return "auth/login";

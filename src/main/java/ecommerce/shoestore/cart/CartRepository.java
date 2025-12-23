@@ -11,11 +11,11 @@ public interface CartRepository extends JpaRepository<Cart, Long> {
 
     Optional<Cart> findByCustomer(User customer);
 
-    @Query("""
-        select distinct c from Cart c
-        left join fetch c.items i
-        left join fetch i.variant v
-        where c.customer = :customer
-    """)
+    @Query("select c from Cart c "
+            + "left join fetch c.items i "
+            + "left join fetch i.variant v "
+            + "left join fetch v.shoes s "
+            + "left join fetch s.images "
+            + "where c.customer = :customer")
     Optional<Cart> findCartWithItems(@Param("customer") User customer);
 }

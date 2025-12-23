@@ -5,8 +5,8 @@ import ecommerce.shoestore.cartitem.CartItem;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "cart")
@@ -30,7 +30,7 @@ public class Cart {
             orphanRemoval = true
     )
 
-    private List<CartItem> items = new ArrayList<>();
+    private Set<CartItem> items = new HashSet<>();
 
     public Cart(User customer) {
         this.customer = customer;
