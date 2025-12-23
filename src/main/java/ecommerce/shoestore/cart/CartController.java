@@ -1,59 +1,116 @@
 package ecommerce.shoestore.cart;
 
 import ecommerce.shoestore.auth.user.User;
+import ecommerce.shoestore.auth.user.UserRepository;
+import lombok.RequiredArgsConstructor;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.security.core.Authentication;
+import ecommerce.shoestore.cart.dto.CartSummaryView;
 import ecommerce.shoestore.shoes.Shoes;
 import ecommerce.shoestore.shoes.ShoesRepository;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.ui.Model;
 
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/cart")
 
 public class CartController {
-    
-    private final CartService cartService;
-    private final ShoesRepository shoesRepository;
 
-    // Xem giỏ hàng
+    private final CartService cartService;
+    private final UserRepository userRepository;
+
+    // ================== VIEW CART ==================
     @GetMapping
-    public String viewCart(
-            @AuthenticationPrincipal User customer,
-            Model model
-    ) {
-        if (customer == null) {
-        return "redirect:/login";
+    public String viewCart(HttpSession session, Model model) {
+
+        Long userId = (Long) session.getAttribute("USER_ID");
+        if (userId == null) {
+            return "redirect:/auth/login";
         }
 
-        Cart cart = cartService.getOrCreateCart(customer);
-        model.addAttribute("cart", cart);
+        User customer = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        CartSummaryView cartView = cartService.getCartSummaryForView(customer);
+
+        model.addAttribute("cartItems", cartView.items());
+        model.addAttribute("cartSubtotal", cartView.subtotal());
+        model.addAttribute("cartShipping", cartView.shipping());
+        model.addAttribute("cartTotal", cartView.total());
+
         return "cart";
     }
 
-    // Thêm sản phẩm vào giỏ
+    // ================== ADD ITEM ==================
     @PostMapping("/add")
     public String addToCart(
-            @AuthenticationPrincipal User customer,
-            @RequestParam Long shoeId,
-            @RequestParam int quantity
+            HttpSession session,
+            @RequestParam Long variantId,
+            @RequestParam int quantity,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes
     ) {
-        Shoes shoes = shoesRepository.findById(shoeId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm phù hợp"));
+        Long userId = (Long) session.getAttribute("USER_ID");
+        if (userId == null) {
+            return "redirect:/auth/login";
+        }
 
-        cartService.addItem(customer, shoes, quantity);
+        User customer = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        cartService.addItem(customer, variantId, quantity);
+
+        redirectAttributes.addFlashAttribute(
+                "successMessage",
+                "Đã thêm sản phẩm vào giỏ hàng thành công!"
+        );
         return "redirect:/cart";
     }
 
-    // Xóa 1 item khỏi giỏ
+    // ================== REMOVE ITEM ==================
     @PostMapping("/remove")
     public String removeItem(
-            @AuthenticationPrincipal User customer,
-            @RequestParam Long shoeId
+            HttpSession session,
+            @RequestParam Long cartItemId
     ) {
-        cartService.removeItem(customer, shoeId);
+        Long userId = (Long) session.getAttribute("USER_ID");
+        if (userId == null) {
+            return "redirect:/auth/login";
+        }
+
+        User customer = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        cartService.removeItem(customer, cartItemId);
+
+        return "redirect:/cart";
+    }
+
+    // ================== UPDATE QUANTITY ==================
+    @PostMapping("/update")
+    public String updateQuantity(
+            HttpSession session,
+            @RequestParam Long cartItemId,
+            @RequestParam String action
+    ) {
+        Long userId = (Long) session.getAttribute("USER_ID");
+        if (userId == null) {
+            return "redirect:/auth/login";
+        }
+
+        User customer = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if ("increase".equals(action)) {
+            cartService.increaseQuantity(customer, cartItemId);
+        } else if ("decrease".equals(action)) {
+            cartService.decreaseQuantity(customer, cartItemId);
+        }
         return "redirect:/cart";
     }
 }

@@ -6,6 +6,7 @@ import ecommerce.shoestore.shoes.dto.ShoesListDto;
 import ecommerce.shoestore.shoes.dto.ShoesSummaryDto;
 import ecommerce.shoestore.shoesimage.ShoesImage;
 import ecommerce.shoestore.shoesvariant.ShoesVariant;
+import ecommerce.shoestore.shoesvariant.ShoesVariantDto;
 import ecommerce.shoestore.shoesvariant.ShoesVariantRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.stream.Collectors;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -39,7 +41,7 @@ public class ShoesService {
     @Transactional(readOnly = true)
     public ShoesListDto getShoesList(int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size);
-        
+
         // Lấy danh sách sản phẩm từ database
         Page<Shoes> shoesPage = shoesRepository.findAllActive(pageable);
 
@@ -90,14 +92,13 @@ public class ShoesService {
     }
 
     // ========== PRIVATE METHODS ==========
-
     /**
      * Chuyển đổi Shoes -> ShoesSummaryDto (cho danh sách)
      */
     private ShoesSummaryDto convertToSummaryDto(Shoes shoes) {
         // Lấy ảnh thumbnail
         String thumbnailUrl = getThumbnailUrl(shoes);
-        
+
         // Kiểm tra hết hàng
         boolean outOfStock = isOutOfStock(shoes.getShoeId());
         
@@ -159,6 +160,21 @@ public class ShoesService {
             }
         }
 
+        List<ShoesSummaryDto> relatedProducts = getRelatedProducts(shoes);
+
+        List<ShoesVariantDto> variants = new ArrayList<>();
+
+        if (shoes.getVariants() != null && !shoes.getVariants().isEmpty()) {
+            for (ShoesVariant v : shoes.getVariants()) {
+                variants.add(ShoesVariantDto.builder()
+                        .variantId(v.getVariantId())
+                        .size(v.getSizeValue())
+                        .color(v.getColorValue())
+                        .stock(v.getStock())
+                        .build());
+            }
+        }
+
         return ShoesDetailDto.builder()
                 .shoeId(shoes.getShoeId())
                 .name(shoes.getName())
@@ -171,6 +187,7 @@ public class ShoesService {
                 .imageUrls(imageUrls)
                 .sizes(sizes)
                 .colors(colors)
+                .variants(variants)
                 .totalStock(totalStock)
                 .build();
     }

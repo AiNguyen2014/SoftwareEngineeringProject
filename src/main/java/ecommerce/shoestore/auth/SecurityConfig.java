@@ -20,6 +20,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+<<<<<<< HEAD
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 // PUBLIC - thêm /order/mock/**
@@ -52,6 +53,38 @@ public class SecurityConfig {
                 .permitAll()
             );
             
+=======
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session
+                        -> session.sessionFixation().none()
+                )
+                .authorizeHttpRequests(auth -> auth
+                // PUBLIC
+                .requestMatchers(
+                        "/", "/index", "/shoes", "/product/**",
+                        "/auth/**", "/user/**", "/cart/**",
+                        "/css/**", "/js/**", "/images/**",
+                        "/error"
+                ).permitAll()
+                // ADMIN
+                .requestMatchers("/admin/**").hasRole("ADMIN")
+                // CÒN LẠI PHẢI LOGIN
+                .anyRequest().authenticated()
+                )
+                .formLogin(form -> form
+                .loginPage("/auth/login")
+                .loginProcessingUrl("/j_spring_security_check")
+                .defaultSuccessUrl("/", true)
+                .failureUrl("/auth/login?error=true")
+                .permitAll()
+                )
+                .logout(logout -> logout
+                .logoutUrl("/auth/logout")
+                .logoutSuccessUrl("/auth/login?logout")
+                .permitAll()
+                );
+
+>>>>>>> main
         return http.build();
     }
 }

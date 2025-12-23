@@ -42,14 +42,18 @@
             </div>
 
             <!--Cart icon  -->
-            <a th:href="@{/cart}" class="nav-icon position-relative text-dark">
+            <a th:if="${role == null || role.toString() != 'ADMIN'}"
+            th:href="@{/cart}" class="nav-icon position-relative text-dark text-decoration-none">
+
                 <i class="fas fa-shopping-cart"></i>
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem">2</span>
+                <span th:if="${isLoggedIn != null && isLoggedIn && cartItemCount != null && cartItemCount > 0}" 
+                      class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" 
+                      style="font-size: 0.6rem" 
+                      th:text="${cartItemCount}">0</span>
             </a>
 
             <div th:if="${isLoggedIn == null or !isLoggedIn}" class="d-flex gap-2 align-items-center">
                 <a th:href="@{/auth/login}" class="btn btn-outline-dark btn-sm rounded-pill px-3">Đăng nhập</a>
-
                 <a th:href="@{/auth/register}" class="btn btn-outline-dark btn-sm rounded-pill px-3">Đăng ký</a>
             </div>
 
@@ -96,6 +100,8 @@
                     </li>
                 </ul>
             </div>
+
+
         </div>
     </div>
 </nav>
