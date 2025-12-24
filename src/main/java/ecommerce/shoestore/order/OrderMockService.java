@@ -55,7 +55,7 @@ public class OrderMockService {
         log1.setOrderId(orderId);
         log1.setOldStatus("NONE");
         log1.setNewStatus("WAITING_CONFIRMATION");
-        log1.setChangeAt(LocalDateTime.now().minusDays(5));
+        log1.setChangedAt(LocalDateTime.now().minusDays(5));
         log1.setChangedBy("System Auto");
         log1.setComment("Đơn hàng được tạo");
         trackingLogs.add(log1);

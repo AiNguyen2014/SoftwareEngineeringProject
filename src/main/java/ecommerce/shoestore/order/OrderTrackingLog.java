@@ -15,22 +15,22 @@ public class OrderTrackingLog {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "logid")
+    @Column(name = "\"logId\"")
     private Long logId;
     
-    @Column(name = "orderid", nullable = false)
+    @Column(name = "\"orderId\"", nullable = false)
     private Long orderId;
     
-    @Column(name = "oldstatus", length = 50)
+    @Column(name = "\"oldStatus\"", length = 50)
     private String oldStatus;
     
-    @Column(name = "newstatus", length = 50, nullable = false)
+    @Column(name = "\"newStatus\"", length = 50, nullable = false)
     private String newStatus;
     
-    @Column(name = "changeat", nullable = false)
-    private LocalDateTime changeAt;
+    @Column(name = "\"changedAt\"", nullable = false)
+    private LocalDateTime changedAt;
     
-    @Column(name = "changedby", nullable = false, length = 255)
+    @Column(name = "\"changedBy\"", nullable = false, length = 255)
     private String changedBy;
     
     @Column(name = "comment", columnDefinition = "TEXT")
@@ -38,6 +38,6 @@ public class OrderTrackingLog {
     
     @PrePersist
     protected void onCreate() {
-        this.changeAt = LocalDateTime.now();
+        this.changedAt = LocalDateTime.now();
     }
 }

@@ -118,48 +118,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Admin Actions (if user is admin) -->
-                        <div th:if="${session.ROLE?.name() == 'ADMIN'}" class="card shadow-sm">
-                            <div class="card-header">
-                                <h5 class="card-title mb-0">
-                                    <i class="bi bi-gear me-2"></i>
-                                    Quản lý đơn hàng
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <form th:action="@{/order/admin/update-status}" method="post">
-                                    <input type="hidden" name="orderId" th:value="${order.orderId}">
-                                    
-                                    <div class="mb-3">
-                                        <label for="newStatus" class="form-label">Trạng thái mới:</label>
-                                        <select class="form-select" id="newStatus" name="newStatus" required>
-                                            <option value="WAITING_PAYMENT">Chờ thanh toán</option>
-                                            <option value="PAID">Đã thanh toán</option>
-                                            <option value="WAITING_CONFIRMATION">Chờ xác nhận</option>
-                                            <option value="CONFIRMED">Đã xác nhận</option>
-                                            <option value="PACKING">Đang đóng gói</option>
-                                            <option value="SHIPPING">Đang giao hàng</option>
-                                            <option value="COMPLETE_DELIVERY">Giao hàng thành công</option>
-                                            <option value="CANCELED">Đã hủy</option>
-                                            <option value="REQUEST_REFUND">Yêu cầu hoàn tiền</option>
-                                            <option value="REFUND">Đã hoàn tiền</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label for="comment" class="form-label">Ghi chú (tùy chọn):</label>
-                                        <textarea class="form-control" id="comment" name="comment" rows="3" 
-                                                  placeholder="Nhập ghi chú về việc thay đổi trạng thái..."></textarea>
-                                    </div>
-                                    
-                                    <button type="submit" class="btn btn-primary w-100">
-                                        <i class="bi bi-check-circle me-1"></i>
-                                        Cập nhật trạng thái
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- Order Tracking Timeline -->

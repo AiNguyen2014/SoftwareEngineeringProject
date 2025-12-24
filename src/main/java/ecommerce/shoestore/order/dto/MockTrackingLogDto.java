@@ -18,7 +18,7 @@ public class MockTrackingLogDto {
     private Long orderId;
     private String oldStatus;
     private String newStatus;
-    private LocalDateTime changeAt; // đổi từ changedAt thành changeAt để match với database
+    private LocalDateTime changedAt; // đổi từ changeAt thành changedAt để match với database
     private String changedBy;
     private String comment;
     

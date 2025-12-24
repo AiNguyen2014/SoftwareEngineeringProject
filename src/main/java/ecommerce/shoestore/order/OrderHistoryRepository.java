@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface OrderHistoryRepository extends JpaRepository<OrderHistory, Long> {
+public interface OrderHistoryRepository extends JpaRepository<Order, Long> {
     
     // Tìm orders theo userId
     List<Order> findByUserIdOrderByCreateAtDesc(Long userId);
@@ -16,7 +16,7 @@ public interface OrderHistoryRepository extends JpaRepository<OrderHistory, Long
     Page<Order> findByUserIdOrderByCreateAtDesc(Long userId, Pageable pageable);
     
     // Tìm đơn hàng theo trạng thái  
-    List<Order> findByStatusOrderByCreateAtDesc(OrderStatus status);
+    List<Order> findByStatusOrderByCreateAtDesc(String status);
     
     // Tìm đơn hàng trong khoảng thời gian
     List<Order> findByCreateAtBetweenOrderByCreateAtDesc(java.time.LocalDateTime startDate, 

@@ -41,6 +41,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
+            .securityContext(context -> context
+                .requireExplicitSave(false)  // Tự động lưu SecurityContext vào session
+            )
             .sessionManagement(session
                     -> session.sessionFixation().none()
             )
@@ -51,7 +54,7 @@ public class SecurityConfig {
                         "/auth/**", "/user/**", "/cart/**",
                         "/css/**", "/js/**", "/images/**",
                         "/error",
-                        "/order/history", "/order/tracking/**" // Keep order pages access
+                        "/order/**" // Include all order pages
                 ).permitAll()
                 // ADMIN
                 .requestMatchers("/admin/**").hasRole("ADMIN")
@@ -64,6 +67,12 @@ public class SecurityConfig {
                 .defaultSuccessUrl("/", true)
                 .failureUrl("/auth/login?error=true")
                 .permitAll()
+            )
+            .exceptionHandling(exception -> exception
+                .authenticationEntryPoint((request, response, authException) -> {
+                    // Nếu chưa login và cố truy cập trang yêu cầu auth, redirect đến login
+                    response.sendRedirect("/auth/login");
+                })
             )
             .logout(logout -> logout
                 .logoutUrl("/auth/logout")

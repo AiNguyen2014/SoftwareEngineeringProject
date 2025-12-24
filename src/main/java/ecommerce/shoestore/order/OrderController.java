@@ -278,6 +278,11 @@ public class OrderController {
     public String createOrder(
             @RequestParam String paymentMethod,
             @RequestParam(required = false) String voucherCode,
+            @RequestParam(required = false) String recipientName,
+            @RequestParam(required = false) String recipientPhone,
+            @RequestParam(required = false) String recipientEmail,
+            @RequestParam(required = false) String recipientAddress,
+            @RequestParam(required = false) String note,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
         
@@ -291,16 +296,39 @@ public class OrderController {
                 return "redirect:/auth/login";
             }
             
-            // Lấy thông tin từ session
+            // Lấy thông tin từ session hoặc form
             String type = (String) session.getAttribute("SHIPPING_TYPE");
-            String recipientName = (String) session.getAttribute("SHIPPING_RECIPIENT_NAME");
-            String recipientPhone = (String) session.getAttribute("SHIPPING_RECIPIENT_PHONE");
-            String recipientEmail = (String) session.getAttribute("SHIPPING_RECIPIENT_EMAIL");
-            String recipientAddress = (String) session.getAttribute("SHIPPING_RECIPIENT_ADDRESS");
-            String note = (String) session.getAttribute("SHIPPING_NOTE");
+            if (type == null) {
+                type = "CART"; // Default to CART if not specified
+            }
+            
+            String finalRecipientName = (String) session.getAttribute("SHIPPING_RECIPIENT_NAME");
+            if (finalRecipientName == null) {
+                finalRecipientName = recipientName;
+            }
+            
+            String finalRecipientPhone = (String) session.getAttribute("SHIPPING_RECIPIENT_PHONE");
+            if (finalRecipientPhone == null) {
+                finalRecipientPhone = recipientPhone;
+            }
+            
+            String finalRecipientEmail = (String) session.getAttribute("SHIPPING_RECIPIENT_EMAIL");
+            if (finalRecipientEmail == null) {
+                finalRecipientEmail = recipientEmail;
+            }
+            
+            String finalRecipientAddress = (String) session.getAttribute("SHIPPING_RECIPIENT_ADDRESS");
+            if (finalRecipientAddress == null) {
+                finalRecipientAddress = recipientAddress;
+            }
+            
+            String finalNote = (String) session.getAttribute("SHIPPING_NOTE");
+            if (finalNote == null) {
+                finalNote = note;
+            }
             
             System.out.println("Type: " + type);
-            System.out.println("RecipientName: " + recipientName);
+            System.out.println("RecipientName: " + finalRecipientName);
             System.out.println("PaymentMethod: " + paymentMethod);
             System.out.println("VoucherCode: " + voucherCode);
             
@@ -316,8 +344,8 @@ public class OrderController {
                 
                 order = orderService.createOrderFromCart(
                         user.getUserId(),
-                        recipientName, recipientPhone, recipientEmail, recipientAddress,
-                        paymentMethod, note, cart
+                        finalRecipientName, finalRecipientPhone, finalRecipientEmail, finalRecipientAddress,
+                        paymentMethod, finalNote, cart
                 );
                 
             } else if ("BUY_NOW".equals(type)) {
@@ -327,8 +355,8 @@ public class OrderController {
                 
                 order = orderService.createOrderBuyNow(
                         user.getUserId(),
-                        recipientName, recipientPhone, recipientEmail, recipientAddress,
-                        paymentMethod, note,
+                        finalRecipientName, finalRecipientPhone, finalRecipientEmail, finalRecipientAddress,
+                        paymentMethod, finalNote,
                         variantId, quantity
                 );
                 
