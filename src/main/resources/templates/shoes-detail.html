@@ -38,7 +38,7 @@
                 </div>
 
                 <div class="thumb-list" th:if="${product.imageUrls != null and !#lists.isEmpty(product.imageUrls)}">
-                    <div class="thumb-item" th:each="img, stat : ${product.imageUrls}">
+                    <div class="thumb-item" th:each="img, stat : ${#sets.toSet(product.imageUrls)}">
                         <img th:src="${img}"
                              onclick="changeImage(this)"
                              th:classappend="${stat.index == 0} ? 'active'"
@@ -214,14 +214,14 @@
         // 1. Kiểm tra đã chọn size chưa
         const selectedVariant = document.querySelector('input[name="variantId"]:checked');
         if (!selectedVariant) {
-            alert('⚠️ Vui lòng chọn kích thước!');
+            alert('Vui lòng chọn kích thước!');
             return;
         }
 
         // 2. Lấy thông tin số lượng
         const quantity = document.getElementById('quantity').value;
         if (!quantity || parseInt(quantity) <= 0) {
-            alert('⚠️ Số lượng phải lớn hơn 0!');
+            alert('Số lượng phải lớn hơn 0!');
             return;
         }
 

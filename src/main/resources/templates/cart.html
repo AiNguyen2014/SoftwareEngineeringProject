@@ -13,6 +13,16 @@
 <div th:replace="~{fragments :: header}"></div>
 
 <main class="cart-page">
+    <!-- ================== NAVBAR (dùng CSS của bạn, KHÔNG Bootstrap) ================== -->
+<header>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-links">
+                <a class="nav-link" th:href="@{/}">Home</a> <a class="nav-link active" th:href="@{/cart}">Cart</a>
+            </div>
+        </div>
+    </nav>
+</header>
 
     <!-- SUCCESS MESSAGE -->
     <div class="alert alert-success"
@@ -166,11 +176,6 @@
 
 </main>
 
-<footer>
-    <div class="footer-bottom">
-        © 2025 WEBSHOE. All rights reserved.
-    </div>
-</footer>
 
 </body>
 
