@@ -12,6 +12,22 @@
 
 <div th:replace="~{fragments :: header}"></div>
 
+<header class="navbar-custom">
+    <nav class="container">
+        <div class="nav-container">
+            <a class="nav-brand" th:href="@{/}">
+                <i class="fas fa-gem"></i> WEBSHOE
+            </a>
+
+            <div class="nav-links">
+                <a class="nav-link" th:href="@{/}">Home</a>
+                <a class="nav-link active" th:href="@{/cart}">Cart</a>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<!-- ================== MAIN CART ================== -->
 <main class="cart-page">
 
     <!-- SUCCESS MESSAGE -->
