@@ -40,30 +40,28 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-<<<<<<< HEAD
             .csrf(csrf -> csrf.disable())
+            .sessionManagement(session
+                    -> session.sessionFixation().none()
+            )
             .authorizeHttpRequests(auth -> auth
-                // PUBLIC - thêm /order/mock/**
+                // PUBLIC
                 .requestMatchers(
-                    "/", "/index",
-                    "/auth/**",
-                    "/css/**", "/js/**", "/images/**",
-                    "/error",
-                    "/product/**",
-                    "/user/**",
-                    "/order/history", "/order/tracking/**" // Cho phép Order pages
+                        "/", "/index", "/shoes", "/product/**",
+                        "/auth/**", "/user/**", "/cart/**",
+                        "/css/**", "/js/**", "/images/**",
+                        "/error",
+                        "/order/history", "/order/tracking/**" // Keep order pages access
                 ).permitAll()
-
-                // ADMIN ONLY 
+                // ADMIN
                 .requestMatchers("/admin/**").hasRole("ADMIN")
-
-                // CÒN LẠI: CẦN LOGIN 
+                // Authentication required for other requests
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
                 .loginPage("/auth/login")
                 .loginProcessingUrl("/j_spring_security_check")
-                .defaultSuccessUrl("/")
+                .defaultSuccessUrl("/", true)
                 .failureUrl("/auth/login?error=true")
                 .permitAll()
             )
@@ -72,37 +70,7 @@ public class SecurityConfig {
                 .logoutSuccessUrl("/auth/login?logout")
                 .permitAll()
             );
-            
-=======
-                .csrf(csrf -> csrf.disable())
-                .securityContext(context -> context
-                    .requireExplicitSave(false)  // Tự động lưu SecurityContext vào session
-                )
-                .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/shoes", "/index", "/auth/**", "/css/**", "/js/**", "/images/**", "/error", "/product/**", "/user/**", "/cart/**", "/order/**").permitAll()
-                .requestMatchers("/admin/**").hasRole("ADMIN")
-                .anyRequest().authenticated()
-                )
-                .formLogin(form -> form
-                .loginPage("/auth/login")
-                .loginProcessingUrl("/j_spring_security_check")
-                .defaultSuccessUrl("/", true)
-                .failureUrl("/auth/login?error=true")
-                .permitAll()
-                )
-                .exceptionHandling(exception -> exception
-                .authenticationEntryPoint((request, response, authException) -> {
-                    // Nếu chưa login và cố truy cập trang yêu cầu auth, redirect đến login
-                    response.sendRedirect("/auth/login");
-                })
-                )
-                .logout(logout -> logout
-                .logoutUrl("/auth/logout")
-                .logoutSuccessUrl("/auth/login?logout")
-                .permitAll()
-                );
 
->>>>>>> main
         return http.build();
     }
 }
