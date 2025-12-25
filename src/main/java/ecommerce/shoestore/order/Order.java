@@ -22,17 +22,11 @@ public class Order {
     @Column(name = "\"userId\"", nullable = false)
     private Long userId;
     
-    @Column(name = "\"recipientName\"")
-    private String recipientName;
-    
-    @Column(name = "\"recipientPhone\"")
-    private String recipientPhone;
+    @Column(name = "\"orderAddressId\"")
+    private Long orderAddressId;
     
     @Column(name = "\"recipientEmail\"")
     private String recipientEmail;
-    
-    @Column(name = "\"recipientAddress\"", columnDefinition = "TEXT")
-    private String recipientAddress;
     
     @Column(name = "\"subTotal\"", nullable = false, columnDefinition = "numeric")
     private BigDecimal subTotal;

@@ -25,6 +25,7 @@ import java.util.List;
 public class OrderController {
     
     private final OrderService orderService;
+    private final OrderAddressService orderAddressService;
     private final UserRepository userRepository;
     private final CartRepository cartRepository;
     private final ShoesVariantRepository shoesVariantRepository;
@@ -87,6 +88,10 @@ public class OrderController {
         // Lấy thông tin để hiển thị trên form
         model.addAttribute("user", user);
         model.addAttribute("type", type);
+        
+        // Lấy danh sách địa chỉ đã lưu của user
+        List<OrderAddress> savedAddresses = orderAddressService.getUserAddresses(userId);
+        model.addAttribute("savedAddresses", savedAddresses);
         
         if ("CART".equals(type)) {
             System.out.println("Processing CART checkout");
@@ -164,11 +169,17 @@ public class OrderController {
             @RequestParam String type,
             @RequestParam(required = false) Long variantId,
             @RequestParam(required = false) Integer quantity,
-            @RequestParam String recipientName,
-            @RequestParam String recipientPhone,
+            @RequestParam(required = false) Long savedAddressId,
+            @RequestParam(required = false) String recipientName,
+            @RequestParam(required = false) String recipientPhone,
             @RequestParam(required = false) String recipientEmail,
-            @RequestParam String recipientAddress,
+            @RequestParam(required = false) String province,
+            @RequestParam(required = false) String district,
+            @RequestParam(required = false) String commune,
+            @RequestParam(required = false) String streetDetail,
             @RequestParam(required = false) String note,
+            @RequestParam(required = false) boolean saveAddress,
+            @RequestParam(required = false) boolean setAsDefault,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
         
@@ -177,12 +188,43 @@ public class OrderController {
             return "redirect:/auth/login";
         }
         
+        Long addressId;
+        
+        // Nếu chọn địa chỉ có sẵn
+        if (savedAddressId != null) {
+            addressId = savedAddressId;
+        } 
+        // Nếu nhập địa chỉ mới
+        else if (recipientName != null && !recipientName.isBlank()) {
+            OrderAddress newAddress = new OrderAddress();
+            newAddress.setUserId(userId);
+            newAddress.setRecipientName(recipientName);
+            newAddress.setRecipientPhone(recipientPhone);
+            newAddress.setProvince(province);
+            newAddress.setDistrict(district);
+            newAddress.setCommune(commune);
+            newAddress.setStreetDetail(streetDetail);
+            newAddress.setIsDefault(setAsDefault);
+            
+            // Chỉ lưu vào database nếu user chọn "Lưu địa chỉ"
+            if (saveAddress) {
+                newAddress = orderAddressService.saveAddress(newAddress);
+            } else {
+                // Tạo temporary address (không lưu vào DB)
+                newAddress.setAddressId(-1L); // Temporary ID
+            }
+            
+            addressId = newAddress.getAddressId();
+        } else {
+            redirectAttributes.addFlashAttribute("error", "Vui lòng chọn hoặc nhập địa chỉ giao hàng");
+            return "redirect:/order/checkout?type=" + type + 
+                   (variantId != null ? "&variantId=" + variantId + "&quantity=" + quantity : "");
+        }
+        
         // Lưu thông tin vào session
         session.setAttribute("SHIPPING_TYPE", type);
-        session.setAttribute("SHIPPING_RECIPIENT_NAME", recipientName);
-        session.setAttribute("SHIPPING_RECIPIENT_PHONE", recipientPhone);
+        session.setAttribute("SHIPPING_ADDRESS_ID", addressId);
         session.setAttribute("SHIPPING_RECIPIENT_EMAIL", recipientEmail);
-        session.setAttribute("SHIPPING_RECIPIENT_ADDRESS", recipientAddress);
         session.setAttribute("SHIPPING_NOTE", note);
         
         if ("BUY_NOW".equals(type)) {
@@ -192,6 +234,73 @@ public class OrderController {
         
         // Redirect sang trang thanh toán
         return "redirect:/order/payment";
+    }
+    
+    /**
+     * API endpoint để thêm địa chỉ mới (AJAX)
+     */
+    @PostMapping("/address/add")
+    @ResponseBody
+    public OrderAddress addAddress(
+            @RequestParam String recipientName,
+            @RequestParam String recipientPhone,
+            @RequestParam String province,
+            @RequestParam String district,
+            @RequestParam String commune,
+            @RequestParam String streetDetail,
+            @RequestParam(required = false) boolean setAsDefault,
+            HttpSession session) {
+        
+        Long userId = (Long) session.getAttribute("USER_ID");
+        if (userId == null) {
+            throw new RuntimeException("User not logged in");
+        }
+        
+        OrderAddress address = new OrderAddress();
+        address.setUserId(userId);
+        address.setRecipientName(recipientName);
+        address.setRecipientPhone(recipientPhone);
+        address.setProvince(province);
+        address.setDistrict(district);
+        address.setCommune(commune);
+        address.setStreetDetail(streetDetail);
+        address.setIsDefault(setAsDefault);
+        
+        return orderAddressService.saveAddress(address);
+    }
+    
+    /**
+     * API endpoint để xóa địa chỉ (AJAX)
+     */
+    @DeleteMapping("/address/{addressId}")
+    @ResponseBody
+    public void deleteAddress(
+            @PathVariable Long addressId,
+            HttpSession session) {
+        
+        Long userId = (Long) session.getAttribute("USER_ID");
+        if (userId == null) {
+            throw new RuntimeException("User not logged in");
+        }
+        
+        orderAddressService.deleteAddress(addressId, userId);
+    }
+    
+    /**
+     * API endpoint để đặt địa chỉ mặc định (AJAX)
+     */
+    @PostMapping("/address/{addressId}/set-default")
+    @ResponseBody
+    public void setDefaultAddress(
+            @PathVariable Long addressId,
+            HttpSession session) {
+        
+        Long userId = (Long) session.getAttribute("USER_ID");
+        if (userId == null) {
+            throw new RuntimeException("User not logged in");
+        }
+        
+        orderAddressService.setDefaultAddress(addressId, userId);
     }
 
     /**
@@ -208,7 +317,9 @@ public class OrderController {
         
         // Kiểm tra có thông tin shipping không
         String type = (String) session.getAttribute("SHIPPING_TYPE");
-        if (type == null) {
+        Long addressId = (Long) session.getAttribute("SHIPPING_ADDRESS_ID");
+        
+        if (type == null || addressId == null) {
             redirectAttributes.addFlashAttribute("error", "Vui lòng nhập thông tin giao hàng trước");
             return "redirect:/order/checkout?type=CART";
         }
@@ -216,10 +327,13 @@ public class OrderController {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy thông tin người dùng"));
         
-        // Lấy thông tin shipping từ session
-        model.addAttribute("recipientName", session.getAttribute("SHIPPING_RECIPIENT_NAME"));
-        model.addAttribute("recipientPhone", session.getAttribute("SHIPPING_RECIPIENT_PHONE"));
-        model.addAttribute("recipientAddress", session.getAttribute("SHIPPING_RECIPIENT_ADDRESS"));
+        // Lấy thông tin địa chỉ
+        OrderAddress address = orderAddressService.getAddressById(addressId);
+        if (address != null) {
+            model.addAttribute("recipientName", address.getRecipientName());
+            model.addAttribute("recipientPhone", address.getRecipientPhone());
+            model.addAttribute("recipientAddress", address.getFullAddress());
+        }
         model.addAttribute("type", type);
         
         // Tính tổng tiền
@@ -293,14 +407,12 @@ public class OrderController {
             
             // Lấy thông tin từ session
             String type = (String) session.getAttribute("SHIPPING_TYPE");
-            String recipientName = (String) session.getAttribute("SHIPPING_RECIPIENT_NAME");
-            String recipientPhone = (String) session.getAttribute("SHIPPING_RECIPIENT_PHONE");
+            Long addressId = (Long) session.getAttribute("SHIPPING_ADDRESS_ID");
             String recipientEmail = (String) session.getAttribute("SHIPPING_RECIPIENT_EMAIL");
-            String recipientAddress = (String) session.getAttribute("SHIPPING_RECIPIENT_ADDRESS");
             String note = (String) session.getAttribute("SHIPPING_NOTE");
             
             System.out.println("Type: " + type);
-            System.out.println("RecipientName: " + recipientName);
+            System.out.println("AddressId: " + addressId);
             System.out.println("PaymentMethod: " + paymentMethod);
             System.out.println("VoucherCode: " + voucherCode);
             
@@ -315,8 +427,7 @@ public class OrderController {
                         .orElseThrow(() -> new RuntimeException("Giỏ hàng trống"));
                 
                 order = orderService.createOrderFromCart(
-                        user.getUserId(),
-                        recipientName, recipientPhone, recipientEmail, recipientAddress,
+                        user.getUserId(), addressId, recipientEmail,
                         paymentMethod, note, cart
                 );
                 
@@ -326,10 +437,8 @@ public class OrderController {
                 Integer quantity = (Integer) session.getAttribute("SHIPPING_QUANTITY");
                 
                 order = orderService.createOrderBuyNow(
-                        user.getUserId(),
-                        recipientName, recipientPhone, recipientEmail, recipientAddress,
-                        paymentMethod, note,
-                        variantId, quantity
+                        user.getUserId(), addressId, recipientEmail,
+                        paymentMethod, note, variantId, quantity
                 );
                 
             } else {
@@ -338,10 +447,8 @@ public class OrderController {
             
             // Xóa session shipping data
             session.removeAttribute("SHIPPING_TYPE");
-            session.removeAttribute("SHIPPING_RECIPIENT_NAME");
-            session.removeAttribute("SHIPPING_RECIPIENT_PHONE");
+            session.removeAttribute("SHIPPING_ADDRESS_ID");
             session.removeAttribute("SHIPPING_RECIPIENT_EMAIL");
-            session.removeAttribute("SHIPPING_RECIPIENT_ADDRESS");
             session.removeAttribute("SHIPPING_NOTE");
             session.removeAttribute("SHIPPING_VARIANT_ID");
             session.removeAttribute("SHIPPING_QUANTITY");
@@ -372,6 +479,12 @@ public class OrderController {
         
         Order order = orderService.getOrderById(orderId);
         List<OrderItem> orderItems = orderService.getOrderItems(orderId);
+        
+        // Lấy thông tin địa chỉ
+        if (order.getOrderAddressId() != null) {
+            OrderAddress address = orderAddressService.getAddressById(order.getOrderAddressId());
+            model.addAttribute("orderAddress", address);
+        }
         
         model.addAttribute("order", order);
         model.addAttribute("orderItems", orderItems);

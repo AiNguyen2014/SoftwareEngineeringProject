@@ -212,24 +212,40 @@
                 <div class="info-value" th:text="${#temporals.format(order.createAt, 'dd/MM/yyyy HH:mm')}"></div>
             </div>
             
-            <div class="info-row">
-                <div class="info-label">Người nhận:</div>
-                <div class="info-value" th:text="${order.recipientName}"></div>
+            <!-- Hiển thị thông tin từ OrderAddress -->
+            <div th:if="${orderAddress != null}">
+                <div class="info-row">
+                    <div class="info-label">Người nhận:</div>
+                    <div class="info-value" th:text="${orderAddress.recipientName}"></div>
+                </div>
+                
+                <div class="info-row">
+                    <div class="info-label">Số điện thoại:</div>
+                    <div class="info-value" th:text="${orderAddress.recipientPhone}"></div>
+                </div>
+                
+                <div class="info-row" th:if="${order.recipientEmail}">
+                    <div class="info-label">Email:</div>
+                    <div class="info-value" th:text="${order.recipientEmail}"></div>
+                </div>
+                
+                <div class="info-row">
+                    <div class="info-label">Địa chỉ:</div>
+                    <div class="info-value" th:text="${orderAddress.fullAddress}"></div>
+                </div>
             </div>
             
-            <div class="info-row">
-                <div class="info-label">Số điện thoại:</div>
-                <div class="info-value" th:text="${order.recipientPhone}"></div>
-            </div>
-            
-            <div class="info-row" th:if="${order.recipientEmail}">
-                <div class="info-label">Email:</div>
-                <div class="info-value" th:text="${order.recipientEmail}"></div>
-            </div>
-            
-            <div class="info-row">
-                <div class="info-label">Địa chỉ:</div>
-                <div class="info-value" th:text="${order.recipientAddress}"></div>
+            <!-- Fallback nếu không có orderAddress -->
+            <div th:if="${orderAddress == null}">
+                <div class="info-row">
+                    <div class="info-label">Thông tin giao hàng:</div>
+                    <div class="info-value">Không có thông tin địa chỉ</div>
+                </div>
+                
+                <div class="info-row" th:if="${order.recipientEmail}">
+                    <div class="info-label">Email:</div>
+                    <div class="info-value" th:text="${order.recipientEmail}"></div>
+                </div>
             </div>
             
             <div class="info-row">

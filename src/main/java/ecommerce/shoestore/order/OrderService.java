@@ -24,8 +24,7 @@ public class OrderService {
     private static final BigDecimal SHIPPING_FEE = new BigDecimal("30000");
     
     @Transactional
-    public Order createOrderFromCart(Long userId, String recipientName, String recipientPhone, 
-                                     String recipientEmail, String recipientAddress, 
+    public Order createOrderFromCart(Long userId, Long addressId, String recipientEmail,
                                      String paymentMethod, String note, Cart cart) {
         
         // Tính subTotal từ cart
@@ -45,10 +44,8 @@ public class OrderService {
         // Tạo Order
         Order order = new Order();
         order.setUserId(userId);
-        order.setRecipientName(recipientName);
-        order.setRecipientPhone(recipientPhone);
+        order.setOrderAddressId(addressId);
         order.setRecipientEmail(recipientEmail);
-        order.setRecipientAddress(recipientAddress);
         order.setSubTotal(subTotal);
         order.setShippingFee(SHIPPING_FEE);
         order.setDiscountAmount(discountAmount);
@@ -84,8 +81,7 @@ public class OrderService {
     }
     
     @Transactional
-    public Order createOrderBuyNow(Long userId, String recipientName, String recipientPhone,
-                                   String recipientEmail, String recipientAddress,
+    public Order createOrderBuyNow(Long userId, Long addressId, String recipientEmail,
                                    String paymentMethod, String note,
                                    Long variantId, Integer quantity) {
         
@@ -105,10 +101,8 @@ public class OrderService {
         // Tạo Order
         Order order = new Order();
         order.setUserId(userId);
-        order.setRecipientName(recipientName);
-        order.setRecipientPhone(recipientPhone);
+        order.setOrderAddressId(addressId);
         order.setRecipientEmail(recipientEmail);
-        order.setRecipientAddress(recipientAddress);
         order.setSubTotal(subTotal);
         order.setShippingFee(SHIPPING_FEE);
         order.setDiscountAmount(discountAmount);

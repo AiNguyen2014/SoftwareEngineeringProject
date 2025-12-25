@@ -33,8 +33,169 @@
             top: 2rem;
         }
         
-        .form-group {
+        .progress-steps {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+            gap: 2rem;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .step-number {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #ddd;
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+        
+        .step.active .step-number {
+            background: #e53935;
+            color: white;
+        }
+        
+        /* Address Selection Styles */
+        .address-section {
+            margin-bottom: 2rem;
+        }
+        
+        .address-section h3 {
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .btn-add-address {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .btn-add-address:hover {
+            background: #45a049;
+        }
+        
+        .saved-addresses {
+            display: grid;
+            gap: 1rem;
             margin-bottom: 1.5rem;
+        }
+        
+        .address-card {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .address-card:hover {
+            border-color: #e53935;
+            box-shadow: 0 2px 8px rgba(229, 57, 53, 0.2);
+        }
+        
+        .address-card input[type="radio"] {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+        }
+        
+        .address-card.selected {
+            border-color: #e53935;
+            background: #fff5f5;
+        }
+        
+        .address-card-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        
+        .address-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .address-phone {
+            color: #666;
+        }
+        
+        .address-detail {
+            color: #444;
+            line-height: 1.6;
+        }
+        
+        .default-badge {
+            display: inline-block;
+            background: #e53935;
+            color: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+        }
+        
+        .address-actions {
+            margin-top: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .btn-set-default, .btn-delete-address {
+            font-size: 0.85rem;
+            padding: 0.25rem 0.75rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .btn-set-default {
+            background: #2196F3;
+            color: white;
+        }
+        
+        .btn-delete-address {
+            background: #f44336;
+            color: white;
+        }
+        
+        /* New Address Form */
+        .new-address-form {
+            display: none;
+            border: 2px solid #e53935;
+            border-radius: 8px;
+            padding: 1.5rem;
+            background: #fffafalse
+            margin-bottom: 1.5rem;
+        }
+        
+        .new-address-form.active {
+            display: block;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
         }
         
         .form-group label {
@@ -45,7 +206,8 @@
         }
         
         .form-group input,
-        .form-group textarea {
+        .form-group textarea,
+        .form-group select {
             width: 100%;
             padding: 0.75rem;
             border: 1px solid #ddd;
@@ -54,7 +216,7 @@
         }
         
         .form-group textarea {
-            min-height: 100px;
+            min-height: 80px;
             resize: vertical;
         }
         
@@ -62,6 +224,40 @@
             color: red;
         }
         
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+        
+        .btn-submit {
+            width: 100%;
+            padding: 1rem;
+            background: #e53935;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1.5rem;
+        }
+        
+        .btn-submit:hover {
+            background: #c62828;
+        }
+        
+        .btn-submit:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        /* Summary styles */
         .summary-item {
             display: flex;
             align-items: center;
@@ -110,55 +306,12 @@
             margin-top: 1rem;
         }
         
-        .btn-submit {
-            width: 100%;
-            padding: 1rem;
-            background: #e53935;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 1.5rem;
-        }
-        
-        .btn-submit:hover {
-            background: #c62828;
-        }
-        
-        .progress-steps {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 2rem;
-            gap: 2rem;
-        }
-        
-        .step {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .step-number {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background: #ddd;
-            color: #666;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-        }
-        
-        .step.active .step-number {
-            background: #e53935;
-            color: white;
-        }
-        
         @media (max-width: 768px) {
             .checkout-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
                 grid-template-columns: 1fr;
             }
         }
@@ -184,35 +337,116 @@
             
             <h2>Thông tin nhận hàng</h2>
             
-            <form action="/order/shipping" method="POST">
+            <form id="shippingForm" action="/order/shipping" method="POST">
                 <input type="hidden" name="type" th:value="${type}">
                 <input type="hidden" name="variantId" th:value="${variantId}">
                 <input type="hidden" name="quantity" th:value="${quantity}">
                 
-                <div class="form-group">
-                    <label>Họ và tên <span class="required">*</span></label>
-                    <input type="text" name="recipientName" required 
-                           th:value="${user.fullname}">
+                <!-- Địa chỉ đã lưu -->
+                <div class="address-section" th:if="${!savedAddresses.empty}">
+                    <h3>
+                        Chọn địa chỉ nhận hàng
+                        <button type="button" class="btn-add-address" onclick="showNewAddressForm()">
+                            + Thêm địa chỉ mới
+                        </button>
+                    </h3>
+                    
+                    <div class="saved-addresses">
+                        <div th:each="addr : ${savedAddresses}" 
+                             class="address-card"
+                             th:classappend="${addr.isDefault} ? 'selected' : ''"
+                             onclick="selectAddress(this)">
+                            <input type="radio" name="savedAddressId" 
+                                   th:value="${addr.addressId}"
+                                   th:checked="${addr.isDefault}"
+                                   onchange="toggleNewAddressForm(false)">
+                            <div class="address-card-header">
+                                <div>
+                                    <span class="address-name" th:text="${addr.recipientName}"></span>
+                                    <span class="default-badge" th:if="${addr.isDefault}">Mặc định</span>
+                                </div>
+                                <span class="address-phone" th:text="${addr.recipientPhone}"></span>
+                            </div>
+                            <div class="address-detail" th:text="${addr.fullAddress}"></div>
+                            <div class="address-actions" th:if="${!addr.isDefault}">
+                                <button type="button" class="btn-set-default" 
+                                        th:onclick="'setDefaultAddress(' + ${addr.addressId} + ')'">
+                                    Đặt làm mặc định
+                                </button>
+                                <button type="button" class="btn-delete-address" 
+                                        th:onclick="'deleteAddress(' + ${addr.addressId} + ')'">
+                                    Xóa
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="form-group">
-                    <label>Số điện thoại <span class="required">*</span></label>
-                    <input type="tel" name="recipientPhone" required 
-                           pattern="[0-9]{10,11}"
-                           th:value="${user.phone}"
-                           placeholder="0912345678">
-                </div>
-                
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" name="recipientEmail" 
-                           th:value="${user.email}">
-                </div>
-                
-                <div class="form-group">
-                    <label>Địa chỉ nhận hàng <span class="required">*</span></label>
-                    <textarea name="recipientAddress" required 
-                              placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố"></textarea>
+                <!-- Form thêm địa chỉ mới -->
+                <div id="newAddressForm" class="new-address-form" 
+                     th:classappend="${savedAddresses.empty} ? 'active' : ''">
+                    <h3 style="margin-bottom: 1.5rem;">
+                        <span th:text="${savedAddresses.empty} ? 'Thêm địa chỉ nhận hàng' : 'Địa chỉ nhận hàng mới'"></span>
+                    </h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Họ và tên <span class="required">*</span></label>
+                            <input type="text" name="recipientName" 
+                                   th:value="${user.fullname}"
+                                   id="recipientName">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Số điện thoại <span class="required">*</span></label>
+                            <input type="tel" name="recipientPhone" 
+                                   pattern="[0-9]{10,11}"
+                                   th:value="${user.phone}"
+                                   id="recipientPhone"
+                                   placeholder="0912345678">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Tỉnh/Thành phố <span class="required">*</span></label>
+                            <input type="text" name="province" id="province" placeholder="VD: Hồ Chí Minh">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Quận/Huyện <span class="required">*</span></label>
+                            <input type="text" name="district" id="district" placeholder="VD: Quận 1">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Phường/Xã <span class="required">*</span></label>
+                            <input type="text" name="commune" id="commune" placeholder="VD: Phường Bến Nghé">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" name="recipientEmail" 
+                                   th:value="${user.email}">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Địa chỉ chi tiết <span class="required">*</span></label>
+                        <textarea name="streetDetail" id="streetDetail"
+                                  placeholder="Số nhà, tên đường..."></textarea>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <input type="checkbox" name="saveAddress" id="saveAddress" value="true">
+                        <label for="saveAddress" style="margin: 0;">Lưu địa chỉ này để dùng cho lần sau</label>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <input type="checkbox" name="setAsDefault" id="setAsDefault" value="true">
+                        <label for="setAsDefault" style="margin: 0;">Đặt làm địa chỉ mặc định</label>
+                    </div>
                 </div>
                 
                 <div class="form-group">
@@ -284,6 +518,109 @@
             </div>
         </div>
     </div>
+    
+    <script>
+        function selectAddress(card) {
+            // Remove selected class from all cards
+            document.querySelectorAll('.address-card').forEach(c => c.classList.remove('selected'));
+            // Add selected class to clicked card
+            card.classList.add('selected');
+            // Check the radio button
+            card.querySelector('input[type="radio"]').checked = true;
+            // Hide new address form
+            toggleNewAddressForm(false);
+        }
+        
+        function showNewAddressForm() {
+            // Uncheck all saved addresses
+            document.querySelectorAll('.address-card input[type="radio"]').forEach(r => r.checked = false);
+            document.querySelectorAll('.address-card').forEach(c => c.classList.remove('selected'));
+            // Show new address form
+            toggleNewAddressForm(true);
+        }
+        
+        function toggleNewAddressForm(show) {
+            const form = document.getElementById('newAddressForm');
+            const inputs = form.querySelectorAll('input, textarea');
+            
+            if (show) {
+                form.classList.add('active');
+                inputs.forEach(input => {
+                    if (input.name !== 'recipientEmail' && input.name !== 'note' && 
+                        input.type !== 'checkbox' && input.id !== 'saveAddress' && 
+                        input.id !== 'setAsDefault') {
+                        input.setAttribute('required', 'required');
+                    }
+                });
+            } else {
+                form.classList.remove('active');
+                inputs.forEach(input => input.removeAttribute('required'));
+            }
+        }
+        
+        async function setDefaultAddress(addressId) {
+            try {
+                const response = await fetch(`/order/address/${addressId}/set-default`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Không thể đặt địa chỉ mặc định');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra');
+            }
+        }
+        
+        async function deleteAddress(addressId) {
+            if (!confirm('Bạn có chắc muốn xóa địa chỉ này?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/order/address/${addressId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Không thể xóa địa chỉ');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra');
+            }
+        }
+        
+        // Form validation
+        document.getElementById('shippingForm').addEventListener('submit', function(e) {
+            const savedAddressSelected = document.querySelector('input[name="savedAddressId"]:checked');
+            const newAddressFormActive = document.getElementById('newAddressForm').classList.contains('active');
+            
+            if (!savedAddressSelected && !newAddressFormActive) {
+                e.preventDefault();
+                alert('Vui lòng chọn địa chỉ nhận hàng hoặc nhập địa chỉ mới');
+                return false;
+            }
+            
+            if (newAddressFormActive) {
+                const requiredFields = ['recipientName', 'recipientPhone', 'province', 'district', 'commune', 'streetDetail'];
+                for (let field of requiredFields) {
+                    const input = document.getElementById(field);
+                    if (!input.value.trim()) {
+                        e.preventDefault();
+                        alert(`Vui lòng nhập ${input.previousElementSibling.textContent.replace(' *', '')}`);
+                        input.focus();
+                        return false;
+                    }
+                }
+            }
+        });
+    </script>
     
     <div th:replace="~{fragments :: footer}"></div>
 </body>
