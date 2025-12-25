@@ -16,7 +16,7 @@
     <groupId>com.shoestore</groupId>
     <artifactId>webshoe</artifactId>
     <version>1.0.0</version>
-    <packaging>war</packaging>
+    <packaging>jar</packaging>
     <name>WebShoe</name>
     <description>Web application for viewing shoe products</description>
 
@@ -150,6 +150,9 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>ecommerce.shoestore.BackendApplication</mainClass>
+                </configuration>
             </plugin>
         </plugins>
     </build>

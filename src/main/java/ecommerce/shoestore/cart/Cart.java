@@ -17,11 +17,11 @@ public class Cart {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "\"cartId\"")
+    @Column(name = "cartId")
     private Long cartId;
 
     @ManyToOne
-    @JoinColumn(name = "\"userId\"", nullable = false)
+    @JoinColumn(name = "userId", nullable = false)
     private User customer;
 
     @OneToMany(
