@@ -53,9 +53,8 @@ public class OrderService {
         order.setShippingFee(SHIPPING_FEE);
         order.setDiscountAmount(discountAmount);
         order.setTotalAmount(totalAmount);
-        // Map form values to database enum: COD->CASH, TRANSFER->EWALLET
-        String dbPaymentMethod = "COD".equals(paymentMethod) ? "CASH" : "EWALLET";
-        order.setPaymentMethod(dbPaymentMethod);
+        // Use payment method value directly from form (COD or TRANSFER)
+        order.setPaymentMethod(paymentMethod);
         order.setNote(note);
         order.setStatus("PENDING");
         
@@ -114,9 +113,8 @@ public class OrderService {
         order.setShippingFee(SHIPPING_FEE);
         order.setDiscountAmount(discountAmount);
         order.setTotalAmount(totalAmount);
-        // Map form values to database enum: COD->CASH, TRANSFER->EWALLET
-        String dbPaymentMethod = "COD".equals(paymentMethod) ? "CASH" : "EWALLET";
-        order.setPaymentMethod(dbPaymentMethod);
+        // Use payment method value directly from form (COD or TRANSFER)
+        order.setPaymentMethod(paymentMethod);
         order.setNote(note);
         order.setStatus("PENDING");
         
