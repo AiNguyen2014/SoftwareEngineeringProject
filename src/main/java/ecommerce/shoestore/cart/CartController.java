@@ -10,15 +10,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.security.core.Authentication;
 import ecommerce.shoestore.cart.dto.CartSummaryView;
-import ecommerce.shoestore.shoes.Shoes;
-import ecommerce.shoestore.shoes.ShoesRepository;
-
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/cart")
-
 public class CartController {
 
     private final CartService cartService;
@@ -111,6 +106,7 @@ public class CartController {
         } else if ("decrease".equals(action)) {
             cartService.decreaseQuantity(customer, cartItemId);
         }
+
         return "redirect:/cart";
     }
 }

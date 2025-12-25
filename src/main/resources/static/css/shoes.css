@@ -209,33 +209,12 @@
     letter-spacing: 0.5px;
 }
 
-.badge-soldout {
-    padding: 6px 14px;
-    background: #757575;
-    color: white;
-    font-size: 0.7rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    border-radius: 6px;
-    letter-spacing: 0.5px;
-}
-
 .badge-pink {
     background: #E91E63;
 }
 
 .badge-green {
     background: #4CAF50;
-}
-
-/* Out of Stock Card Style */
-.product-card.out-of-stock .product-img-wrap img {
-    opacity: 0.6;
-    filter: grayscale(30%);
-}
-
-.product-card.out-of-stock .product-title {
-    color: var(--text-gray);
 }
 
 /* Product Info */
@@ -547,25 +526,52 @@
     box-shadow: 0 6px 20px rgba(0,102,204,0.4);
 }
 
-/* Disabled button style */
-.btn-add-cart.btn-disabled,
-.btn-add-cart:disabled {
-    background: #9E9E9E;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
+/* Nút Mua Ngay */
+.btn-buy-now {
+    width: 100%;
+    padding: 18px 32px;
+    background: linear-gradient(135deg, #FF6B35 0%, #FF4500 100%);
+    color: white;
+    font-weight: 700;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
-.btn-add-cart.btn-disabled:hover,
-.btn-add-cart:disabled:hover {
-    background: #9E9E9E;
-    transform: none;
-    box-shadow: none;
+.btn-buy-now:hover {
+    background: linear-gradient(135deg, #FF4500 0%, #CC3700 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(255, 107, 53, 0.5);
 }
 
-.quantity-selector.disabled {
-    opacity: 0.5;
-    pointer-events: none;
+.btn-buy-now:active {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+}
+
+.btn-buy-now i {
+    font-size: 1.2rem;
+    animation: bolt-pulse 2s infinite;
+}
+
+@keyframes bolt-pulse {
+    0%, 100% { 
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% { 
+        transform: scale(1.2);
+        opacity: 0.8;
+    }
 }
 
 /* Product Details Section */

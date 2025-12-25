@@ -7,7 +7,6 @@ import ecommerce.shoestore.cartitem.CartItem;
 import ecommerce.shoestore.cartitem.CartItemRepository;
 import ecommerce.shoestore.shoesvariant.ShoesVariant;
 import ecommerce.shoestore.shoesvariant.ShoesVariantRepository;
-import ecommerce.shoestore.shoes.Shoes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -127,7 +126,12 @@ public class CartService {
     public CartSummaryView getCartSummaryForView(User user) {
 
         Cart cart = cartRepository.findCartWithItems(user)
-                .orElseGet(() -> cartRepository.save(new Cart(user)));
+                .orElse(null);
+
+        // Nếu không có cart, return empty cart summary (không tạo mới trong read-only transaction)
+        if (cart == null) {
+            return new CartSummaryView(List.of(), BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);
+        }
 
         List<CartItemView> items = cart.getItems().stream().map(item -> {
 
@@ -148,8 +152,8 @@ public class CartService {
                     variant.getVariantId(),
                     shoes.getName(),
                     shoes.getBrand(),
-                    variant.getColor() != null ? variant.getColor().name() : null,
-                    variant.getSize() != null ? variant.getSize().name() : null,
+                    variant.getColor().name(),
+                    variant.getSize().name(),
                     imageUrl,
                     item.getUnitPrice(),
                     item.getQuantity(),
@@ -165,6 +169,12 @@ public class CartService {
         BigDecimal total = cartSubtotal.add(shipping);
 
         return new CartSummaryView(items, cartSubtotal, shipping, total);
+    }
 
+    // ================== GET OR CREATE CART ==================
+    @Transactional
+    public Cart getOrCreateCart(User user) {
+        return cartRepository.findByCustomer(user)
+                .orElseGet(() -> cartRepository.save(new Cart(user)));
     }
 }

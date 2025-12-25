@@ -30,24 +30,13 @@ public interface ShoesRepository extends JpaRepository<Shoes, Long> {
             + "WHERE s.shoeId IN :shoeIds")
     java.util.List<Shoes> findAllWithDetailsByIds(@Param("shoeIds") java.util.List<Long> shoeIds);
 
-    // Lấy danh sách sản phẩm đang bán
-    @Query("SELECT s FROM Shoes s WHERE s.status = true")
-    Page<Shoes> findAllActive(Pageable pageable);
+    @Query("SELECT s FROM Shoes s " +
+           "LEFT JOIN FETCH s.category " +
+           "LEFT JOIN FETCH s.images " +
+           "LEFT JOIN FETCH s.variants " +
+           "WHERE s.shoeId = :shoeId")
+    Optional<Shoes> findByIdWithDetails(@Param("shoeId") Long shoeId);
 
-    // Lấy chi tiết sản phẩm với IMAGES (tách riêng để tránh Cartesian product)
-    @Query("SELECT s FROM Shoes s "
-            + "LEFT JOIN FETCH s.category "
-            + "LEFT JOIN FETCH s.images "
-            + "WHERE s.shoeId = :shoeId")
-    Optional<Shoes> findByIdWithImages(@Param("shoeId") Long shoeId);
-
-    // Lấy chi tiết sản phẩm với VARIANTS (tách riêng để tránh Cartesian product)
-    @Query("SELECT s FROM Shoes s "
-            + "LEFT JOIN FETCH s.variants "
-            + "WHERE s.shoeId = :shoeId")
-    Optional<Shoes> findByIdWithVariants(@Param("shoeId") Long shoeId);
-
-    // Lấy sản phẩm liên quan (cùng category)
     @Query("SELECT s FROM Shoes s "
             + "LEFT JOIN FETCH s.images "
             + "WHERE s.category.categoryId = :categoryId "

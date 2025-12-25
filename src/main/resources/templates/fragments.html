@@ -35,13 +35,13 @@
             </ul>
         </div>
 
-        
         <div class="d-flex gap-3 align-items-center">
             <div class="nav-icon">
                 <i class="fas fa-search"></i>
             </div>
 
             <!--Cart icon  -->
+
             <a th:if="${role == null || role.toString() != 'ADMIN'}"
             th:href="@{/cart}" class="nav-icon position-relative text-dark text-decoration-none">
 

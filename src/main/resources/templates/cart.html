@@ -4,33 +4,25 @@
     <meta charset="UTF-8"/>
     <title>Giỏ hàng | WEBSHOE</title>
 
-    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <th:block th:replace="~{fragments :: head_header}"></th:block>
     <link rel="stylesheet" th:href="@{/css/cart.css}">
-
-    <script src="https://kit.fontawesome.com/a2c9b6c4b1.js" crossorigin="anonymous"></script>
 </head>
 
 <body>
 
-<!-- ================== NAVBAR (dùng CSS của bạn, KHÔNG Bootstrap) ================== -->
+<div th:replace="~{fragments :: header}"></div>
+
+<main class="cart-page">
+    <!-- ================== NAVBAR (dùng CSS của bạn, KHÔNG Bootstrap) ================== -->
 <header>
     <nav class="navbar">
         <div class="nav-container">
-            <a class="navbar-brand" th:href="@{/}">
-
-                <i class="fas fa-gem"></i> WEBSHOE
-            </a>
-
             <div class="nav-links">
-                <a class="nav-link" th:href="@{/}">Home</a>
-                <a class="nav-link active" th:href="@{/cart}">Cart</a>
+                <a class="nav-link" th:href="@{/}">Home</a> <a class="nav-link active" th:href="@{/cart}">Cart</a>
             </div>
         </div>
     </nav>
 </header>
-
-<!-- ================== MAIN CART ================== -->
-<main class="cart-page">
 
     <!-- SUCCESS MESSAGE -->
     <div class="alert alert-success"
@@ -44,7 +36,7 @@
             <i class="fas fa-shopping-cart cart-empty-icon"></i>
             <h3>Giỏ hàng của bạn đang trống</h3>
             <p>Hãy khám phá và thêm sản phẩm vào giỏ nhé!</p>
-            <a th:href="@{/shoes}" class="btn-cart-primary">Khám phá sản phẩm</a>
+            <a th:href="@{/}" class="btn-cart-primary">Khám phá sản phẩm</a>
         </div>
     </section>
 
@@ -171,13 +163,12 @@
                 </div>
 
                 <!-- CHECKOUT -->
-                <a th:href="@{/order/create}" class="btn-cart-primary w-100">
-                    Thanh toán
+                <a th:href="@{/order/checkout(type='CART')}" class="btn-cart-primary w-100">
+                    <i class="fas fa-shopping-bag"></i> Đặt hàng
                 </a>
 
-
                 <!-- CONTINUE SHOPPING -->
-                <a th:href="@{/shoes}" class="btn-cart-secondary w-100">
+                <a th:href="@{/}" class="btn-cart-secondary w-100">
                     <i class="fas fa-arrow-left"></i> Tiếp tục mua sắm
                 </a>
             </div>
@@ -185,11 +176,6 @@
 
 </main>
 
-<footer>
-    <div class="footer-bottom">
-        © 2025 WEBSHOE. All rights reserved.
-    </div>
-</footer>
 
 </body>
 
@@ -222,4 +208,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
 });
 </script>
+
+<div th:replace="~{fragments :: footer}"></div>
+
+</body>
 </html>

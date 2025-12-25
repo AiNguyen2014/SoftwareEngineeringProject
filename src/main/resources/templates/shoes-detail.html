@@ -38,7 +38,7 @@
                 </div>
 
                 <div class="thumb-list" th:if="${product.imageUrls != null and !#lists.isEmpty(product.imageUrls)}">
-                    <div class="thumb-item" th:each="img, stat : ${product.imageUrls}">
+                    <div class="thumb-item" th:each="img, stat : ${#sets.toSet(product.imageUrls)}">
                         <img th:src="${img}"
                              onclick="changeImage(this)"
                              th:classappend="${stat.index == 0} ? 'active'"
@@ -92,26 +92,30 @@
                     </div>
 
                     <div class="action-group">
-                        <div class="quantity-selector" th:classappend="${product.totalStock le 0} ? 'disabled' : ''">
-                            <button type="button" class="qty-btn" onclick="decreaseQty()" th:attr="disabled=${product.totalStock le 0} ? 'disabled' : null">
+                        <div class="quantity-selector">
+                            <button type="button" class="qty-btn" onclick="decreaseQty()">
                                 <i class="fas fa-minus"></i>
                             </button>
 
-                            <input type="number" id="quantity" name="quantity" class="qty-input" value="1" min="1" max="10" readonly>
-                            <button type="button" class="qty-btn" onclick="increaseQty()">
+                        <input type="number" id="quantity" name="quantity" class="qty-input" value="1" min="1" max="10" readonly>
+                        <button type="button" class="qty-btn" onclick="increaseQty()">
 
                                 <i class="fas fa-plus"></i>
                             </button>
                         </div>
 
-                        <button type="submit" class="btn-add-cart" 
-                                th:attr="disabled=${product.totalStock le 0} ? 'disabled' : null"
-                                th:classappend="${product.totalStock le 0} ? 'btn-disabled' : ''">
+                        <button type="submit" class="btn-add-cart">
                             <i class="fas fa-shopping-bag me-2"></i>
-                            <span th:text="${product.totalStock le 0} ? 'Hết hàng' : 'Thêm vào giỏ'">Thêm vào giỏ</span>
+                            Thêm vào giỏ
                         </button>
                     </div>
                 </form>
+
+                <!-- Nút Mua Ngay -->
+                <button type="button" class="btn-buy-now mt-3" onclick="buyNow()">
+                    <i class="fas fa-bolt me-2"></i>
+                    Mua Ngay
+                </button>
 
                 <div class="product-details-section">
                     <h5 class="details-heading">
@@ -200,6 +204,34 @@
         document.getElementById('quantityInput').value = input.value;
     }
 
+    /**
+     * Chức năng Mua Ngay
+     * - Kiểm tra người dùng đã chọn size chưa
+     * - Kiểm tra số lượng hợp lệ
+     * - Chuyển hướng đến trang checkout với thông tin đã chọn
+     */
+    function buyNow() {
+        // 1. Kiểm tra đã chọn size chưa
+        const selectedVariant = document.querySelector('input[name="variantId"]:checked');
+        if (!selectedVariant) {
+            alert('Vui lòng chọn kích thước!');
+            return;
+        }
+
+        // 2. Lấy thông tin số lượng
+        const quantity = document.getElementById('quantity').value;
+        if (!quantity || parseInt(quantity) <= 0) {
+            alert('Số lượng phải lớn hơn 0!');
+            return;
+        }
+
+        // 3. Lấy variantId đã chọn
+        const variantId = selectedVariant.value;
+
+        // 4. Chuyển hướng đến trang checkout với type=BUY_NOW
+        // Backend sẽ kiểm tra đăng nhập và xử lý redirect nếu cần
+        window.location.href = `/order/checkout?type=BUY_NOW&variantId=${variantId}&quantity=${quantity}`;
+    }
     
 </script>
 </body>

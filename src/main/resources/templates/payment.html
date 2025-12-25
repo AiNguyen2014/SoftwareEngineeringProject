@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanh toán - WEBSHOE</title>
+    <th:block th:replace="~{fragments :: head_header}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/cart.css}">
+    <style>
+        .checkout-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 2rem;
+        }
+        
+        .payment-form {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .checkout-summary {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            height: fit-content;
+            position: sticky;
+            top: 2rem;
+        }
+        
+        .form-section {
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .form-section:last-child {
+            border-bottom: none;
+        }
+        
+        .form-section h3 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        
+        .shipping-info {
+            background: #f5f5f5;
+            padding: 1rem;
+            border-radius: 4px;
+        }
+        
+        .shipping-info p {
+            margin: 0.5rem 0;
+            color: #666;
+        }
+        
+        .shipping-info strong {
+            color: #333;
+        }
+        
+        .voucher-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .voucher-item {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .voucher-item:hover {
+            border-color: #e53935;
+        }
+        
+        .voucher-item.selected {
+            border-color: #e53935;
+            background: #fff5f5;
+        }
+        
+        .voucher-item input[type="radio"] {
+            display: none;
+        }
+        
+        .voucher-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .voucher-code {
+            background: #e53935;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .voucher-title {
+            font-weight: 600;
+            flex: 1;
+        }
+        
+        .voucher-discount {
+            color: #e53935;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        
+        .voucher-description {
+            color: #666;
+            font-size: 0.9rem;
+            margin: 0.5rem 0;
+        }
+        
+        .voucher-conditions {
+            font-size: 0.85rem;
+            color: #999;
+        }
+        
+        .no-voucher {
+            color: #999;
+            font-style: italic;
+        }
+        
+        .payment-methods {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .payment-method {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .payment-method:hover {
+            border-color: #e53935;
+        }
+        
+        .payment-method.selected {
+            border-color: #e53935;
+            background: #fff5f5;
+        }
+        
+        .payment-method input[type="radio"] {
+            display: none;
+        }
+        
+        .payment-method-icon {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+        }
+        
+        .payment-method-info {
+            flex: 1;
+        }
+        
+        .payment-method-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .payment-method-desc {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .summary-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .summary-item img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        
+        .summary-item-info {
+            flex: 1;
+        }
+        
+        .summary-item-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .summary-item-variant {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .summary-pricing {
+            margin-top: 1.5rem;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+        }
+        
+        .summary-row.discount {
+            color: #4caf50;
+        }
+        
+        .summary-row.total {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #e53935;
+            border-top: 2px solid #333;
+            padding-top: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .btn-submit {
+            width: 100%;
+            padding: 1rem;
+            background: #e53935;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1.5rem;
+        }
+        
+        .btn-submit:hover {
+            background: #c62828;
+        }
+        
+        .btn-back {
+            width: 100%;
+            padding: 1rem;
+            background: white;
+            color: #666;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+        
+        .btn-back:hover {
+            background: #f5f5f5;
+        }
+        
+        .progress-steps {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+            gap: 2rem;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .step-number {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #ddd;
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+        
+        .step.active .step-number {
+            background: #e53935;
+            color: white;
+        }
+        
+        .step.completed .step-number {
+            background: #4caf50;
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .checkout-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <div th:replace="~{fragments :: header}"></div>
+    
+    <div class="checkout-container">
+        <!-- Form thanh toán -->
+        <div class="payment-form">
+            <div class="progress-steps">
+                <div class="step completed">
+                    <div class="step-number">✓</div>
+                    <span>Thông tin giao hàng</span>
+                </div>
+                <div class="step active">
+                    <div class="step-number">2</div>
+                    <span>Thanh toán</span>
+                </div>
+            </div>
+            
+            <form action="/order/create" method="POST" id="paymentForm">
+                <!-- Thông tin giao hàng (chỉ hiển thị) -->
+                <div class="form-section">
+                    <h3>Thông tin giao hàng</h3>
+                    <div class="shipping-info">
+                        <p><strong>Người nhận:</strong> <span th:text="${recipientName}"></span></p>
+                        <p><strong>Số điện thoại:</strong> <span th:text="${recipientPhone}"></span></p>
+                        <p th:if="${recipientEmail}"><strong>Email:</strong> <span th:text="${recipientEmail}"></span></p>
+                        <p><strong>Địa chỉ:</strong> <span th:text="${recipientAddress}"></span></p>
+                        <p th:if="${note}"><strong>Ghi chú:</strong> <span th:text="${note}"></span></p>
+                    </div>
+                    <button type="button" class="btn-back" onclick="window.history.back()">
+                        ← Sửa thông tin giao hàng
+                    </button>
+                </div>
+                
+                <!-- Chọn voucher -->
+                <div class="form-section">
+                    <h3>Áp dụng mã giảm giá</h3>
+                    <div class="voucher-list" th:if="${!vouchers.empty}">
+                        <div class="voucher-item" th:each="voucher : ${vouchers}" 
+                             th:onclick="'selectVoucher(' + ${voucher.voucherId} + ', ' + ${voucher.discountValue} + ', \'' + ${voucher.discountType} + '\')'" 
+                             th:id="'voucher-' + ${voucher.voucherId}">
+                            <input type="radio" name="voucherCode" th:value="${voucher.code}" th:id="'radio-' + ${voucher.voucherId}">
+                            <div class="voucher-header">
+                                <span class="voucher-code" th:text="${voucher.code}"></span>
+                                <span class="voucher-title" th:text="${voucher.title}"></span>
+                                <span class="voucher-discount" 
+                                      th:text="${voucher.discountType == 'PERCENTAGE' ? voucher.discountValue + '%' : '-' + #numbers.formatDecimal(voucher.discountValue, 0, 'COMMA', 0, 'POINT') + '₫'}">
+                                </span>
+                            </div>
+                            <div class="voucher-description" th:text="${voucher.description}"></div>
+                            <div class="voucher-conditions">
+                                <span th:if="${voucher.minOrderValue}">
+                                    Đơn tối thiểu: <span th:text="${#numbers.formatDecimal(voucher.minOrderValue, 0, 'COMMA', 0, 'POINT')} + '₫'"></span>
+                                </span>
+                                <span th:if="${voucher.maxDiscountValue && voucher.discountType == 'PERCENTAGE'}">
+                                    | Giảm tối đa: <span th:text="${#numbers.formatDecimal(voucher.maxDiscountValue, 0, 'COMMA', 0, 'POINT')} + '₫'"></span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="no-voucher" th:if="${vouchers.empty}">
+                        Không có mã giảm giá khả dụng cho đơn hàng này
+                    </div>
+                </div>
+                
+                <!-- Chọn phương thức thanh toán -->
+                <div class="form-section">
+                    <h3>Phương thức thanh toán</h3>
+                    <div class="payment-methods">
+                        <div class="payment-method selected" onclick="selectPayment('COD', this)" id="payment-cod">
+                            <input type="radio" name="paymentMethod" value="COD" id="radio-cod" checked required>
+                            <img th:src="@{/images/R.png}" alt="COD" class="payment-method-icon">
+                            <div class="payment-method-info">
+                                <div class="payment-method-name">Thanh toán khi nhận hàng (COD)</div>
+                                <div class="payment-method-desc">Thanh toán bằng tiền mặt khi nhận hàng</div>
+                            </div>
+                        </div>
+                        
+                        <div class="payment-method" onclick="selectPayment('TRANSFER', this)" id="payment-transfer">
+                            <input type="radio" name="paymentMethod" value="TRANSFER" id="radio-transfer" required>
+                            <img th:src="@{/images/vnpay.jpg}" alt="Chuyển khoản" class="payment-method-icon">
+                            <div class="payment-method-info">
+                                <div class="payment-method-name">Chuyển khoản ngân hàng</div>
+                                <div class="payment-method-desc">Chuyển khoản qua tài khoản ngân hàng</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-submit">Xác nhận đặt hàng</button>
+            </form>
+        </div>
+        
+        <!-- Tóm tắt đơn hàng -->
+        <div class="checkout-summary">
+            <h3>Đơn hàng của bạn</h3>
+            
+            <!-- Đặt hàng từ giỏ -->
+            <div th:if="${type == 'CART'}">
+                <div th:each="item : ${cartItems}" class="summary-item">
+                    <img th:src="@{${!item.variant.shoes.images.empty ? item.variant.shoes.images.iterator().next().url : '/images/no-image.png'}}" 
+                         th:alt="${item.variant.shoes.name}">
+                    <div class="summary-item-info">
+                        <div class="summary-item-name" th:text="${item.variant.shoes.name}"></div>
+                        <div class="summary-item-variant">
+                            Size: <span th:text="${item.variant.size}"></span> | 
+                            Màu: <span th:text="${item.variant.color}"></span>
+                        </div>
+                        <div>SL: <span th:text="${item.quantity}"></span></div>
+                    </div>
+                    <div class="summary-item-price" 
+                         th:text="${#numbers.formatDecimal(item.unitPrice * item.quantity, 0, 'COMMA', 0, 'POINT')} + ' ₫'">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mua ngay -->
+            <div th:if="${type == 'BUY_NOW'}">
+                <div class="summary-item">
+                    <img th:src="@{${!variant.shoes.images.empty ? variant.shoes.images.iterator().next().url : '/images/no-image.png'}}" 
+                         th:alt="${variant.shoes.name}">
+                    <div class="summary-item-info">
+                        <div class="summary-item-name" th:text="${variant.shoes.name}"></div>
+                        <div class="summary-item-variant">
+                            Size: <span th:text="${variant.size}"></span> | 
+                            Màu: <span th:text="${variant.color}"></span>
+                        </div>
+                        <div>SL: <span th:text="${quantity}"></span></div>
+                    </div>
+                    <div class="summary-item-price" 
+                         th:text="${#numbers.formatDecimal(subtotal, 0, 'COMMA', 0, 'POINT')} + ' ₫'">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tính tiền -->
+            <div class="summary-pricing">
+                <div class="summary-row">
+                    <span>Tạm tính:</span>
+                    <span id="subtotal-display" th:text="${#numbers.formatDecimal(subtotal, 0, 'COMMA', 0, 'POINT')} + ' ₫'"></span>
+                </div>
+                <div class="summary-row">
+                    <span>Phí vận chuyển:</span>
+                    <span id="shipping-display" th:text="${#numbers.formatDecimal(shipping, 0, 'COMMA', 0, 'POINT')} + ' ₫'"></span>
+                </div>
+                <div class="summary-row discount" id="discount-row" style="display: none;">
+                    <span>Giảm giá:</span>
+                    <span id="discount-display">-0 ₫</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Tổng cộng:</span>
+                    <span id="total-display" th:text="${#numbers.formatDecimal(total, 0, 'COMMA', 0, 'POINT')} + ' ₫'"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script th:inline="javascript">
+        const subtotal = [[${subtotal}]];
+        const shipping = [[${shipping}]];
+        let selectedVoucherId = null;
+        let discountAmount = 0;
+        
+        function selectVoucher(voucherId, discountValue, discountType) {
+            // Deselect all vouchers
+            document.querySelectorAll('.voucher-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // Toggle selection
+            const voucherElement = document.getElementById('voucher-' + voucherId);
+            const radioElement = document.getElementById('radio-' + voucherId);
+            
+            if (selectedVoucherId === voucherId) {
+                // Deselect if clicking same voucher
+                selectedVoucherId = null;
+                radioElement.checked = false;
+                discountAmount = 0;
+            } else {
+                // Select new voucher
+                selectedVoucherId = voucherId;
+                voucherElement.classList.add('selected');
+                radioElement.checked = true;
+                
+                // Calculate discount
+                if (discountType === 'PERCENTAGE') {
+                    discountAmount = subtotal * (discountValue / 100);
+                    
+                    // Check max discount if exists
+                    const maxDiscount = [[${vouchers}]].find(v => v.voucherId === voucherId)?.maxDiscountValue;
+                    if (maxDiscount && discountAmount > maxDiscount) {
+                        discountAmount = maxDiscount;
+                    }
+                } else {
+                    discountAmount = discountValue;
+                }
+            }
+            
+            updatePricing();
+        }
+        
+        function selectPayment(method, element) {
+            document.querySelectorAll('.payment-method').forEach(item => {
+                item.classList.remove('selected');
+            });
+            element.classList.add('selected');
+            document.getElementById('radio-' + method.toLowerCase()).checked = true;
+        }
+        
+        function updatePricing() {
+            const total = subtotal + shipping - discountAmount;
+            
+            // Update display
+            document.getElementById('total-display').textContent = formatCurrency(total) + ' ₫';
+            
+            if (discountAmount > 0) {
+                document.getElementById('discount-row').style.display = 'flex';
+                document.getElementById('discount-display').textContent = '-' + formatCurrency(discountAmount) + ' ₫';
+            } else {
+                document.getElementById('discount-row').style.display = 'none';
+            }
+        }
+        
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN').format(Math.round(amount));
+        }
+    </script>
+    
+    <div th:replace="~{fragments :: footer}"></div>
+</body>
+</html>
