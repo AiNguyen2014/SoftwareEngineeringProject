@@ -35,6 +35,47 @@ public class OrderHistoryService {
     private OrderSyncService orderSyncService;
     
     /**
+     * Chuyển đổi trạng thái đơn hàng sang tiếng Việt
+     */
+    private String getVietnameseStatus(String status) {
+        if (status == null) return "Không xác định";
+        
+        switch (status.toUpperCase()) {
+            case "PENDING": return "Chờ xử lý";
+            case "CONFIRMED": return "Đã xác nhận"; 
+            case "SHIPPING": return "Đang giao hàng";
+            case "COMPLETED": return "Hoàn thành";
+            case "CANCELLED": return "Đã hủy";
+            // Thêm các trạng thái mở rộng
+            case "WAITING_PAYMENT": return "Chờ thanh toán";
+            case "PAID": return "Đã thanh toán";
+            case "WAITING_CONFIRMATION": return "Chờ xác nhận";
+            case "PACKING": return "Đang đóng gói";
+            case "COMPLETE_DELIVERY": return "Giao hàng thành công";
+            case "CANCELED": return "Đã hủy";
+            case "REQUEST_REFUND": return "Yêu cầu hoàn tiền";
+            case "REFUND": return "Đã hoàn tiền";
+            default: return status;
+        }
+    }
+    
+    /**
+     * Lấy CSS class cho trạng thái
+     */
+    private String getStatusColorClass(String status) {
+        if (status == null) return "secondary";
+        
+        switch (status.toUpperCase()) {
+            case "PENDING": return "warning";
+            case "CONFIRMED": return "info"; 
+            case "SHIPPING": return "primary";
+            case "COMPLETED": return "success";
+            case "CANCELLED": return "danger";
+            default: return "secondary";
+        }
+    }
+    
+    /**
      * Lấy lịch sử đơn hàng của một customer từ OrderTrackingLog
      */
     public Page<OrderHistoryDto> getCustomerOrderHistory(Long customerId, int page, int size) {
@@ -171,6 +212,8 @@ public class OrderHistoryService {
                     .customerEmail(order.getRecipientEmail() != null ? order.getRecipientEmail() : "customer@example.com")  
                     .createAt(trackingLog.getChangedAt()) // Sử dụng changedAt từ tracking log
                     .status(orderStatus) // Sử dụng newStatus từ tracking log
+                    .statusDisplay(getVietnameseStatus(trackingLog.getNewStatus())) // Tiếng Việt
+                    .statusColorClass(getStatusColorClass(trackingLog.getNewStatus())) // CSS class
                     .subTotal(order.getSubTotal() != null ? order.getSubTotal() : BigDecimal.ZERO)
                     .discountAmount(order.getDiscountAmount() != null ? order.getDiscountAmount() : BigDecimal.ZERO)
                     .totalAmount(order.getTotalAmount() != null ? order.getTotalAmount() : BigDecimal.ZERO)
@@ -246,6 +289,8 @@ public class OrderHistoryService {
                 .orderId(log.getOrderId())
                 .oldStatus(log.getOldStatus())
                 .newStatus(log.getNewStatus())
+                .oldStatusDisplay(getVietnameseStatus(log.getOldStatus())) // Tiếng Việt
+                .newStatusDisplay(getVietnameseStatus(log.getNewStatus())) // Tiếng Việt
                 .changeAt(log.getChangedAt())
                 .changedBy(log.getChangedBy())
                 .comment(log.getComment())

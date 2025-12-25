@@ -17,17 +17,18 @@ public class Cart {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "cartId")
+    @Column(name = "\"cartId\"")
     private Long cartId;
 
     @ManyToOne
-    @JoinColumn(name = "userId", nullable = false)
+    @JoinColumn(name = "\"userId\"", nullable = false)
     private User customer;
 
     @OneToMany(
             mappedBy = "cart",
             cascade = CascadeType.ALL,
-            orphanRemoval = true
+            orphanRemoval = true,
+            fetch = FetchType.EAGER
     )
 
     private Set<CartItem> items = new HashSet<>();

@@ -39,8 +39,9 @@
                 <span class="menu-label">Quản lý khuyến mãi</span>
             </a>
 
-            <!-- TODO: Menu Đơn hàng - Chờ module Order được implement -->
-            <a href="#" class="menu-item disabled">
+            <a th:href="@{/order/admin/all}"
+               class="menu-item"
+               th:classappend="${activeMenu == 'orders'} ? 'active' : ''">
                 <span class="menu-icon">📦</span>
                 <span class="menu-label">Quản lý đơn hàng</span>
             </a>

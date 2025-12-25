@@ -24,11 +24,11 @@ public class CartItem {
     @Column(name = "\"cartItemId\"")
     private Long cartItemId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "\"cartId\"", nullable = false)
     private Cart cart;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "\"variantId\"", nullable = false)
     private ShoesVariant variant;
 

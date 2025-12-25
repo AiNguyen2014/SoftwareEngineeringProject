@@ -28,7 +28,7 @@ public class ShoesVariant {
 
     private Integer stock;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "\"shoeId\"", nullable = false)
     private Shoes shoes;
 
