@@ -32,6 +32,9 @@ public class OrderService {
     public Order createOrderFromCart(Long userId, Long addressId, String recipientEmail,
                                      String paymentMethod, String note, Cart cart, String voucherCode) {
         
+        System.out.println("=== Creating order from cart ===");
+        System.out.println("VoucherCode received: [" + voucherCode + "]");
+        
         // Tính subTotal từ cart
         BigDecimal subTotal = BigDecimal.ZERO;
         for (CartItem item : cart.getItems()) {
@@ -40,20 +43,28 @@ public class OrderService {
             subTotal = subTotal.add(itemTotal);
         }
         
+        System.out.println("SubTotal calculated: " + subTotal);
+        
         // Validate và tính discountAmount từ voucher
         BigDecimal discountAmount = BigDecimal.ZERO;
         Voucher appliedVoucher = null;
         
-        if (StringUtils.hasText(voucherCode)) {
+        // Chỉ validate voucher nếu có code thực sự (không null, không rỗng, không chỉ có khoảng trắng)
+        if (voucherCode != null && !voucherCode.trim().isEmpty()) {
+            System.out.println("Validating voucher: " + voucherCode.trim());
             VoucherValidationResult validation = customerPromotionService.validateVoucher(
-                    voucherCode, userId, subTotal);
+                    voucherCode.trim(), userId, subTotal);
             
             if (validation.isValid()) {
                 appliedVoucher = validation.getVoucher();
                 discountAmount = validation.getDiscountAmount();
+                System.out.println("Voucher valid! Discount: " + discountAmount);
             } else {
+                System.out.println("Voucher validation failed: " + validation.getErrorMessage());
                 throw new IllegalArgumentException(validation.getErrorMessage());
             }
+        } else {
+            System.out.println("No voucher code provided, skipping validation");
         }
         
         // Tính totalAmount
@@ -108,6 +119,9 @@ public class OrderService {
                                    String paymentMethod, String note,
                                    Long variantId, Integer quantity, String voucherCode) {
         
+        System.out.println("=== Creating order from BUY NOW ===");
+        System.out.println("VoucherCode received: [" + voucherCode + "]");
+        
         ShoesVariant variant = shoesVariantRepository.findById(variantId)
                 .orElseThrow(() -> new RuntimeException("Variant not found"));
         
@@ -115,20 +129,28 @@ public class OrderService {
         BigDecimal subTotal = variant.getShoes().getBasePrice()
                 .multiply(BigDecimal.valueOf(quantity));
         
+        System.out.println("SubTotal calculated: " + subTotal);
+        
         // Validate và tính discountAmount từ voucher
         BigDecimal discountAmount = BigDecimal.ZERO;
         Voucher appliedVoucher = null;
         
-        if (StringUtils.hasText(voucherCode)) {
+        // Chỉ validate voucher nếu có code thực sự
+        if (voucherCode != null && !voucherCode.trim().isEmpty()) {
+            System.out.println("Validating voucher: " + voucherCode.trim());
             VoucherValidationResult validation = customerPromotionService.validateVoucher(
-                    voucherCode, userId, subTotal);
+                    voucherCode.trim(), userId, subTotal);
             
             if (validation.isValid()) {
                 appliedVoucher = validation.getVoucher();
                 discountAmount = validation.getDiscountAmount();
+                System.out.println("Voucher valid! Discount: " + discountAmount);
             } else {
+                System.out.println("Voucher validation failed: " + validation.getErrorMessage());
                 throw new IllegalArgumentException(validation.getErrorMessage());
             }
+        } else {
+            System.out.println("No voucher code provided, skipping validation");
         }
         
         // Tính totalAmount

@@ -231,7 +231,15 @@ public class PromotionService {
         voucher.setDescription(form.getDescription());
         voucher.setDiscountType(form.getDiscountType());
         voucher.setDiscountValue(form.getDiscountValue());
-        voucher.setMaxDiscountValue(form.getMaxDiscountValue());
+        
+        // Handle maxDiscountValue - use campaign value if not provided, or 0 as fallback
+        BigDecimal maxDiscountValue = form.getMaxDiscountValue();
+        if (maxDiscountValue == null) {
+            maxDiscountValue = campaign.getMaxDiscountAmount() != null 
+                ? campaign.getMaxDiscountAmount() 
+                : BigDecimal.ZERO;
+        }
+        voucher.setMaxDiscountValue(maxDiscountValue);
 
         BigDecimal minOrderValue = form.getMinOrderValue();
         if (minOrderValue == null) {
@@ -317,6 +325,7 @@ public class PromotionService {
     /**
      * Validate all vouchers of a campaign when campaign dates are updated.
      * Called when updating campaign to ensure existing vouchers are still valid.
+     * Also updates voucher discount rules to match campaign rules.
      */
     @Transactional
     public void validateAndAdjustVouchersForCampaignDateChange(PromotionCampaign campaign) {
@@ -347,6 +356,38 @@ public class PromotionService {
                 voucher.setEnabled(false);
                 needsUpdate = true;
                 log.warn("Disabled voucher {} as its date range became invalid", voucher.getCode());
+            }
+            
+            // Cập nhật quy tắc giảm giá từ campaign sang voucher
+            if (voucher.getDiscountType() != campaign.getDiscountType()) {
+                voucher.setDiscountType(campaign.getDiscountType());
+                needsUpdate = true;
+                log.info("Updated voucher {} discountType to {}", voucher.getCode(), campaign.getDiscountType());
+            }
+            
+            if (campaign.getDiscountValue() != null && 
+                !campaign.getDiscountValue().equals(voucher.getDiscountValue())) {
+                voucher.setDiscountValue(campaign.getDiscountValue());
+                needsUpdate = true;
+                log.info("Updated voucher {} discountValue to {}", voucher.getCode(), campaign.getDiscountValue());
+            }
+            
+            // Cập nhật maxDiscountValue
+            if (campaign.getMaxDiscountAmount() != null) {
+                if (!campaign.getMaxDiscountAmount().equals(voucher.getMaxDiscountValue())) {
+                    voucher.setMaxDiscountValue(campaign.getMaxDiscountAmount());
+                    needsUpdate = true;
+                    log.info("Updated voucher {} maxDiscountValue to {}", voucher.getCode(), campaign.getMaxDiscountAmount());
+                }
+            }
+            
+            // Cập nhật minOrderValue
+            if (campaign.getMinOrderValue() != null) {
+                if (!campaign.getMinOrderValue().equals(voucher.getMinOrderValue())) {
+                    voucher.setMinOrderValue(campaign.getMinOrderValue());
+                    needsUpdate = true;
+                    log.info("Updated voucher {} minOrderValue to {}", voucher.getCode(), campaign.getMinOrderValue());
+                }
             }
             
             if (needsUpdate) {

@@ -1,6 +1,7 @@
 package ecommerce.shoestore.promotion;
 
 import ecommerce.shoestore.order.Order;
+import ecommerce.shoestore.promotion.dto.VoucherDisplayDTO;
 import ecommerce.shoestore.promotion.dto.VoucherValidationResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -21,6 +23,7 @@ public class CustomerPromotionService {
 
     private final VoucherRepository voucherRepository;
     private final OrderVoucherRepository orderVoucherRepository;
+    private final PromotionCampaignRepository promotionCampaignRepository;
 
     /**
      * Lấy danh sách voucher khả dụng cho customer
@@ -51,6 +54,32 @@ public class CustomerPromotionService {
                         v.getCampaign().updateStatus();
                     }
                 })
+                .toList();
+    }
+
+    /**
+     * Lấy danh sách voucher để hiển thị cho customer (bao gồm cả voucher không đủ điều kiện)
+     * Voucher đủ điều kiện sẽ hiển thị trước, voucher không đủ điều kiện hiển thị màu xám
+     */
+    @Transactional(readOnly = true)
+    public List<VoucherDisplayDTO> getVouchersForDisplay(Long userId, BigDecimal orderSubTotal) {
+        LocalDate today = LocalDate.now();
+        
+        return voucherRepository.findAllWithCampaign().stream()
+                // Chỉ lấy voucher enabled và campaign enabled
+                .filter(v -> Boolean.TRUE.equals(v.getEnabled()))
+                .filter(v -> v.getCampaign() != null && Boolean.TRUE.equals(v.getCampaign().getEnabled()))
+                // Chỉ lấy voucher trong thời gian hiệu lực (không lấy voucher đã hết hạn)
+                .filter(v -> !v.getStartDate().isAfter(today))
+                .filter(v -> !v.getEndDate().isBefore(today))
+                // Chỉ lấy voucher trong thời gian campaign
+                .filter(v -> v.getCampaign() != null && !v.getCampaign().getStartDate().isAfter(today))
+                .filter(v -> v.getCampaign() != null && !v.getCampaign().getEndDate().isBefore(today))
+                // Chuyển sang DTO (bao gồm kiểm tra minOrderValue)
+                .map(v -> VoucherDisplayDTO.fromVoucher(v, orderSubTotal))
+                // Sắp xếp: voucher áp dụng được trước, sau đó theo giá trị giảm
+                .sorted(Comparator.comparing(VoucherDisplayDTO::isApplicable).reversed()
+                        .thenComparing(VoucherDisplayDTO::getDiscountValue, Comparator.reverseOrder()))
                 .toList();
     }
 
@@ -167,7 +196,7 @@ public class CustomerPromotionService {
                 .orderId(order.getOrderId())
                 .voucher(voucher)
                 .userId(userId)
-                .discountAmount(validation.getDiscountAmount())
+                .appliedAmount(validation.getDiscountAmount())
                 .build();
 
         orderVoucherRepository.save(orderVoucher);
@@ -181,5 +210,37 @@ public class CustomerPromotionService {
     @Transactional(readOnly = true)
     public long countVoucherUsage(Long voucherId, Long userId) {
         return orderVoucherRepository.countByVoucher_VoucherIdAndUserId(voucherId, userId);
+    }
+    
+    /**
+     * Lấy danh sách campaign đang hoạt động cho sản phẩm cụ thể
+     */
+    @Transactional(readOnly = true)
+    public List<PromotionCampaign> getActiveCampaignsForProduct(Long shoeId, Long categoryId) {
+        LocalDate today = LocalDate.now();
+        List<PromotionCampaign> campaigns = promotionCampaignRepository.findActiveCampaignsForProduct(
+                shoeId, categoryId, today);
+        
+        // Update status cho mỗi campaign
+        campaigns.forEach(PromotionCampaign::updateStatus);
+        
+        return campaigns.stream()
+                .filter(c -> c.getStatus() == PromotionCampaignStatus.ACTIVE)
+                .toList();
+    }
+    
+    /**
+     * Lấy tất cả campaign đang hoạt động
+     */
+    @Transactional(readOnly = true)
+    public List<PromotionCampaign> getAllActiveCampaigns() {
+        LocalDate today = LocalDate.now();
+        List<PromotionCampaign> campaigns = promotionCampaignRepository.findAllActiveCampaigns(today);
+        
+        campaigns.forEach(PromotionCampaign::updateStatus);
+        
+        return campaigns.stream()
+                .filter(c -> c.getStatus() == PromotionCampaignStatus.ACTIVE)
+                .toList();
     }
 }

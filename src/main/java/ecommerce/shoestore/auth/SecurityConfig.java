@@ -46,7 +46,7 @@ public class SecurityConfig {
                     .requireExplicitSave(false)  // Tự động lưu SecurityContext vào session
                 )
                 .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/shoes", "/index", "/auth/**", "/css/**", "/js/**", "/images/**", "/error", "/product/**", "/user/**", "/cart/**", "/order/**").permitAll()
+                .requestMatchers("/", "/shoes", "/index", "/auth/**", "/css/**", "/js/**", "/images/**", "/error", "/product/**", "/user/**", "/cart/**", "/order/**", "/vouchers/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
                 )

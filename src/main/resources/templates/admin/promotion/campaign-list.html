@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Chiến dịch khuyến mãi</title>
+    <title>Quản lý khuyến mãi - Chiến dịch</title>
     <link rel="stylesheet" th:href="@{/css/admin.css}">
     <link rel="stylesheet" th:href="@{/css/common.css}">
 </head>
@@ -17,42 +17,61 @@
 </div>
 
 <div class="admin-layout">
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebar">
         <div th:replace="~{admin/sidebar :: sidebar}"></div>
     </aside>
+    
     <div class="main">
+        <!-- TOPBAR CỐ ĐỊNH -->
         <header class="topbar">
             <div class="topbar-inner">
                 <div class="topbar-left">
-                    <button class="menu-toggle" aria-label="Toggle menu">☰</button>
-                    <div>
-                        <h3 class="section-title">Chiến dịch khuyến mãi</h3>
-                        <p class="section-sub">Quản lý các chiến dịch đang chạy và lịch sắp tới.</p>
+                    <button class="menu-toggle" id="menuToggle" aria-label="Thu gọn menu">☰</button>
+                    <div class="page-info">
+                        <h3 class="section-title">Quản lý khuyến mãi</h3>
+                        <p class="section-sub">Tạo và quản lý các chiến dịch, mã giảm giá cho khách hàng</p>
                     </div>
                 </div>
                 <div class="topbar-right">
-                    <a class="btn btn-primary" th:href="@{/admin/promotions/campaigns/create}">Thêm chiến dịch</a>
+                    <a class="btn btn-primary" th:href="@{/admin/promotions/campaigns/create}">
+                        ➕ Thêm chiến dịch
+                    </a>
                 </div>
             </div>
         </header>
-        <main class="page-content">
+        
+        <!-- TAB SECTION CỐ ĐỊNH -->
+        <div class="tab-section">
             <div class="tab-header">
                 <a th:href="@{/admin/promotions/campaigns}" class="tab"
-                   th:classappend="${tab} == 'campaigns' ? 'active' : ''">Chiến dịch</a>
+                   th:classappend="${tab} == 'campaigns' ? 'active' : ''">
+                    <span class="tab-icon">🎯</span>
+                    Chiến dịch
+                </a>
                 <a th:href="@{/admin/promotions/vouchers}" class="tab"
-                   th:classappend="${tab} == 'vouchers' ? 'active' : ''">Voucher</a>
+                   th:classappend="${tab} == 'vouchers' ? 'active' : ''">
+                    <span class="tab-icon">🎫</span>
+                    Mã giảm giá
+                </a>
             </div>
-
+            <p class="tab-description">
+                Chiến dịch khuyến mãi - Quản lý các chương trình giảm giá đang chạy và lịch sắp tới.
+            </p>
+        </div>
+        
+        <!-- NỘI DUNG TRANG -->
+        <main class="page-content">
             <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
             <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
 
-            <!-- Filter Section -->
+            <!-- Phần lọc tìm kiếm -->
             <div class="card" style="margin-bottom: 24px;">
                 <div class="card-header">
-                    <h4 style="margin: 0; font-size: 16px; font-weight: 600;">Tìm kiếm & Lọc</h4>
+                    <h4>🔍 Tìm kiếm & Lọc</h4>
                 </div>
                 <div class="card-body">
-                    <form th:action="@{/admin/promotions/campaigns}" method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: end;">
+                    <form th:action="@{/admin/promotions/campaigns}" method="get" 
+                          style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: end;">
                         <div class="form-group">
                             <label>Từ khóa</label>
                             <input type="text" name="keyword" th:value="${keyword}" placeholder="Tên chiến dịch...">
@@ -95,40 +114,43 @@
                 </div>
             </div>
 
+            <!-- Bảng danh sách -->
             <div class="card">
                 <div class="card-body">
                     <table class="table">
                         <thead>
                         <tr>
-                            <th>Tên</th>
+                            <th>Tên chiến dịch</th>
                             <th>Thời gian</th>
                             <th>Loại giảm</th>
                             <th>Giá trị</th>
                             <th>Trạng thái</th>
                             <th>Bật/Tắt</th>
-                            <th style="width: 220px;">Thao tác</th>
+                            <th style="width: 180px;">Thao tác</th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr th:each="c : ${campaigns}">
                             <td>
                                 <a th:href="@{|/admin/promotions/campaigns/${c.campaignId}|}" 
-                                   style="color: #1e40af; font-weight: 600; text-decoration: none; display: block;"
+                                   style="color: #1e40af; font-weight: 600;"
                                    th:text="${c.name}">Tên</a>
                             </td>
-                            <td th:text="${c.startDate + ' → ' + c.endDate}">2024-01-01</td>
+                            <td>
+                                <span th:text="${#temporals.format(c.startDate, 'dd/MM/yyyy')}">01/01/2025</span>
+                                →
+                                <span th:text="${#temporals.format(c.endDate, 'dd/MM/yyyy')}">31/01/2025</span>
+                            </td>
                             <td>
                                 <span th:if="${c.discountType.name() == 'PERCENT'}">Phần trăm (%)</span>
                                 <span th:if="${c.discountType.name() == 'FIXED_AMOUNT'}">Cố định (VNĐ)</span>
                             </td>
                             <td>
-                                <span th:text="${c.discountType.name() == 'PERCENT' ? c.discountValue : #numbers.formatDecimal(c.discountValue, 0, 'COMMA', 0, 'POINT')}"></span>
-                                <span th:if="${c.discountType.name() == 'PERCENT'}">%</span>
-                                <span th:if="${c.discountType.name() == 'FIXED_AMOUNT'}"> VNĐ</span>
+                                <strong th:text="${c.discountType.name() == 'PERCENT' ? c.discountValue + '%' : #numbers.formatDecimal(c.discountValue, 0, 'COMMA', 0, 'POINT') + ' VNĐ'}">10%</strong>
                             </td>
                             <td>
                                 <span class="badge"
-                                      th:classappend="${c.status.name() == 'ACTIVE'} ? ' badge-success' : (${c.status.name() == 'ENDED' || c.status.name() == 'CANCELLED'} ? ' badge-danger' : ' badge-warning')">
+                                      th:classappend="${c.status.name() == 'ACTIVE'} ? 'badge-success' : (${c.status.name() == 'ENDED' || c.status.name() == 'CANCELLED'} ? 'badge-danger' : 'badge-warning')">
                                     <span th:if="${c.status.name() == 'DRAFT'}">Nháp</span>
                                     <span th:if="${c.status.name() == 'ACTIVE'}">Đang hoạt động</span>
                                     <span th:if="${c.status.name() == 'ENDED'}">Đã kết thúc</span>
@@ -144,14 +166,18 @@
                                 </form>
                             </td>
                             <td>
-                                <a class="btn btn-secondary" style="padding: 6px 12px; font-size: 13px;" th:href="@{|/admin/promotions/campaigns/${c.campaignId}/edit|}">Sửa</a>
-                                <form th:action="@{|/admin/promotions/campaigns/${c.campaignId}/delete|}" method="post" style="display:inline" onsubmit="return confirm('Xóa chiến dịch này?');">
-                                    <button type="submit" class="btn btn-danger" style="padding: 6px 12px; font-size: 13px;">Xóa</button>
-                                </form>
+                                <div style="display: flex; gap: 8px;">
+                                    <a class="btn btn-secondary btn-sm" th:href="@{|/admin/promotions/campaigns/${c.campaignId}/edit|}">Sửa</a>
+                                    <form th:action="@{|/admin/promotions/campaigns/${c.campaignId}/delete|}" method="post" style="margin: 0;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa chiến dịch này?');">
+                                        <button type="submit" class="btn btn-danger btn-sm">Xóa</button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
-                        <tr th:if="${#lists.isEmpty(campaigns)}">
-                            <td colspan="7">Chưa có chiến dịch nào.</td>
+                        <tr th:if="${campaigns == null || campaigns.isEmpty()}">
+                            <td colspan="7" class="text-center text-muted" style="padding: 40px;">
+                                Chưa có chiến dịch nào. Hãy tạo chiến dịch mới!
+                            </td>
                         </tr>
                         </tbody>
                     </table>
@@ -160,70 +186,22 @@
         </main>
     </div>
 </div>
+
 <script>
-    // Toast notification system
-    function showToast(message, type = 'success') {
-        const container = document.getElementById('toastContainer');
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        
-        const icon = type === 'success' ? '✓' : '×';
-        const title = type === 'success' ? 'Thành công' : 'Lỗi';
-        
-        toast.innerHTML = `
-            <div class="toast-icon">${icon}</div>
-            <div class="toast-content">
-                <div class="toast-title">${title}</div>
-                <div class="toast-message">${message}</div>
-            </div>
-            <button class="toast-close" onclick="closeToast(this)">×</button>
-            <div class="toast-progress"></div>
-        `;
-        
-        container.appendChild(toast);
-        
-        // Auto remove after 10s
-        setTimeout(() => {
-            closeToast(toast.querySelector('.toast-close'));
-        }, 10000);
+    // Toggle sidebar
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    
+    menuToggle.addEventListener('click', function() {
+        sidebar.classList.toggle('collapsed');
+        // Lưu trạng thái vào localStorage
+        localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+    });
+    
+    // Khôi phục trạng thái từ localStorage
+    if (localStorage.getItem('sidebarCollapsed') === 'true') {
+        sidebar.classList.add('collapsed');
     }
-    
-    function closeToast(button) {
-        const toast = button.closest('.toast');
-        toast.classList.add('hiding');
-        setTimeout(() => {
-            toast.remove();
-        }, 300);
-    }
-    
-    // Show flash messages
-    document.addEventListener('DOMContentLoaded', function() {
-        const successMsg = /*[[${successMessage}]]*/ null;
-        const errorMsg = /*[[${errorMessage}]]*/ null;
-        
-        if (successMsg) {
-            showToast(successMsg, 'success');
-        }
-        if (errorMsg) {
-            showToast(errorMsg, 'error');
-        }
-    });
-    
-    document.addEventListener('click', function (e) {
-        if (!e.target.matches('.menu-toggle')) return;
-        const sidebar = document.querySelector('.sidebar');
-        if (sidebar) sidebar.classList.toggle('collapsed');
-    });
-    
-    // Loading indicator for forms
-    document.querySelectorAll('form').forEach(form => {
-        form.addEventListener('submit', function(e) {
-            const overlay = document.getElementById('loadingOverlay');
-            if (overlay) {
-                overlay.classList.add('show');
-            }
-        });
-    });
 </script>
 </body>
 </html>

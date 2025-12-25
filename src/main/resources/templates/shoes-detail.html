@@ -59,6 +59,21 @@
                         2,000,000₫
                     </span>
                 </div>
+                
+                <!-- Khuyến mãi đang áp dụng -->
+                <div class="promo-box" th:if="${activeCampaigns != null and !activeCampaigns.isEmpty()}">
+                    <div class="promo-item" th:each="campaign : ${activeCampaigns}">
+                        <span class="promo-tag" th:if="${campaign.discountType.name() == 'PERCENT'}"
+                              th:text="'-' + ${campaign.discountValue} + '%'">-10%</span>
+                        <span class="promo-tag fixed" th:if="${campaign.discountType.name() == 'FIXED_AMOUNT'}"
+                              th:text="'-' + ${#numbers.formatDecimal(campaign.discountValue/1000, 0, 'COMMA', 0, 'POINT')} + 'K'">-50K</span>
+                        <span class="promo-info">
+                            <span th:text="${campaign.name}">Tên KM</span>
+                            <small th:if="${campaign.maxDiscountAmount != null}" 
+                                   th:text="'(tối đa ' + ${#numbers.formatDecimal(campaign.maxDiscountAmount/1000, 0, 'COMMA', 0, 'POINT')} + 'K)'"></small>
+                        </span>
+                    </div>
+                </div>
 
                 <div class="stock-info" th:classappend="${product.totalStock > 0} ? 'in-stock' : 'out-stock'">
                     <i class="fas fa-check-circle" th:if="${product.totalStock > 0}"></i>

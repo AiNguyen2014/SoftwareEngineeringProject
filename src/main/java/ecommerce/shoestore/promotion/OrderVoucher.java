@@ -28,7 +28,7 @@ public class OrderVoucher {
     private Voucher voucher;
 
     @Column(name = "\"appliedAmount\"", nullable = false)
-    private BigDecimal discountAmount;
+    private BigDecimal appliedAmount;
 
     @Column(name = "\"createAt\"")
     private OffsetDateTime createdAt;
@@ -38,4 +38,15 @@ public class OrderVoucher {
 
     @Column(name = "\"userId\"")
     private Long userId;
+    
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = OffsetDateTime.now();
+        this.updatedAt = OffsetDateTime.now();
+    }
+    
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = OffsetDateTime.now();
+    }
 }

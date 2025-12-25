@@ -1,32 +1,417 @@
 <div th:fragment="content">
 
-    <div class="page-header">
-        <h1>Dashboard</h1>
-        <p>Quản lý hệ thống WebShoe</p>
+    <style>
+        .dashboard-header {
+            margin-bottom: 2rem;
+        }
+        .dashboard-header h1 {
+            font-size: 1.75rem;
+            color: var(--text-primary, #2d3748);
+            margin: 0 0 0.5rem 0;
+        }
+        .dashboard-header p {
+            color: var(--text-secondary, #718096);
+            margin: 0;
+        }
+        
+        /* Stat Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .stat-card .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .stat-card .stat-icon svg {
+            width: 24px;
+            height: 24px;
+            stroke-width: 2;
+        }
+        .stat-card .stat-info .label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-secondary, #718096);
+            margin-bottom: 0.25rem;
+        }
+        .stat-card .stat-info .value {
+            display: block;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary, #2d3748);
+        }
+        
+        .stat-card.products .stat-icon { background: #e3f2fd; color: #1976d2; }
+        .stat-card.orders .stat-icon { background: #e8f5e9; color: #388e3c; }
+        .stat-card.promotions .stat-icon { background: #fff3e0; color: #f57c00; }
+        .stat-card.users .stat-icon { background: #fce4ec; color: #c2185b; }
+        
+        /* Charts Section */
+        .charts-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        @media (max-width: 1024px) {
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+        }
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .chart-card h3 {
+            font-size: 1rem;
+            color: var(--text-primary, #2d3748);
+            margin: 0 0 1rem 0;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .chart-container {
+            position: relative;
+            height: 280px;
+        }
+        
+        /* Recent Activity */
+        .activity-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        @media (max-width: 900px) {
+            .activity-section {
+                grid-template-columns: 1fr;
+            }
+        }
+        .activity-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .activity-card h3 {
+            font-size: 1rem;
+            color: var(--text-primary, #2d3748);
+            margin: 0 0 1rem 0;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .activity-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .activity-list li {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .activity-list li:last-child {
+            border-bottom: none;
+        }
+        .activity-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .activity-dot.green { background: #48bb78; }
+        .activity-dot.blue { background: #4299e1; }
+        .activity-dot.orange { background: #ed8936; }
+        .activity-dot.purple { background: #9f7aea; }
+        
+        .activity-content {
+            flex: 1;
+        }
+        .activity-content .title {
+            font-size: 0.9rem;
+            color: var(--text-primary, #2d3748);
+        }
+        .activity-content .time {
+            font-size: 0.8rem;
+            color: var(--text-secondary, #a0aec0);
+        }
+        
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+        .quick-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1rem;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            color: var(--text-primary, #2d3748);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .quick-btn:hover {
+            background: #edf2f7;
+            border-color: #cbd5e0;
+        }
+        .quick-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+    </style>
+
+    <div class="dashboard-header">
+        <h1>Trang chủ quản trị</h1>
+        <p>Xin chào! Đây là tổng quan hệ thống WebShoe</p>
     </div>
 
-    <div class="card-grid">
-
-        <div class="stat-card">
-            <span class="label">Sản phẩm</span>
-            <span class="value">128</span>
+    <!-- Thống kê tổng quan -->
+    <div class="stats-grid">
+        <div class="stat-card products">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <path d="M16 10a4 4 0 0 1-8 0"></path>
+                </svg>
+            </div>
+            <div class="stat-info">
+                <span class="label">Tổng sản phẩm</span>
+                <span class="value" th:text="${totalProducts != null} ? ${totalProducts} : '0'">128</span>
+            </div>
         </div>
 
-        <div class="stat-card">
-            <span class="label">Đơn hàng</span>
-            <span class="value">42</span>
+        <div class="stat-card orders">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <circle cx="9" cy="21" r="1"></circle>
+                    <circle cx="20" cy="21" r="1"></circle>
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                </svg>
+            </div>
+            <div class="stat-info">
+                <span class="label">Đơn hàng</span>
+                <span class="value" th:text="${totalOrders != null} ? ${totalOrders} : '0'">42</span>
+            </div>
         </div>
 
-        <div class="stat-card">
-            <span class="label">Khuyến mãi</span>
-            <span class="value">6</span>
+        <div class="stat-card promotions">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <circle cx="12" cy="8" r="7"></circle>
+                    <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+                </svg>
+            </div>
+            <div class="stat-info">
+                <span class="label">Khuyến mãi</span>
+                <span class="value" th:text="${totalPromotions != null} ? ${totalPromotions} : '0'">6</span>
+            </div>
         </div>
 
-        <div class="stat-card">
-            <span class="label">Người dùng</span>
-            <span class="value">312</span>
+        <div class="stat-card users">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+            </div>
+            <div class="stat-info">
+                <span class="label">Người dùng</span>
+                <span class="value" th:text="${totalUsers != null} ? ${totalUsers} : '0'">312</span>
+            </div>
         </div>
-
     </div>
+
+    <!-- Biểu đồ -->
+    <div class="charts-section">
+        <div class="chart-card">
+            <h3>Doanh thu 7 ngày gần đây</h3>
+            <div class="chart-container">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-card">
+            <h3>Phân loại đơn hàng</h3>
+            <div class="chart-container">
+                <canvas id="ordersChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hoạt động gần đây & Thao tác nhanh -->
+    <div class="activity-section">
+        <div class="activity-card">
+            <h3>Hoạt động gần đây</h3>
+            <ul class="activity-list">
+                <li>
+                    <span class="activity-dot green"></span>
+                    <div class="activity-content">
+                        <div class="title">Đơn hàng mới #1234 được tạo</div>
+                        <div class="time">5 phút trước</div>
+                    </div>
+                </li>
+                <li>
+                    <span class="activity-dot blue"></span>
+                    <div class="activity-content">
+                        <div class="title">Sản phẩm "Nike Air Max" đã cập nhật</div>
+                        <div class="time">15 phút trước</div>
+                    </div>
+                </li>
+                <li>
+                    <span class="activity-dot orange"></span>
+                    <div class="activity-content">
+                        <div class="title">Voucher SUMMER20 được kích hoạt</div>
+                        <div class="time">1 giờ trước</div>
+                    </div>
+                </li>
+                <li>
+                    <span class="activity-dot purple"></span>
+                    <div class="activity-content">
+                        <div class="title">Người dùng mới đăng ký</div>
+                        <div class="time">2 giờ trước</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="activity-card">
+            <h3>Thao tác nhanh</h3>
+            <div class="quick-actions">
+                <a th:href="@{/admin/products/new}" class="quick-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Thêm sản phẩm
+                </a>
+                <a th:href="@{/admin/orders}" class="quick-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                    Xem đơn hàng
+                </a>
+                <a th:href="@{/admin/promotions/vouchers/new}" class="quick-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="8" r="7"></circle>
+                        <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+                    </svg>
+                    Tạo voucher
+                </a>
+                <a th:href="@{/admin/promotions/campaigns/new}" class="quick-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    Tạo chiến dịch
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            // Doanh thu 7 ngày
+            const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+            new Chart(revenueCtx, {
+                type: 'line',
+                data: {
+                    labels: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'],
+                    datasets: [{
+                        label: 'Doanh thu (VND)',
+                        data: [1200000, 1900000, 1500000, 2500000, 2200000, 3000000, 2800000],
+                        borderColor: '#4299e1',
+                        backgroundColor: 'rgba(66, 153, 225, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#4299e1',
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return (value / 1000000).toFixed(1) + 'M';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Phân loại đơn hàng
+            const ordersCtx = document.getElementById('ordersChart').getContext('2d');
+            new Chart(ordersCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Chờ xử lý', 'Đang giao', 'Hoàn thành', 'Đã hủy'],
+                    datasets: [{
+                        data: [12, 8, 25, 3],
+                        backgroundColor: [
+                            '#ed8936',
+                            '#4299e1',
+                            '#48bb78',
+                            '#e53e3e'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
 
 </div>

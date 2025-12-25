@@ -160,6 +160,7 @@ public class ShoesService {
                 .basePrice(shoes.getBasePrice() != null ? shoes.getBasePrice() : BigDecimal.ZERO)
                 .description(shoes.getDescription())
                 .category(categoryName)
+                .categoryId(shoes.getCategory() != null ? shoes.getCategory().getCategoryId() : null)
                 .type(shoes.getType() != null ? shoes.getType().name() : null)
                 .collection(shoes.getCollection())
                 .imageUrls(imageUrls)

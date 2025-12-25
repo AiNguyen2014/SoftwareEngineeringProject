@@ -143,6 +143,10 @@
             margin-top: 1rem;
         }
         
+        .summary-row.discount {
+            color: #4caf50;
+        }
+        
         .actions {
             display: flex;
             gap: 1rem;
@@ -288,8 +292,8 @@
                 <span>Phí vận chuyển:</span>
                 <span th:text="${#numbers.formatDecimal(order.shippingFee, 0, 'COMMA', 0, 'POINT')} + ' ₫'"></span>
             </div>
-            <div class="summary-row" th:if="${order.discountAmount != null && order.discountAmount > 0}">
-                <span>Giảm giá:</span>
+            <div class="summary-row discount" th:if="${order.discountAmount != null && order.discountAmount > 0}">
+                <span>🎫 Giảm giá voucher:</span>
                 <span th:text="'-' + ${#numbers.formatDecimal(order.discountAmount, 0, 'COMMA', 0, 'POINT')} + ' ₫'"></span>
             </div>
             <div class="summary-row">
@@ -300,11 +304,10 @@
         
         <!-- Actions -->
         <div class="actions">
-            <a href="/" class="btn btn-secondary">Về trang chủ</a>
-            <a href="/shoes" class="btn btn-primary">Tiếp tục mua sắm</a>
+            <a href="/" class="btn btn-primary">Tiếp tục mua sắm</a>
         </div>
     </div>
     
-    <div th:replace="~{fragments :: footer}"></div>
+    
 </body>
 </html>

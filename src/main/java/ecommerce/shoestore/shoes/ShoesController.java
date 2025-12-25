@@ -1,5 +1,8 @@
 package ecommerce.shoestore.shoes;
 
+import ecommerce.shoestore.promotion.CustomerPromotionService;
+import ecommerce.shoestore.promotion.PromotionCampaign;
+import ecommerce.shoestore.shoes.dto.ShoesDetailDto;
 import ecommerce.shoestore.shoes.dto.ShoesListDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -8,11 +11,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.List;
+
 @Controller
 @RequiredArgsConstructor
 public class ShoesController {
 
     private final ShoesService shoesService;
+    private final CustomerPromotionService customerPromotionService;
 
     @GetMapping("/")
     public String homePage(
@@ -36,7 +42,14 @@ public class ShoesController {
     public String productDetail(@PathVariable Long shoeId, Model model) {
         // Session attributes được tự động thêm bởi SessionModelAdvice
         
-        model.addAttribute("product", shoesService.getShoesDetail(shoeId));
+        ShoesDetailDto product = shoesService.getShoesDetail(shoeId);
+        model.addAttribute("product", product);
+        
+        // Lấy các campaign khuyến mãi đang áp dụng cho sản phẩm này
+        List<PromotionCampaign> activeCampaigns = customerPromotionService.getActiveCampaignsForProduct(
+                shoeId, product.getCategoryId());
+        model.addAttribute("activeCampaigns", activeCampaigns);
+        
         return "shoes-detail";
     }
 }
