@@ -97,8 +97,8 @@ public class UserController {
                                  HttpSession session,
                                  RedirectAttributes redirectAttributes) {
 
-        String username = (String) session.getAttribute("USER_NAME");
-        if (username == null) return "redirect:/auth/login";
+        String email = (String) session.getAttribute("EMAIL");
+        if (email == null) return "redirect:/auth/login";
 
         String sessionOtp = (String) session.getAttribute("OTP_CODE");
         String inputOtp = request.getOtp();
@@ -112,7 +112,7 @@ public class UserController {
         session.removeAttribute("OTP_CODE");
 
         try {
-            userService.changePassword(username, request);
+            userService.changePassword(email, request);
             redirectAttributes.addFlashAttribute("successMessage", "Đổi mật khẩu thành công!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());

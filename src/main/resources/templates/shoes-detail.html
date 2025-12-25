@@ -143,6 +143,45 @@
         </div>
     </div>
 
+    <section class="review-container mt-5 py-5 border-top">
+        <div class="container">
+            <h3 class="section-title text-center mb-5">Đánh giá từ khách hàng</h3>
+
+            <div th:if="${reviews == null or reviews.isEmpty()}" class="no-reviews text-center py-4">
+                <i class="fas fa-comment-dots fa-3x mb-3 text-muted"></i>
+                <p class="text-muted">Sản phẩm này chưa có đánh giá nào. Hãy là người đầu tiên mua và để lại cảm nhận!</p>
+            </div>
+
+            <div th:if="${reviews != null and !reviews.isEmpty()}" class="review-list">
+                <div th:each="review : ${reviews}" class="review-card mb-4">
+                    <div class="review-header d-flex justify-content-between align-items-center">
+                        <div class="user-info d-flex align-items-center">
+                            <div class="user-avatar me-3">
+                                <span th:text="${#strings.substring(review.user.fullName, 0, 1)}">U</span>
+                            </div>
+                            <div>
+                                <div class="user-name" th:text="${review.user.fullName}">Tên người dùng</div>
+                                <div class="review-stars">
+                                <span th:each="i : ${#numbers.sequence(1, 5)}">
+                                    <i class="fa-star"
+                                       th:classappend="${i <= review.rate} ? 'fas text-warning' : 'far text-secondary'"></i>
+                                </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="review-date text-muted"
+                             th:text="${#temporals.format(review.reviewDate, 'dd/MM/yyyy')}">
+                            25/12/2025
+                        </div>
+                    </div>
+                    <div class="review-body mt-3">
+                        <p class="review-text" th:text="${review.comment}">Nội dung đánh giá ở đây...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
     <div class="related-section" th:if="${product.relatedProducts != null and !product.relatedProducts.isEmpty()}">
         <h3 class="section-title text-center mb-5">Sản phẩm tương tự</h3>
         <div class="product-grid">

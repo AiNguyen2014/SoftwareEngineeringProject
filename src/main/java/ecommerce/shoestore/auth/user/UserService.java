@@ -85,19 +85,20 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public void changePassword(String Username, ChangePasswordRequest request) {
-        Account account = getCurrentAccount(Username);
+    public void changePassword(String email, ChangePasswordRequest request) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
+
+        Account account = user.getAccount();
+        if (account == null) throw new RuntimeException("Tài khoản không hợp lệ!");
 
         if (!passwordEncoder.matches(request.getOldPassword(), account.getPassword())) {
-            throw new RuntimeException("Mật khẩu hiện tại không chính xác!");
+             throw new RuntimeException("Mật khẩu cũ không đúng!");
         }
-
-        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
-            throw new RuntimeException("Mật khẩu xác nhận không khớp!");
-        }
-
         account.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        accountRepository.save(account);
+
+        userRepository.save(user);
     }
 }
 

@@ -1,0 +1,67 @@
+/* Container chính */
+.review-container {
+    background-color: #fff;
+}
+
+.section-title {
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Card đánh giá */
+.review-card {
+    background: #fdfdfd;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+
+.review-card:hover {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+/* Avatar người dùng (tạo hình tròn với chữ cái đầu) */
+.user-avatar {
+    width: 45px;
+    height: 45px;
+    background-color: #333;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+}
+
+.user-name {
+    font-weight: 600;
+    font-size: 1.05rem;
+    margin-bottom: 2px;
+}
+
+.review-stars {
+    font-size: 0.85rem;
+}
+
+.review-date {
+    font-size: 0.85rem;
+}
+
+/* Nội dung bình luận */
+.review-text {
+    color: #444;
+    line-height: 1.6;
+    margin: 0;
+    font-style: italic;
+}
+
+/* Khi không có review */
+.no-reviews {
+    background: #f9f9f9;
+    border-radius: 10px;
+    border: 1px dashed #ccc;
+}
