@@ -370,11 +370,11 @@
                             <div class="address-detail" th:text="${addr.fullAddress}"></div>
                             <div class="address-actions" th:if="${!addr.isDefault}">
                                 <button type="button" class="btn-set-default" 
-                                        th:onclick="'setDefaultAddress(' + ${addr.addressId} + ')'">
+                                        th:onclick="'handleSetDefault(event, ' + ${addr.addressId} + ')'">
                                     Đặt làm mặc định
                                 </button>
                                 <button type="button" class="btn-delete-address" 
-                                        th:onclick="'deleteAddress(' + ${addr.addressId} + ')'">
+                                        th:onclick="'handleDelete(event, ' + ${addr.addressId} + ')'">
                                     Xóa
                                 </button>
                             </div>
@@ -556,6 +556,16 @@
                 form.classList.remove('active');
                 inputs.forEach(input => input.removeAttribute('required'));
             }
+        }
+        
+        function handleSetDefault(event, addressId) {
+            event.stopPropagation();
+            setDefaultAddress(addressId);
+        }
+        
+        function handleDelete(event, addressId) {
+            event.stopPropagation();
+            deleteAddress(addressId);
         }
         
         async function setDefaultAddress(addressId) {
