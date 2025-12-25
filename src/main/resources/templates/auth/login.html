@@ -1,45 +1,64 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Đăng nhập</title>
-    <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; padding-top: 50px; }
-        form { border: 1px solid #ccc; padding: 20px; border-radius: 5px; width: 300px; }
-        div { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; }
-        input { width: 100%; padding: 8px; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; background: #28a745; color: white; border: none; cursor: pointer; }
-        .error { color: red; font-size: 0.9em; }
-        .success { color: green; font-size: 0.9em; }
-    </style>
+    <title>Đăng nhập - WebShoe</title>
+    <!-- Nhúng CSS chung -->
+    <th:block th:replace="fragments :: head_header"></th:block>
+    <link th:href="@{/css/auth.css}" rel="stylesheet">
 </head>
 <body>
-    <form th:action="@{/auth/login}" method="post">
-        <h2 style="text-align: center;">Đăng Nhập</h2>
 
-        <!-- Thông báo lỗi hoặc thành công -->
-        <p th:if="${error}" th:text="${error}" class="error"></p>
-        <p th:if="${message}" th:text="${message}" class="success"></p>
-        
-        <!-- Param error từ Spring Security khi login sai -->
-        <p th:if="${param.error}" class="error">Sai tài khoản hoặc mật khẩu!</p>
-        <p th:if="${param.logout}" class="success">Đã đăng xuất thành công.</p>
+    <!-- Header tối giản -->
+    <nav class="navbar bg-white shadow-sm">
+        <div class="container justify-content-center">
+            <a class="navbar-brand fw-bold" href="/" style="font-size: 1.5rem;">👟 WEBSHOE</a>
+        </div>
+    </nav>
 
-        <div>
-            <label>Username:</label>
-            <input type="text" name="username" required>
+    <div class="auth-container">
+        <div class="auth-card" style="max-width: 420px;">
+            <div class="auth-header">
+                <h3 class="auth-title">Chào mừng trở lại!</h3>
+                <p class="text-muted small">Đăng nhập để tiếp tục mua sắm</p>
+            </div>
+
+            <div class="auth-body">
+                <!-- Thông báo lỗi/thành công -->
+                <div th:if="${param.error}" class="alert alert-danger text-center small py-2">
+                    <i class="fas fa-exclamation-circle me-1"></i> Tài khoản hoặc mật khẩu không đúng!
+                </div>
+                <div th:if="${message}" th:text="${message}" class="alert alert-success text-center small py-2"></div>
+                <div th:if="${error}" th:text="${error}" class="alert alert-danger text-center small py-2"></div>
+
+                <form th:action="@{/auth/login}" method="post">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Tên đăng nhập</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white"><i class="fas fa-user text-muted"></i></span>
+                            <input type="text" name="username" class="form-control" placeholder="Nhập username" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <label class="form-label fw-bold small">Mật khẩu</label>
+                            <a th:href="@{/auth/forgot-password}" class="small text-decoration-none text-muted">Quên mật khẩu?</a>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white"><i class="fas fa-lock text-muted"></i></span>
+                            <input type="password" name="password" class="form-control" placeholder="Nhập mật khẩu" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-auth mt-2">ĐĂNG NHẬP</button>
+                </form>
+
+                <div class="auth-footer">
+                    Chưa có tài khoản? <a th:href="@{/auth/register}">Đăng ký ngay</a>
+                </div>
+            </div>
         </div>
-        <div>
-            <label>Password:</label>
-            <input type="password" name="password" required>
-        </div>
-        
-        <button type="submit">Đăng nhập</button>
-        
-        <div style="text-align: center; margin-top: 10px;">
-            <a th:href="@{/auth/register}">Đăng ký</a> | 
-            <a th:href="@{/auth/forgot-password}">Quên mật khẩu?</a>
-        </div>
-    </form>
+    </div>
+
 </body>
 </html>

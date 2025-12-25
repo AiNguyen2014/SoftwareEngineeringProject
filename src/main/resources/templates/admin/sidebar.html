@@ -1,0 +1,70 @@
+<div xmlns:th="http://www.thymeleaf.org" th:fragment="sidebar">
+    <div class="sidebar-inner">
+
+        <!-- LOGO / TITLE -->
+        <div class="logo-wrap">
+            <h2 class="logo">WebShoe</h2>
+            <span class="logo-sub">Admin</span>
+        </div>
+
+        <!-- MENU -->
+        <nav class="menu">
+
+            <a th:href="@{/admin}"
+            class="menu-item"
+            th:classappend="${activeMenu == 'dashboard'} ? 'active' : ''">
+                <span class="menu-icon">🏠</span>
+                <span class="menu-label">Dashboard</span>
+            </a>
+
+            <a th:href="@{/admin/products}"
+               class="menu-item"
+               th:classappend="${activeMenu == 'products'} ? 'active' : ''">
+                <span class="menu-icon">🛍️</span>
+                <span class="menu-label">Quản lý sản phẩm</span>
+            </a>
+
+            <hr/>
+
+            <a th:href="@{/admin/inventory}" class="menu-item"
+                th:classappend="${activeMenu == 'inventory'} ? 'active' : ''">
+                <span class="menu-icon">🏭</span>
+                <span class="menu-label">Quản lý tồn kho</span>
+            </a>
+
+            <a th:href="@{/admin/promotions/campaigns}"
+               class="menu-item"
+               th:classappend="${activeMenu == 'promotions'} ? 'active' : ''">
+                <span class="menu-icon">🎯</span>
+                <span class="menu-label">Quản lý khuyến mãi</span>
+            </a>
+
+            <!-- TODO: Menu Đơn hàng - Chờ module Order được implement -->
+            <a href="#" class="menu-item disabled">
+                <span class="menu-icon">📦</span>
+                <span class="menu-label">Quản lý đơn hàng</span>
+            </a>
+
+            <a href="#" class="menu-item disabled">
+                <span class="menu-icon">📊</span>
+                <span class="menu-label">Báo cáo</span>
+            </a>
+
+        </nav>
+
+        <div class="sidebar-bottom">
+            
+            <!-- Nút Thoát: Trở về trang chủ (/) hoặc trang login -->
+            <a th:href="@{/}" class="btn-logout">
+                <span class="menu-icon" style="margin-right: 10px;">🚪</span>
+                Thoát
+            </a>
+
+            <!-- Footer bản quyền -->
+            <div class="sidebar-footer">
+                <span>© 2025 WebShoe</span>
+            </div>
+        </div>
+
+    </div>
+</div>

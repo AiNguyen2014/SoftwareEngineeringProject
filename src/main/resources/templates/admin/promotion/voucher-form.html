@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${pageTitle}">Voucher</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+<body>
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+</div>
+
+<div class="admin-layout">
+    <aside class="sidebar">
+        <div th:replace="~{admin/sidebar :: sidebar}"></div>
+    </aside>
+    <div class="main">
+        <header class="topbar">
+            <div class="topbar-inner">
+                <div class="topbar-left">
+                    <button class="menu-toggle" aria-label="Toggle menu">☰</button>
+                    <h3 th:text="${pageTitle}">Voucher</h3>
+                </div>
+            </div>
+        </header>
+        <main class="page-content">
+            <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+            <div class="card" style="max-width: 900px; margin: 0 auto;">
+                <form th:action="${voucher.voucherId} == null ? @{/admin/promotions/vouchers/create} : @{'/admin/promotions/vouchers/' + ${voucher.voucherId} + '/edit'}" method="post" th:object="${voucher}">
+                    <div style="margin-bottom: 32px; border-bottom: 1px solid #e5e7eb; padding-bottom: 16px;">
+                        <h3 class="section-title" style="margin-bottom: 8px;" th:text="${pageTitle}">Tạo voucher</h3>
+                        <p class="section-sub" style="color: #6b7280; font-size: 14px;">Tạo mã voucher cho khách hàng. Quy tắc giảm giá sẽ kế thừa từ chiến dịch.</p>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="required">Mã voucher</label>
+                            <input type="text" th:field="*{code}" required placeholder="VD: SUMMER2025">
+                            <small style="color: #6b7280; font-size: 12px;">Mã duy nhất để khách hàng nhập khi thanh toán</small>
+                            <div class="error-message" th:if="${#fields.hasErrors('code')}" th:errors="*{code}"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Tiêu đề</label>
+                            <input type="text" th:field="*{title}" placeholder="VD: Giảm giá mùa hè">
+                            <small style="color: #6b7280; font-size: 12px;">Tên hiển thị cho voucher (không bắt buộc)</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Mô tả</label>
+                        <textarea th:field="*{description}" rows="3" placeholder="Mô tả chi tiết về voucher..."></textarea>
+                        <small style="color: #6b7280; font-size: 12px;">Thông tin bổ sung về voucher (không bắt buộc)</small>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label class="required">Thuộc chiến dịch</label>
+                        <select th:field="*{campaignId}" required id="campaignSelect">
+                            <option value="">-- Chọn chiến dịch --</option>
+                            <option th:each="c : ${campaigns}" 
+                                    th:value="${c.campaignId}" 
+                                    th:text="${c.name}"
+                                    th:attr="data-discount-type=${c.discountType}, data-discount-value=${c.discountValue}, data-max-discount=${c.maxDiscountAmount}, data-min-order=${c.minOrderValue}"></option>
+                        </select>
+                        <small style="color: #6b7280; font-size: 12px;">Voucher sẽ kế thừa quy tắc giảm giá từ chiến dịch này</small>
+                        <div class="error-message" th:if="${#fields.hasErrors('campaignId')}" th:errors="*{campaignId}"></div>
+                    </div>
+
+                    <!-- Hidden fields: sẽ tự động điền từ campaign -->
+                    <input type="hidden" th:field="*{discountType}" id="discountType">
+                    <input type="hidden" th:field="*{discountValue}" id="discountValue">
+                    <input type="hidden" th:field="*{maxDiscountValue}" id="maxDiscountValue">
+                    <input type="hidden" th:field="*{minOrderValue}" id="minOrderValue">
+
+                    <!-- Hiển thị thông tin discount kế thừa từ campaign -->
+                    <div id="discountInfo" style="display: none; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+                        <div style="font-weight: 600; color: #0c4a6e; margin-bottom: 8px;">Quy tắc giảm giá (kế thừa từ chiến dịch):</div>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 14px; color: #075985;">
+                            <div>Loại giảm: <strong id="infoDiscountType">-</strong></div>
+                            <div>Giá trị: <strong id="infoDiscountValue">-</strong></div>
+                            <div>Giảm tối đa: <strong id="infoMaxDiscount">-</strong></div>
+                            <div>Đơn tối thiểu: <strong id="infoMinOrder">-</strong></div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Số lần tối đa / khách</label>
+                            <input type="number" step="1" min="1" th:field="*{maxRedeemPerCustomer}" placeholder="VD: 3">
+                            <small style="color: #6b7280; font-size: 12px;">Giới hạn số lần sử dụng cho mỗi khách hàng (không bắt buộc)</small>
+                        </div>
+                        <div class="form-group">
+                            <!-- Placeholder để giữ layout 2 cột -->
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="required">Ngày bắt đầu</label>
+                            <input type="date" name="startDate" 
+                                   th:value="${voucher.startDate != null ? voucher.startDate : ''}"
+                                   required>
+                            <small style="color: #6b7280; font-size: 12px;">Ngày voucher có hiệu lực</small>
+                            <div class="error-message" th:if="${#fields.hasErrors('startDate')}" th:errors="*{startDate}"></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="required">Ngày kết thúc</label>
+                            <input type="date" name="endDate"
+                                   th:value="${voucher.endDate != null ? voucher.endDate : ''}"
+                                   required>
+                            <small style="color: #6b7280; font-size: 12px;">Ngày voucher hết hạn</small>
+                            <div class="error-message" th:if="${#fields.hasErrors('endDate')}" th:errors="*{endDate}"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" style="padding: 12px 28px; border-radius: 10px;">
+                            Lưu voucher
+                        </button>
+                        <a th:href="@{/admin/promotions/vouchers}" class="btn btn-secondary" style="padding: 12px 28px; border-radius: 10px;">
+                            Hủy bỏ
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+</div>
+<script>
+    document.addEventListener('click', function (e) {
+        if (!e.target.matches('.menu-toggle')) return;
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) sidebar.classList.toggle('collapsed');
+    });
+
+    // Auto-fill discount info từ campaign khi chọn
+    const campaignSelect = document.getElementById('campaignSelect');
+    const discountInfo = document.getElementById('discountInfo');
+
+    campaignSelect?.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        
+        if (this.value) {
+            const discountType = selectedOption.getAttribute('data-discount-type');
+            const discountValue = selectedOption.getAttribute('data-discount-value');
+            const maxDiscount = selectedOption.getAttribute('data-max-discount');
+            const minOrder = selectedOption.getAttribute('data-min-order');
+
+            // Fill hidden fields
+            document.getElementById('discountType').value = discountType || '';
+            document.getElementById('discountValue').value = discountValue || '';
+            document.getElementById('maxDiscountValue').value = maxDiscount || '';
+            document.getElementById('minOrderValue').value = minOrder || '';
+
+            // Show discount info
+            document.getElementById('infoDiscountType').textContent = discountType || '-';
+            document.getElementById('infoDiscountValue').textContent = discountValue ? (discountType === 'PERCENT' ? discountValue + '%' : discountValue + ' VNĐ') : '-';
+            document.getElementById('infoMaxDiscount').textContent = maxDiscount ? maxDiscount + ' VNĐ' : 'Không giới hạn';
+            document.getElementById('infoMinOrder').textContent = minOrder ? minOrder + ' VNĐ' : 'Không yêu cầu';
+
+            discountInfo.style.display = 'block';
+        } else {
+            discountInfo.style.display = 'none';
+        }
+    });
+
+    // Trigger change on page load if campaign is already selected
+    if (campaignSelect && campaignSelect.value) {
+        campaignSelect.dispatchEvent(new Event('change'));
+    }
+    
+    // Loading indicator for form submission
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) {
+            overlay.classList.add('show');
+        }
+    });
+</script>
+</body>
+</html>

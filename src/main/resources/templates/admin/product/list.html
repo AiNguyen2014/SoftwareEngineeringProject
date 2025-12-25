@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý sản phẩm</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+<body>
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+</div>
+
+<div class="admin-layout">
+    <aside class="sidebar">
+        <div th:replace="~{admin/sidebar :: sidebar}"></div>
+    </aside>
+    <div class="main">
+        <header class="topbar">
+            <div class="topbar-inner">
+                <div class="topbar-left">
+                    <button class="menu-toggle" aria-label="Toggle menu">☰</button>
+                    <h3>Quản lý sản phẩm</h3>
+                </div>
+                <div class="topbar-right">
+                    <a th:href="@{/admin/products/create}" class="btn btn-primary">Thêm sản phẩm</a>
+                </div>
+            </div>
+        </header>
+        <main class="page-content">
+            <div class="container">
+                <!-- Filter Section -->
+                <div class="card" style="margin-bottom: 24px;">
+                    <div class="card-header">
+                        <h4 style="margin: 0; font-size: 16px; font-weight: 600;">Tìm kiếm & Lọc</h4>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/admin/products}" method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: end;">
+                            <div class="form-group">
+                                <label>Từ khóa</label>
+                                <input type="text" name="keyword" th:value="${keyword}" placeholder="Tên hoặc thương hiệu...">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Danh mục</label>
+                                <select name="categoryId">
+                                    <option value="">Tất cả danh mục</option>
+                                    <option th:each="cat : ${categories}" 
+                                            th:value="${cat.categoryId}" 
+                                            th:text="${cat.name}"
+                                            th:selected="${categoryId != null && categoryId == cat.categoryId}">
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Thương hiệu</label>
+                                <input type="text" name="brand" th:value="${brand}" placeholder="Nhập thương hiệu...">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Trạng thái</label>
+                                <select name="status">
+                                    <option value="">Tất cả trạng thái</option>
+                                    <option value="true" th:selected="${status != null && status == true}">Đang bán</option>
+                                    <option value="false" th:selected="${status != null && status == false}">Ngừng bán</option>
+                                </select>
+                            </div>
+
+                            <div style="display: flex; gap: 10px;">
+                                <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+                                <a th:href="@{/admin/products}" class="btn btn-secondary">Xóa bộ lọc</a>
+                            </div>
+                        </form>
+                    </div>
+                        </div>
+
+                <!-- Products Table -->
+                <div class="card">
+                    <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên sản phẩm</th>
+                            <th>Thương hiệu</th>
+                            <th>Danh mục</th>
+                            <th>Giá bán</th>
+                            <th>Trạng thái</th>
+                            <th style="width: 220px;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="product : ${productsPage.content}">
+                            <td th:text="${product.shoeId}"></td>
+                            <td>
+                                <a th:href="@{/admin/products/{id}(id=${product.shoeId})}" 
+                                   style="color: #1e40af; font-weight: 600; text-decoration: none; display: block;"
+                                   th:text="${product.name}">Tên</a>
+                            </td>
+                            <td th:text="${product.brand}"></td>
+                            <td th:text="${product.categoryName}"></td>
+                            <td>
+                                <span th:text="${#numbers.formatDecimal(product.basePrice, 0, 'COMMA', 0, 'POINT')}"></span> đ
+                            </td>
+                            <td>
+                                <span th:if="${product.status}" class="badge badge-success">Đang bán</span>
+                                <span th:unless="${product.status}" class="badge badge-danger">Ngừng bán</span>
+                            </td>
+                            <td>
+                                <a th:href="@{/admin/products/{id}/edit(id=${product.shoeId})}" class="btn btn-secondary" style="padding: 6px 12px; font-size: 13px;">Sửa</a>
+                                
+                                <form th:action="@{/admin/products/{id}/toggle-status(id=${product.shoeId})}" method="post" style="display:inline">
+                                    <button type="submit" th:classappend="${product.status} ? 'btn-warning' : 'btn-success'" class="btn" style="padding: 6px 12px; font-size: 13px;">
+                                        <span th:if="${product.status}">Ngừng bán</span>
+                                        <span th:unless="${product.status}">Kích hoạt</span>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div th:if="${productsPage.totalPages > 1}" style="display: flex; justify-content: center; gap: 8px; margin-top: 24px;">
+            <a th:if="${currentPage > 1}" 
+               th:href="@{/admin/products(page=${currentPage - 1}, size=10, keyword=${keyword}, categoryId=${categoryId}, brand=${brand}, status=${status})}"
+               class="btn btn-secondary" style="padding: 8px 16px; font-size: 14px;">
+                ← Trước
+            </a>
+
+            <th:block th:each="i : ${#numbers.sequence(1, productsPage.totalPages)}">
+                <a th:if="${i != currentPage}" 
+                   th:href="@{/admin/products(page=${i}, size=10, keyword=${keyword}, categoryId=${categoryId}, brand=${brand}, status=${status})}" 
+                   th:text="${i}"
+                   class="btn" style="padding: 8px 16px; font-size: 14px; background: white; color: #333; border: 1px solid #ddd;">
+                </a>
+                <span th:if="${i == currentPage}" th:text="${i}" class="btn btn-primary" style="padding: 8px 16px; font-size: 14px;"></span>
+            </th:block>
+
+            <a th:if="${currentPage < productsPage.totalPages}" 
+               th:href="@{/admin/products(page=${currentPage + 1}, size=10, keyword=${keyword}, categoryId=${categoryId}, brand=${brand}, status=${status})}"
+                   class="btn btn-secondary" style="padding: 8px 16px; font-size: 14px;">
+                    Sau →
+                </a>
+            </div>
+        </div>
+        </main>
+    </div>
+</div>
+
+<script>
+    // Toast notification system
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        const icon = type === 'success' ? '✓' : '×';
+        const title = type === 'success' ? 'Thành công' : 'Lỗi';
+        
+        toast.innerHTML = `
+            <div class="toast-icon">${icon}</div>
+            <div class="toast-content">
+                <div class="toast-title">${title}</div>
+                <div class="toast-message">${message}</div>
+            </div>
+            <button class="toast-close" onclick="closeToast(this)">×</button>
+            <div class="toast-progress"></div>
+        `;
+        
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            closeToast(toast.querySelector('.toast-close'));
+        }, 10000);
+    }
+    
+    function closeToast(button) {
+        const toast = button.closest('.toast');
+        toast.classList.add('hiding');
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }
+    
+    // Show flash messages
+    document.addEventListener('DOMContentLoaded', function() {
+        const successMsg = /*[[${successMessage}]]*/ null;
+        const errorMsg = /*[[${errorMessage}]]*/ null;
+        
+        if (successMsg) {
+            showToast(successMsg, 'success');
+        }
+        if (errorMsg) {
+            showToast(errorMsg, 'error');
+        }
+    });
+    
+    document.addEventListener('click', function (e) {
+        if (!e.target.matches('.menu-toggle')) return;
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) sidebar.classList.toggle('collapsed');
+    });
+    
+    // Loading indicator for forms
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.classList.add('show');
+            }
+        });
+    });
+</script>
+</body>
+</html>

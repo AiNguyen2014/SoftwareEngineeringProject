@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Admin - WebShoe</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}"/>
+    <link rel="stylesheet" th:href="@{/css/common.css}"/>
+    <link rel="stylesheet" th:href="@{/css/inventory.css}"/>
+</head>
+<body>
+
+<div class="admin-layout">
+
+    <aside class="sidebar">
+        <div th:replace="~{admin/sidebar :: sidebar}"></div>
+    </aside>
+
+    <div class="main">
+
+        <header class="topbar">
+            <div class="topbar-inner">
+                <div class="topbar-left">
+                    <button class="menu-toggle" aria-label="Toggle menu">☰</button>
+                    <h3 th:text="${pageTitle} ?: 'Dashboard'">Dashboard</h3>
+                </div>
+                <div class="topbar-right">
+                    <div class="user">Admin</div>
+                </div>
+            </div>
+        </header>
+
+        <main class="page-content">
+            <div th:if="${content}" th:replace="~{__${content}__}">
+                <p>Nội dung đang tải...</p>
+            </div>
+        </main>
+
+    </div>
+
+</div>
+
+<script>
+    // Xử lý toggle menu đơn giản
+    document.addEventListener('click', function (e) {
+        if (!e.target.matches('.menu-toggle')) return;
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) {
+            sidebar.classList.toggle('collapsed');
+        }
+    });
+</script>
+
+</body>
+</html>

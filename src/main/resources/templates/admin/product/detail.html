@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chi tiết sản phẩm - Admin</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <style>
+        .page-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 24px; }
+        .pill { padding: 6px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .pill-success { background: #e1f7e6; color: #0c7a3c; }
+        .pill-muted { background: #e9ecef; color: #495057; }
+        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); margin-bottom: 16px; }
+        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+        .label { font-size: 13px; color: #6c757d; margin-bottom: 4px; font-weight: 600; }
+        .value { font-size: 15px; color: #212529; }
+        .images { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+        .img-box { position: relative; border: 1px solid #e9ecef; border-radius: 10px; overflow: hidden; background: #f8f9fa; }
+        .img-box img { width: 100%; height: 160px; object-fit: cover; display: block; }
+        .thumb-badge { position: absolute; top: 8px; left: 8px; background: #ffd166; color: #663c00; padding: 4px 8px; border-radius: 10px; font-size: 12px; font-weight: 700; }
+        .variants { width: 100%; border-collapse: collapse; }
+        .variants th, .variants td { padding: 10px 12px; border-bottom: 1px solid #e9ecef; text-align: left; font-size: 14px; }
+        .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn { border: none; border-radius: 8px; padding: 10px 14px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-primary { background: #5865f2; color: white; }
+        .btn-secondary { background: #e9ecef; color: #212529; }
+        .btn-outline { background: transparent; border: 1px solid #ced4da; color: #212529; }
+    </style>
+</head>
+<body>
+<div class="admin-layout">
+    <aside class="sidebar">
+        <div th:replace="~{admin/sidebar :: sidebar}"></div>
+    </aside>
+    <div class="main">
+        <header class="topbar">
+            <div class="topbar-inner">
+                <div class="topbar-left">
+                    <button class="menu-toggle" aria-label="Toggle menu">☰</button>
+                    <h3>Chi tiết sản phẩm</h3>
+                </div>
+                <div class="topbar-right">
+                    <div class="user">Admin</div>
+                </div>
+            </div>
+        </header>
+
+        <main class="page-content">
+            <div class="page-header">
+                <div>
+                    <h2 th:text="${shoes.name}">Tên sản phẩm</h2>
+                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:6px;">
+                        <span class="pill" th:text="${'ID: ' + shoes.shoeId}"></span>
+                        <span class="pill pill-muted" th:text="${shoes.brand}">Brand</span>
+                        <span class="pill pill-muted" th:text="${shoes.type}">TYPE</span>
+                        <span class="pill" th:classappend="${shoes.status} ? ' pill-success' : ' pill-muted'"
+                              th:text="${shoes.status} ? 'Đang bán' : 'Ngừng bán'"></span>
+                    </div>
+                </div>
+                <div class="actions">
+                    <a th:href="@{/admin/products}" class="btn btn-outline">← Quay lại</a>
+                    <a th:href="@{/admin/products/{id}/edit(id=${shoes.shoeId})}" class="btn btn-primary">✏️ Sửa</a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="grid-2">
+                    <div>
+                        <div class="label">Danh mục</div>
+                        <div class="value" th:text="${shoes.categoryName}">Danh mục</div>
+                    </div>
+                    <div>
+                        <div class="label">Giá cơ bản</div>
+                        <div class="value" th:text="${#numbers.formatDecimal(shoes.basePrice, 0, 'COMMA', 0, 'POINT')} + ' đ'">0 đ</div>
+                    </div>
+                    <div>
+                        <div class="label">Bộ sưu tập</div>
+                        <div class="value" th:text="${shoes.collection}">Collection</div>
+                    </div>
+                    <div>
+                        <div class="label">Mô tả</div>
+                        <div class="value" th:text="${shoes.description}">Mô tả</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom:12px;">Hình ảnh</h3>
+                <div class="images" th:if="${shoes.images != null && !shoes.images.isEmpty()}">
+                    <div class="img-box" th:each="img : ${shoes.images}">
+                        <img th:src="${img.url}" alt="image">
+                        <div class="thumb-badge" th:if="${img.thumbnail}">Thumbnail</div>
+                    </div>
+                </div>
+                <div th:if="${shoes.images == null || shoes.images.isEmpty()}">Chưa có hình ảnh.</div>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom:12px;">Biến thể (Màu - Size)</h3>
+                <table class="variants" th:if="${shoes.variants != null && !shoes.variants.isEmpty()}">
+                    <thead>
+                        <tr><th>Màu</th><th>Size</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="v : ${shoes.variants}">
+                            <td th:text="${v.color}">Color</td>
+                            <td th:text="${v.size}">Size</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div th:if="${shoes.variants == null || shoes.variants.isEmpty()}">Chưa có biến thể.</div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('click', function (e) {
+        if (!e.target.matches('.menu-toggle')) return;
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) sidebar.classList.toggle('collapsed');
+    });
+</script>
+</body>
+</html>

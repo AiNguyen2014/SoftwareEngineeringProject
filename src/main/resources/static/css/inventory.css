@@ -1,0 +1,355 @@
+/* --- 1. CONTAINER CHÍNH --- */
+.inventory-container {
+    background-color: #fff;
+    border-radius: 16px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+/* --- 2. HEADER & TOOLBAR --- */
+.inventory-header {
+    
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+/* Cụm tìm kiếm "lai" */
+.inventory-search-wrapper {
+    display: flex;
+    align-items: center;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    padding: 4px;
+    flex: 1;
+    max-width: 700px;
+    transition: 0.2s;
+}
+
+.search-wrapper:focus-within {
+    border-color: #0d6efd;
+    background-color: #fff;
+    box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
+}
+
+.inventory-search-icon {
+    padding: 0 15px;
+    color: #adb5bd;
+    font-size: 14px;
+}
+
+.inventory-search-input {
+    border: none;
+    outline: none;
+    background: transparent;
+    flex-grow: 1;
+    padding: 8px 0;
+    color: #333;
+}
+
+.inventory-filter-select {
+    border: none;
+    border-left: 1px solid #dee2e6;
+    outline: none;
+    background: transparent;
+    padding: 0 15px;
+    color: #555;
+    cursor: pointer;
+    height: 30px;
+}
+
+.inventory-btn-search {
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-search:hover {
+    background-color: #0b5ed7;
+}
+
+/* Nút nhập hàng */
+.inventory-btn-import {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #198754;
+    color: white;
+    text-decoration: none;
+    padding: 10px 24px;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: transform 0.2s;
+    white-space: nowrap;
+}
+
+.btn-import:hover {
+    background-color: #157347;
+    transform: translateY(-2px);
+    color: white;
+}
+
+/* --- 3. BẢNG DỮ LIỆU --- */
+.inventory-table-wrapper {
+    width: 100%;
+    overflow-x: auto; /* Cho phép cuộn ngang nếu bảng quá to */
+}
+
+.inventory-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.inventory-table th {
+    text-align: left;
+    background-color: #f9fafb;
+    color: #6b7280;
+    font-size: 12px;
+    text-transform: uppercase;
+    font-weight: 700;
+    padding: 16px;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.inventory-table td {
+    padding: 16px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f3f4f6;
+    color: #374151;
+}
+
+/* Style cho cột sản phẩm */
+.inventory-product-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.inventory-product-icon {
+    width: 40px;
+    height: 40px;
+    background: #f3f4f6;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.inventory-product-name {
+    font-weight: 600;
+    color: #111827;
+}
+
+.inventory-product-sku {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.inventory-id-col {
+    font-weight: 600;
+    color: #9ca3af;
+}
+
+.qty-text {
+    font-weight: 700;
+    font-size: 16px;
+}
+
+/* Badge trạng thái */
+.inventory-status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.inventory-status-badge.instock {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.inventory-status-badge.outstock {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+.inventory-status-badge.almost_outstock {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+}
+
+.btn-detail {
+    color: #3b82f6;
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.btn-detail:hover {
+    background-color: #eff6ff;
+}
+
+/* --- 4. FOOTER / PAGINATION --- */
+.inventory-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 10px;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.pagination-list {
+    list-style: none;
+    display: flex;
+    gap: 5px;
+    margin: 0;
+    padding: 0;
+}
+
+.pagination-list a {
+    text-decoration: none;
+    padding: 6px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    color: #374151;
+    transition: 0.2s;
+}
+
+.pagination-list a.active {
+    background-color: #0d6efd;
+    color: white;
+    border-color: #0d6efd;
+}
+
+.pagination-list a:hover:not(.active) {
+    background-color: #f9fafb;
+}
+.inventory-text-center { text-align: center; }
+.inventory-text-end { text-align: right; }
+/*INVENTORY NOTIFICATION*/
+.inv-notification-wrapper {
+    position: relative;
+    margin-right: 20px;
+    cursor: pointer;
+}
+
+.inv-bell-trigger {
+    position: relative;
+    padding: 8px;
+    color: #555;
+    transition: 0.2s;
+}
+
+.inv-bell-trigger:hover {
+    color: #0061f2; /* Hover đổi màu xanh */
+    transform: scale(1.1);
+}
+
+/* Chấm đỏ số lượng */
+.inv-notification-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: #dc3545; /* Màu đỏ */
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 2px 5px;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+/* Dropdown Menu */
+.inv-notification-dropdown {
+    display: none; /* Mặc định ẩn */
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 300px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    z-index: 1000;
+    overflow: hidden;
+    animation: fadeIn 0.2s ease;
+    border: 1px solid #eee;
+}
+
+/* Class để hiện menu khi click */
+.inv-notification-dropdown.show {
+    display: block;
+}
+
+.inv-dropdown-header {
+    padding: 12px 15px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #eee;
+}
+.inv-dropdown-header h6 { margin: 0; font-weight: 700; color: #333; }
+
+.inv-dropdown-body {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* Từng dòng thông báo */
+.inv-notify-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    text-decoration: none;
+    border-bottom: 1px solid #f1f1f1;
+    transition: 0.2s;
+}
+
+.inv-notify-item:hover {
+    background-color: #f8f9fa;
+}
+
+.inv-notify-icon {
+    font-size: 18px;
+    margin-right: 12px;
+}
+
+.inv-notify-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+}
+
+.inv-notify-desc {
+    font-size: 12px;
+    color: #666;
+}
+
+.inv-text-danger { color: #dc3545; }
+.inv-text-warning { color: #d39e00; }
+
+.inv-empty-state {
+    padding: 20px;
+    text-align: center;
+    color: #999;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

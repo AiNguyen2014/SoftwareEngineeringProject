@@ -16,13 +16,17 @@ public class FileUploadService {
     private final Cloudinary cloudinary;
 
     public String uploadFile(MultipartFile file) throws IOException {
-        // Upload lên Cloudinary, folder "shoe_store_avatar"
+        return uploadFileToFolder(file, "shoe_store_avatar");
+        }
+
+        public String uploadFileToFolder(MultipartFile file, String folder) throws IOException {
+        // Upload lên Cloudinary với folder truyền vào
         return cloudinary.uploader()
-                .upload(file.getBytes(), ObjectUtils.asMap(
-                        "public_id", UUID.randomUUID().toString(),
-                        "folder", "shoe_store_avatar"
-                ))
-                .get("url")
-                .toString();
+            .upload(file.getBytes(), ObjectUtils.asMap(
+                "public_id", UUID.randomUUID().toString(),
+                "folder", folder
+            ))
+            .get("url")
+            .toString();
     }
 }

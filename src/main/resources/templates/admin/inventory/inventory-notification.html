@@ -1,0 +1,67 @@
+<div th:fragment="notification-bell" class="inv-notification-wrapper">
+    
+    <!-- 1. NÚT CHUÔNG -->
+    <div class="inv-bell-trigger" onclick="toggleNotification()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" class="inv-bi bi-bell-fill" viewBox="0 0 16 16">
+            <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zm.995-14.901a1 1 0 1 0-1.99 0A5.002 5.002 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7 0-2.42-1.72-4.44-4.005-4.901z"/>
+        </svg>
+        <span class="inv-notification-badge"
+              th:if="${notifications != null && !notifications.isEmpty()}"
+              th:text="${notifications.size()}">3</span>
+    </div>
+
+    <div id="notificationDropdown" class="inv-notification-dropdown">
+        <div class="inv-dropdown-header">
+            <h6>Thông báo</h6>
+        </div>
+        
+        <div class="inv-dropdown-body">
+            
+            <!-- TRƯỜNG HỢP 1: KHÔNG CÓ THÔNG BÁO -->
+            <div th:if="${notifications == null || notifications.isEmpty()}" class="inv-empty-state">
+                <p>Kho hàng ổn định ✅</p>
+            </div>
+
+            <!-- TRƯỜNG HỢP 2: CÓ THÔNG BÁO (Phải tách riêng ra khỏi div ở trên) -->
+            <div th:if="${notifications != null && !notifications.isEmpty()}">
+                <a th:each="item : ${notifications}" href="#" class="inv-notify-item">
+                    <div class="inv-notify-icon">
+                        <span th:if="${item.status.name() == 'OUT_OF_STOCK'}">🔴</span>
+                        <span th:if="${item.status.name() == 'ALMOST_OUT_OF_STOCK'}">⚠️</span>
+                    </div>
+                    <div class="inv-notifi-content">
+                        <div class="inv-notify-title" th:text="${item.shoeName}"></div>
+                        <div class="inv-notify-desc">
+                            <span th:if="${item.status.name() == 'OUT_OF_STOCK'}" class="inv-text-danger">Đã hết hàng</span>
+                            <span th:if="${item.status.name() == 'ALMOST_OUT_OF_STOCK'}" class="inv-text-warning">
+                                Chỉ còn <b th:text="${item.quantity}"></b> đôi
+                            </span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 3. SCRIPT (Đã sửa lỗi chính tả closet -> closest) -->
+    <script>
+        function toggleNotification(){
+            var dropdown = document.getElementById("notificationDropdown");
+            if(dropdown) {
+                dropdown.classList.toggle("show");
+            }
+        }
+        
+        window.onclick = function(event){
+            // Sửa closet -> closest
+            if (!event.target.closest('.inv-notification-wrapper')){
+                var dropdown = document.getElementById("notificationDropdown");
+                // Sửa classlist -> classList
+                if (dropdown && dropdown.classList.contains('show')){
+                    dropdown.classList.remove('show');
+                }
+            }
+        }
+    </script>
+</div>
