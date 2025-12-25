@@ -73,10 +73,19 @@
                 <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
                     <li><h6 class="dropdown-header">Tài khoản</h6></li>
                     <li><a class="dropdown-item" th:href="@{/user/profile}"><i class="fas fa-user me-2"></i>Hồ sơ</a></li>
+                    <!-- Chỉ hiện Lịch sử đơn hàng cho user thường, không hiện cho admin -->
+                    <li th:if="${role == null || role.toString() != 'ADMIN'}">
+                        <a class="dropdown-item" th:href="@{/order/history}"><i class="fas fa-history me-2"></i>Lịch sử đơn hàng</a>
+                    </li>
                     
                     <!-- Hiện menu Admin nếu có quyền -->
                     <li th:if="${role != null && role.toString() == 'ADMIN'}">
                         <hr class="dropdown-divider">
+                    </li>
+                    <li th:if="${role != null && role.toString() == 'ADMIN'}">
+                        <a class="dropdown-item text-primary" href="/order/admin/all">
+                            <i class="fas fa-list me-2"></i>Quản lý đơn hàng
+                        </a>
                     </li>
                     <li th:if="${role != null && role.toString() == 'ADMIN'}">
                         <a class="dropdown-item text-primary" href="/admin">

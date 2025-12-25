@@ -100,6 +100,7 @@ public class AuthController {
             // Lưu thông tin user vào session
             session.setAttribute("USER_ID", user.getUserId());
             session.setAttribute("FULLNAME", user.getFullname());
+            session.setAttribute("EMAIL", user.getEmail());
             session.setAttribute("ROLE", user.getAccount().getRole());
             session.setAttribute("AVATAR", user.getAvatar());
             

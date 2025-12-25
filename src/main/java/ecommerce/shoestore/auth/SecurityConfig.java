@@ -39,35 +39,46 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
         http
-                .csrf(csrf -> csrf.disable())
-                .securityContext(context -> context
-                    .requireExplicitSave(false)  // Tự động lưu SecurityContext vào session
-                )
-                .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/shoes", "/index", "/auth/**", "/css/**", "/js/**", "/images/**", "/error", "/product/**", "/user/**", "/cart/**", "/order/**").permitAll()
+            .csrf(csrf -> csrf.disable())
+            .securityContext(context -> context
+                .requireExplicitSave(false)  // Tự động lưu SecurityContext vào session
+            )
+            .sessionManagement(session
+                    -> session.sessionFixation().none()
+            )
+            .authorizeHttpRequests(auth -> auth
+                // PUBLIC
+                .requestMatchers(
+                        "/", "/index", "/shoes", "/product/**",
+                        "/auth/**", "/user/**", "/cart/**",
+                        "/css/**", "/js/**", "/images/**",
+                        "/error",
+                        "/order/**" // Include all order pages
+                ).permitAll()
+                // ADMIN
                 .requestMatchers("/admin/**").hasRole("ADMIN")
+                // Authentication required for other requests
                 .anyRequest().authenticated()
-                )
-                .formLogin(form -> form
+            )
+            .formLogin(form -> form
                 .loginPage("/auth/login")
                 .loginProcessingUrl("/j_spring_security_check")
                 .defaultSuccessUrl("/", true)
                 .failureUrl("/auth/login?error=true")
                 .permitAll()
-                )
-                .exceptionHandling(exception -> exception
+            )
+            .exceptionHandling(exception -> exception
                 .authenticationEntryPoint((request, response, authException) -> {
                     // Nếu chưa login và cố truy cập trang yêu cầu auth, redirect đến login
                     response.sendRedirect("/auth/login");
                 })
-                )
-                .logout(logout -> logout
+            )
+            .logout(logout -> logout
                 .logoutUrl("/auth/logout")
                 .logoutSuccessUrl("/auth/login?logout")
                 .permitAll()
-                );
+            );
 
         return http.build();
     }

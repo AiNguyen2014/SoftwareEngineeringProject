@@ -16,6 +16,7 @@
     <groupId>com.shoestore</groupId>
     <artifactId>webshoe</artifactId>
     <version>1.0.0</version>
+    <packaging>war</packaging>
     <name>WebShoe</name>
     <description>Web application for viewing shoe products</description>
 
@@ -98,6 +99,33 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+
+        <dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+
+        <dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
+
+        <dependency>
+            <groupId>com.cloudinary</groupId>
+            <artifactId>cloudinary-http44</artifactId>
+            <version>1.36.0</version>
+        </dependency>
+
+        <!-- Spring Boot Starter Tomcat - provided scope for WAR deployment -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-tomcat</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>
