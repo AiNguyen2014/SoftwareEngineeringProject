@@ -2,11 +2,11 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Hồ sơ cá nhân</title>
-    <th:block th:replace="fragments :: head_header"></th:block>
+    <th:block th:replace="~{fragments :: head_header}"></th:block>
 </head>
 <body class="bg-light">
 
-<div th:replace="fragments :: header"></div>
+<div th:replace="~{fragments :: header}"></div>
 
 <div class="container my-5">
     <div class="row justify-content-center">
@@ -99,7 +99,7 @@
     </div>
 </div>
 
-<div th:replace="fragments :: footer"></div>
+<div th:replace="~{fragments :: footer}"></div>
 
 <!-- JS Preview Ảnh -->
 <script>

@@ -37,7 +37,7 @@ src/main/java/com/ecommerce/shoestore
      │   ├── style.css              # CSS chính cho toàn trang
      │   ├── product.css            # CSS cho trang sản phẩm (optional)
      │
-     └── images/                    # Tài nguyên hình ảnh
+     └── img/                    # Tài nguyên hình ảnh
 
 ```
 ---

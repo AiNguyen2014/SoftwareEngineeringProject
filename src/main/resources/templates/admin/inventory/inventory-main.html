@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Quản lý tồn kho | WebShoe Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/admin.css}"/>
+    <link rel="stylesheet" th:href="@{/css/inventory.css}"/>
+    <link rel="stylesheet" th:href="@{/css/common.css}"/>
+</head>
+<body>
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+</div>
+<div class="admin-layout">
+
+    <aside class="sidebar">
+        <div th:replace="~{admin/sidebar :: sidebar}"></div>
+    </aside>
+
+    <!-- 2. NỘI DUNG CHÍNH -->
+    <div class="main">
+
+        <header class="topbar">
+            <div class="topbar-inner">
+                <div class="topbar-left">
+                    <button class = "menu-toggle" aria-label = "Toggle menu">☰</button>
+                    <h3>Quản lý tồn kho</h3>
+                </div>
+                
+                <!-- PHẦN THÔNG BÁO (CHUÔNG) -->
+                <div class="topbar-right">
+
+                    <div th:replace="~{admin/inventory/inventory-notification :: notification-bell}"></div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Nội dung bảng (Copy từ code cũ vào đây) -->
+        <main class="page-content">
+            <div class="inventory-container">
+                
+                <!-- Thanh công cụ tìm kiếm -->
+                <div class="inventory-header">
+                    <form class="inventory-search-wrapper" th:action="@{/admin/inventory}" method="get">
+                        <span class="inventory-search-icon">🔍</span>
+                        <input type="text" class="inventory-search-input" name="keyword" 
+                               th:value="${currentKeyword}" placeholder="Tìm kiếm sản phẩm..."/>
+                        
+                        <select class="inventory-filter-select" name="status">
+                            <option value="">Tất cả trạng thái</option>
+                            <option value="IN_STOCK" th:selected="${currentStatus != null && currentStatus.name() == 'IN_STOCK'}">Còn hàng</option>
+                            <option value="OUT_OF_STOCK" th:selected="${currentStatus != null && currentStatus.name() == 'OUT_OF_STOCK'}">Hết hàng</option>
+                            <option value="ALMOST_OUT_OF_STOCK" th:selected="${currentStatus != null && currentStatus.name() == 'ALMOST_OUT_OF_STOCK'}">Sắp hết hàng</option>
+                        </select>
+                        <button type="submit" class="inventory-btn-search">Tìm</button>
+                    </form>
+
+                    <div class="inventory-action-buttons">
+                        <a th:href="@{/admin/products}" class="inventory-btn-import">
+                            <span style = "margin-right: 5px; display: flex; align-items: center;">
+                                <svg xmlns = "http://www.w3.org/2000/svg" width="20" height = "20"
+                                fill = "currentColor" class = "bi bi-arrow-right-circle" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 
+                                8 0 0 1 16 0zM4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 
+                                0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5z"/>
+                                </svg>
+                            </span>
+                            Nhập hàng mới
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Bảng dữ liệu -->
+                <div class="inventory-table-wrapper">
+                    <table class="inventory-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Sản phẩm</th>
+                                <th class="inventory-text-center">Số lượng</th>
+                                <th class="inventory-text-center">Trạng thái</th>
+                                <th class="inventory-text-end">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="item : ${inventories}">
+                                <td th:text="'#' + ${item.shoeId}" class="inventory-id-col"></td>
+                                <td>
+                                    <div class="inventory-product-info">
+                                        <div class="inventory-product-icon">👟</div>
+                                        <div>
+                                            <div th:text="${item.shoeName}" class="inventory-product-name"></div>
+                                            <div class="inventory-product-sku"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td th:text="${item.quantity}" class="inventory-text-center qty-text"></td>
+                                <td class="inventory-text-center">
+                                    <span th:if="${item.status.name() == 'IN_STOCK'}" class="inventory-status-badge instock">● Còn hàng</span>
+                                    <span th:if="${item.status.name() == 'OUT_OF_STOCK'}" class="inventory-status-badge outstock">● Hết hàng</span>
+                                    <span th:if="${item.status.name() == 'ALMOST_OUT_OF_STOCK'}" class="inventory-status-badge almost_outstock">● Sắp hết</span>
+                                </td>
+                                <td class="inventory-text-end">
+                                    <a th:href="@{/admin/inventory/detail/{id}(id=${item.inventoryId})}" class="btn-detail">Chi tiết</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Footer -->
+                <div class="inventory-footer">
+                    <div class="footer-info">Hiển thị danh sách sản phẩm</div>
+                </div>
+
+            </div>
+        </main>
+
+    </div>
+</div>
+
+</body>
+</html>

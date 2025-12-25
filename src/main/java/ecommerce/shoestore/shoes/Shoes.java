@@ -5,8 +5,10 @@ import ecommerce.shoestore.shoesimage.ShoesImage;
 import ecommerce.shoestore.shoesvariant.ShoesVariant;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -52,6 +54,10 @@ public class Shoes {
     @Builder.Default
     @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT true")
     private Boolean status = true;
+    
+    @CreationTimestamp
+    @Column(name = "\"createdAt\"", updatable = false)
+    private OffsetDateTime createdAt;
 
     @OneToMany(mappedBy = "shoes", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("isThumbnail DESC, imageId ASC")

@@ -39,8 +39,9 @@ public class AdminProductController {
             @RequestParam(required = false) String status,
             Model model
     ) {
-        Page<AdminShoesListItemDto> productPage =
-                adminProductService.getAdminProductList(page, size, keyword, categoryId, brand, status);
+
+        Page<AdminShoesListItemDto> productPage
+                = adminProductService.getAdminProductList(page, size, keyword, categoryId, brand, status);
 
         if (page > productPage.getTotalPages() && productPage.getTotalPages() > 0) {
             return "redirect:/admin/products?page=" + productPage.getTotalPages();
@@ -149,7 +150,8 @@ public class AdminProductController {
             model.addAttribute("shoesTypes", ShoesType.values());
             try {
                 model.addAttribute("shoes", adminProductService.getAdminShoesDetail(id));
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
             model.addAttribute("error", e.getMessage());
             return "admin/product/edit";
         }

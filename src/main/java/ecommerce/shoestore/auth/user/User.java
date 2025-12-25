@@ -9,32 +9,36 @@ import ecommerce.shoestore.auth.account.Account;
 import ecommerce.shoestore.auth.address.Address;
 
 @Entity
-@Table(name = "users") 
-@Data @NoArgsConstructor @AllArgsConstructor
+@Table(name = "users")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "\"userId\"")
     private Long userId;
 
     @Column(nullable = false)
     private String fullname;
-    
+
     @Column(nullable = false, unique = true)
     private String email;
-    
+
     @Column(name = "\"dateOfBirth\"", nullable = false)
     private LocalDate dateOfBirth;
-    
+
     @Enumerated(EnumType.STRING)
     private UserGender gender;
-    
+
     @Column(nullable = false, unique = true)
     private String phone;
-    
+
     @Column(columnDefinition = "TEXT", nullable = true)
     private String avatar;
 
-    @Column(name = "\"registrationDate\"", updatable = false) 
+    @Column(name = "\"registrationDate\"", updatable = false)
     private LocalDateTime registrationDate;
 
     @OneToOne(cascade = CascadeType.ALL)

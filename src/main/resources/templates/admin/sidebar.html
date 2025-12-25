@@ -11,8 +11,8 @@
         <nav class="menu">
 
             <a th:href="@{/admin}"
-               class="menu-item"
-               th:classappend="${activeMenu == 'dashboard'} ? 'active' : ''">
+            class="menu-item"
+            th:classappend="${activeMenu == 'dashboard'} ? 'active' : ''">
                 <span class="menu-icon">🏠</span>
                 <span class="menu-label">Dashboard</span>
             </a>
@@ -24,7 +24,13 @@
                 <span class="menu-label">Quản lý sản phẩm</span>
             </a>
 
-            <hr>
+            <hr/>
+
+            <a th:href="@{/admin/inventory}" class="menu-item"
+                th:classappend="${activeMenu == 'inventory'} ? 'active' : ''">
+                <span class="menu-icon">🏭</span>
+                <span class="menu-label">Quản lý tồn kho</span>
+            </a>
 
             <a th:href="@{/admin/promotions/campaigns}"
                class="menu-item"
@@ -40,20 +46,24 @@
             </a>
 
             <a href="#" class="menu-item disabled">
-                <span class="menu-icon">🎯</span>
-                <span class="menu-label">Quản lý tồn kho</span>
-            </a>
-
-            <a href="#" class="menu-item disabled">
                 <span class="menu-icon">📊</span>
                 <span class="menu-label">Báo cáo</span>
             </a>
 
         </nav>
 
-        <!-- FOOTER -->
-        <div class="sidebar-footer">
-            <span>© WebShoe</span>
+        <div class="sidebar-bottom">
+            
+            <!-- Nút Thoát: Trở về trang chủ (/) hoặc trang login -->
+            <a th:href="@{/}" class="btn-logout">
+                <span class="menu-icon" style="margin-right: 10px;">🚪</span>
+                Thoát
+            </a>
+
+            <!-- Footer bản quyền -->
+            <div class="sidebar-footer">
+                <span>© 2025 WebShoe</span>
+            </div>
         </div>
 
     </div>

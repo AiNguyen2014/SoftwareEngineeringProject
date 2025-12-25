@@ -14,7 +14,7 @@
         <div class="hero-content">
             <span class="hero-subtitle">NEW ARRIVALS 2025</span>
             <h1 class="hero-title">ĐẲNG CẤP<br>THỜI THƯỢNG</h1>
-            <p class="hero-desc">Bộ sưu tập giới hạn dành riêng cho mùa hè này.</p>
+            <p class="hero-desc">Bộ sưu tập giới hạn dành riêng cho mùa đông này.</p>
             <a href="#shop" class="btn-hero">Mua Ngay</a>
         </div>
     </div>
@@ -30,14 +30,15 @@
     </div>
 
     <div class="product-grid">
-        <div class="product-card" th:each="product : ${products}">
+        <div class="product-card" th:each="product : ${products}" th:classappend="${product.outOfStock} ? 'out-of-stock' : ''">
             <a th:href="@{/product/{shoeId}(shoeId=${product.shoeId})}" class="product-img-wrap">
                 <img th:src="${product.thumbnailUrl}"
                      th:alt="${product.name}"
                      loading="lazy"
                      onerror="this.src='https://placehold.co/400x400?text=No+Image'">
                 <div class="badge-overlay">
-                    <span class="badge-new">NEW</span>
+                    <span class="badge-new" th:if="${product.isNew}">NEW</span>
+                    <span class="badge-soldout" th:if="${product.outOfStock}">HẾT HÀNG</span>
                 </div>
             </a>
             <div class="product-info">

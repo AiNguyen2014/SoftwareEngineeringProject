@@ -35,6 +35,7 @@
 │ - description: String (Text)        │
 │ - collection: String                │
 │ - status: Boolean (Default: true)   │
+│ - createdAt: LocalDateTime          │
 ├─────────────────────────────────────┤
 │ + getters/setters                   │
 └─────────────────────────────────────┘
