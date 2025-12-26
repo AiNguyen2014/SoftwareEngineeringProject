@@ -83,11 +83,6 @@
                         <hr class="dropdown-divider">
                     </li>
                     <li th:if="${role != null && role.toString() == 'ADMIN'}">
-                        <a class="dropdown-item text-primary" href="/order/admin/all">
-                            <i class="fas fa-list me-2"></i>Quản lý đơn hàng
-                        </a>
-                    </li>
-                    <li th:if="${role != null && role.toString() == 'ADMIN'}">
                         <a class="dropdown-item text-primary" href="/admin">
                             <i class="fas fa-cogs me-2"></i>Quản trị
                         </a>

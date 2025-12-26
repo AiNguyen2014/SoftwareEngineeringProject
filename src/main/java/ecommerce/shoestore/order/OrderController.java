@@ -459,6 +459,7 @@ public class OrderController {
         } catch (Exception e) {
             System.out.println("===== ORDER CREATION ERROR =====");
             System.out.println("Error message: " + e.getMessage());
+            System.out.println("Error class: " + e.getClass().getSimpleName());
             e.printStackTrace();
             redirectAttributes.addFlashAttribute("error", "Đặt hàng thất bại: " + e.getMessage());
             return "redirect:/cart";

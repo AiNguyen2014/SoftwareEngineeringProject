@@ -1,13 +1,14 @@
 package ecommerce.shoestore.order.dto;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+
 import ecommerce.shoestore.order.OrderStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
 @Builder
@@ -19,6 +20,8 @@ public class OrderHistoryDto {
     private String customerEmail;
     private LocalDateTime createAt;
     private OrderStatus status;
+    private String statusDisplay; // Tiếng Việt 
+    private String statusColorClass; // CSS class
     private BigDecimal subTotal;
     private BigDecimal discountAmount;
     private BigDecimal totalAmount;
