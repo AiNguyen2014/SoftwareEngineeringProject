@@ -23,7 +23,7 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-    
+
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -31,7 +31,7 @@ public class SecurityConfig {
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
-    
+
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
@@ -46,7 +46,14 @@ public class SecurityConfig {
                     .requireExplicitSave(false)  // Tự động lưu SecurityContext vào session
                 )
                 .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/shoes", "/index", "/auth/**", "/css/**", "/js/**", "/images/**", "/error", "/product/**", "/user/**", "/cart/**", "/order/**").permitAll()
+                // PUBLIC
+                .requestMatchers(
+                        "/", "/index", "/shoes", "/product/**",
+                        "/auth/**", "/user/**", "/cart/**",
+                        "/css/**", "/js/**", "/images/**",
+                        "/error", "/api/search-suggestions", "/search/**", "/products","/order/**"
+                ).permitAll()
+                // ADMIN
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
                 )

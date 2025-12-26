@@ -157,3 +157,62 @@ footer {
     font-size: 0.9rem;
     font-weight: 500;
 }
+
+/* Container chính */
+.search-box {
+    width: fit-content;
+    height: fit-content;
+    position: relative;
+    margin-right: 10px; /* Cách các icon khác một chút */
+}
+
+/* Ô nhập liệu (mặc định ẩn/thu nhỏ) */
+.input-search {
+    height: 40px;
+    width: 40px; /* Thu nhỏ bằng kích thước icon */
+    border-style: none;
+    padding: 10px;
+    font-size: 16px;
+    letter-spacing: 2px;
+    outline: none;
+    border-radius: 25px;
+    transition: all .5s ease-in-out;
+    background-color: transparent; /* Nền trong suốt */
+    padding-right: 40px; /* Chừa chỗ cho nút search */
+    color: #333;
+}
+
+/* Nút icon kính lúp */
+.btn-search {
+    width: 40px;
+    height: 40px;
+    border-style: none;
+    font-size: 18px;
+    font-weight: bold;
+    outline: none;
+    cursor: pointer;
+    border-radius: 50%;
+    position: absolute;
+    right: 0px;
+    color: #333;
+    background-color: transparent;
+    pointer-events: none; /* Để click xuyên qua input khi chưa mở */
+}
+
+.input-search:focus,
+.search-box:hover .input-search {
+    width: 250px; /* Mở rộng ra */
+    border-radius: 0px;
+    background-color: transparent;
+    border-bottom: 1px solid #333; /* Hiện đường kẻ dưới */
+    transition: all 500ms cubic-bezier(0, 0.110, 0.35, 2);
+}
+.search-box {
+    position: relative;
+}
+
+#searchSuggestions {
+    width: 100%;
+    max-height: 300px;
+    overflow-y: auto;
+}
