@@ -18,6 +18,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -489,15 +492,13 @@ public class OrderController {
             
             // Lấy thông tin từ session hoặc form
             String type = (String) session.getAttribute("SHIPPING_TYPE");
-<<<<<<< HEAD
             if (type == null) {
                 type = "CART"; // Default to CART if not specified
             }
             
-            String finalRecipientName = (String) session.getAttribute("SHIPPING_RECIPIENT_NAME");
-            if (finalRecipientName == null) {
-                finalRecipientName = recipientName;
-            }
+            Long addressId = (Long) session.getAttribute("SHIPPING_ADDRESS_ID");
+            String recipientEmail = (String) session.getAttribute("SHIPPING_RECIPIENT_EMAIL");
+            String note = (String) session.getAttribute("SHIPPING_NOTE");
             
             String finalRecipientPhone = (String) session.getAttribute("SHIPPING_RECIPIENT_PHONE");
             if (finalRecipientPhone == null) {
@@ -520,15 +521,7 @@ public class OrderController {
             }
             
             System.out.println("Type: " + type);
-            System.out.println("RecipientName: " + finalRecipientName);
-=======
-            Long addressId = (Long) session.getAttribute("SHIPPING_ADDRESS_ID");
-            String recipientEmail = (String) session.getAttribute("SHIPPING_RECIPIENT_EMAIL");
-            String note = (String) session.getAttribute("SHIPPING_NOTE");
-            
-            System.out.println("Type: " + type);
             System.out.println("AddressId: " + addressId);
->>>>>>> 36fbf3fa5454a47e01774541a10e402bfccbb730
             System.out.println("PaymentMethod: " + paymentMethod);
             System.out.println("VoucherCode: " + voucherCode);
             
@@ -542,12 +535,6 @@ public class OrderController {
                 Cart cart = cartRepository.findCartWithItems(user)
                         .orElseThrow(() -> new RuntimeException("Giỏ hàng trống"));
                 
-<<<<<<< HEAD
-                order = orderService.createOrderFromCart(
-                        user.getUserId(),
-                        finalRecipientName, finalRecipientPhone, finalRecipientEmail, finalRecipientAddress,
-                        paymentMethod, finalNote, cart
-=======
                 // Lấy danh sách IDs được chọn từ session
                 String cartItemIds = (String) session.getAttribute("SELECTED_CART_ITEM_IDS");
                 
@@ -569,7 +556,6 @@ public class OrderController {
                 order = orderService.createOrderFromSelectedItems(
                         user.getUserId(), addressId, recipientEmail,
                         paymentMethod, note, selectedItems, voucherCode
->>>>>>> 36fbf3fa5454a47e01774541a10e402bfccbb730
                 );
                 
                 // Xóa session data
@@ -581,15 +567,8 @@ public class OrderController {
                 Integer quantity = (Integer) session.getAttribute("SHIPPING_QUANTITY");
                 
                 order = orderService.createOrderBuyNow(
-<<<<<<< HEAD
-                        user.getUserId(),
-                        finalRecipientName, finalRecipientPhone, finalRecipientEmail, finalRecipientAddress,
-                        paymentMethod, finalNote,
-                        variantId, quantity
-=======
                         user.getUserId(), addressId, recipientEmail,
                         paymentMethod, note, variantId, quantity, voucherCode
->>>>>>> 36fbf3fa5454a47e01774541a10e402bfccbb730
                 );
                 
             } else {
