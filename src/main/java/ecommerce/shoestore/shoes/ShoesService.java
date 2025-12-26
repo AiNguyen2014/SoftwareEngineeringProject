@@ -7,22 +7,20 @@ import ecommerce.shoestore.shoes.dto.ShoesSummaryDto;
 import ecommerce.shoestore.shoesimage.ShoesImage;
 import ecommerce.shoestore.shoesvariant.ShoesVariant;
 import ecommerce.shoestore.shoesvariant.ShoesVariantDto;
-import ecommerce.shoestore.shoes.ShoesType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.data.domain.Sort; // import để sắp xếp
+
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
+/**
+ * Service chính cho Shoes - chỉ chứa logic hiển thị chi tiết sản phẩm
+ * Các logic search/filter/sort đã được tách ra ShoesSearchService
+ */
 @Service
 @RequiredArgsConstructor
 public class ShoesService {
@@ -208,158 +206,5 @@ public class ShoesService {
         }
 
         return result;
-    }
-
-
-
-    /**
-     * Gợi ý tìm kiếm (brand + product name)
-     * Dùng cho autocomplete dropdown
-     */
-    @Transactional(readOnly = true)
-    public List<String> getSearchSuggestions(String keyword) {
-
-        // gọi query lấy danh sách gợi ý
-        List<String> suggestions = shoesRepository.findSuggestions(keyword);
-
-        if (suggestions == null || suggestions.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        // Giới hạn 10 gợi ý tối đa
-        return suggestions.stream()
-                .distinct()
-                .limit(10)
-                .collect(Collectors.toList());
-    }
-
-    private String buildSortKey(String sortKey) {
-        if (sortKey == null || sortKey.isBlank()) {
-            return "name_asc"; // mặc định
-        }
-
-        return switch (sortKey) {
-            case "newest",
-                 "price_asc",
-                 "price_desc",
-                 "name_asc",
-                 "name_desc" -> sortKey;
-            default -> "name_asc";
-        };
-    }
-
-    @Transactional(readOnly = true)
-    public ShoesListDto searchProducts(
-            String keyword,
-            Long categoryId,
-            String brand,
-            String type,
-            BigDecimal minPrice,
-            BigDecimal maxPrice,
-            int page,
-            int size,
-            String sort
-    ) {
-        brand = (brand != null && brand.isBlank()) ? null : brand;
-        sort = (sort != null && sort.isBlank()) ? null : sort;
-
-        if (minPrice != null && minPrice.compareTo(BigDecimal.ZERO) <= 0) {
-            minPrice = null;
-        }
-        if (maxPrice != null && maxPrice.compareTo(BigDecimal.ZERO) <= 0) {
-            maxPrice = null;
-        }
-
-        // sold → chuyển sang query riêng
-        if ("sold".equals(sort)) {
-            return searchProductsWithSoldSort(
-                    keyword,
-                    categoryId,
-                    brand,
-                    type,
-                    minPrice,
-                    maxPrice,
-                    page,
-                    size
-            );
-        }
-
-        String sortKey = buildSortKey(sort);
-
-        Pageable pageable = PageRequest.of(page - 1, size);
-
-
-        String kw = (keyword != null && !keyword.isBlank())
-                ? keyword.trim()
-                : null;
-
-        Page<Shoes> pageResult = shoesRepository.searchAndFilter(
-                kw,
-                categoryId,
-                brand,
-                type,
-                minPrice,
-                maxPrice,
-                sortKey,
-                pageable
-        );
-
-        List<ShoesSummaryDto> dtos = pageResult.getContent().stream()
-                .map(this::convertToSummaryDto)
-                .toList();
-
-        return ShoesListDto.builder()
-                .products(dtos)
-                .currentPage(page)
-                .totalPages(pageResult.getTotalPages())
-                .totalItems(pageResult.getTotalElements())
-                .build();
-    }
-
-    public List<String> findAllBrands(ShoesType type) {
-        if (type == null) {
-            return shoesRepository.findDistinctBrands();
-        }
-        return shoesRepository.findDistinctBrandsByType(type);
-    }
-
-
-    @Transactional(readOnly = true)
-    public ShoesListDto searchProductsWithSoldSort(
-            String keyword,
-            Long categoryId,
-            String brand,
-            String type,
-            BigDecimal minPrice,
-            BigDecimal maxPrice,
-            int page,
-            int size
-    ) {
-        Pageable pageable = PageRequest.of(page - 1, size);
-
-        String kw = (keyword != null && !keyword.isBlank())
-                ? keyword.trim()
-                : null;
-
-        Page<Shoes> pageResult = shoesRepository.findBestSeller(
-                kw,
-                categoryId,
-                brand,
-                type,
-                minPrice,
-                maxPrice,
-                pageable
-        );
-
-        List<ShoesSummaryDto> products = pageResult.getContent().stream()
-                .map(this::convertToSummaryDto)
-                .toList();
-
-        return ShoesListDto.builder()
-                .products(products)
-                .currentPage(page)
-                .totalPages(pageResult.getTotalPages())
-                .totalItems(pageResult.getTotalElements())
-                .build();
     }
 }
