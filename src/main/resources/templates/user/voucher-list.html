@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Mã giảm giá | WEBSHOE</title>
-    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <th:block th:replace="~{fragments :: head_header}"></th:block>
     <style>
         .voucher-page {
             max-width: 1200px;
@@ -222,7 +222,7 @@
     
     <div th:if="${vouchers != null and !vouchers.isEmpty()}" class="voucher-grid">
         <div th:each="voucher : ${vouchers}" class="voucher-card">
-            <span th:if="${voucher.status.name() == 'ACTIVE'}" class="voucher-ribbon">HOT</span>
+            <span th:if="${voucher.status != null and voucher.status.name() == 'ACTIVE'}" class="voucher-ribbon">HOT</span>
             
             <div class="voucher-card-header">
                 <div class="voucher-code">
@@ -292,6 +292,7 @@
 
 <div th:replace="~{fragments :: footer}"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     function copyCode(button) {
         const code = button.getAttribute('data-code');

@@ -33,18 +33,11 @@ public class CustomerPromotionController {
     public String listVouchers(HttpSession session, Model model) {
         Long userId = (Long) session.getAttribute("USER_ID");
         
-        // Nếu chưa login, vẫn hiển thị vouchers nhưng không check usage
-        BigDecimal orderValue = new BigDecimal("0"); // Default order value
+        // Lấy tất cả vouchers đang hoạt động (không filter theo minOrderValue)
+        // để customer có thể xem tất cả vouchers hiện có
+        List<Voucher> allVouchers = customerPromotionService.getAllActiveVouchers();
         
-        List<Voucher> availableVouchers;
-        if (userId != null) {
-            availableVouchers = customerPromotionService.getAvailableVouchers(userId, orderValue);
-        } else {
-            // Guest users - chỉ lấy vouchers enabled và trong thời gian hiệu lực
-            availableVouchers = customerPromotionService.getAvailableVouchers(null, orderValue);
-        }
-        
-        model.addAttribute("vouchers", availableVouchers);
+        model.addAttribute("vouchers", allVouchers);
         model.addAttribute("pageTitle", "Mã giảm giá");
         
         return "user/voucher-list";

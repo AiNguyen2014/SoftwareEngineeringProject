@@ -1,6 +1,6 @@
 package ecommerce.shoestore.promotion.dto;
 
-import ecommerce.shoestore.promotion.DiscountType;
+import ecommerce.shoestore.promotion.VoucherDiscountType;
 import ecommerce.shoestore.promotion.Voucher;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,7 +23,7 @@ public class VoucherDisplayDTO {
     private Long voucherId;
     private String code;
     private String description;
-    private DiscountType discountType;
+    private VoucherDiscountType discountType;
     private BigDecimal discountValue;
     private BigDecimal maxDiscountValue;
     private BigDecimal minOrderValue;
@@ -124,7 +124,7 @@ public class VoucherDisplayDTO {
      * Lấy mô tả giảm giá cho hiển thị
      */
     public String getDiscountDisplay() {
-        if (discountType == DiscountType.PERCENTAGE) {
+        if (discountType == VoucherDiscountType.PERCENT) {
             String text = discountValue.stripTrailingZeros().toPlainString() + "%";
             if (maxDiscountValue != null && maxDiscountValue.compareTo(BigDecimal.ZERO) > 0) {
                 text += " (tối đa " + formatCurrency(maxDiscountValue) + ")";

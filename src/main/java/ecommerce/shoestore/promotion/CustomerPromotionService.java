@@ -58,6 +58,35 @@ public class CustomerPromotionService {
     }
 
     /**
+     * Lấy tất cả voucher đang hoạt động (không filter theo minOrderValue)
+     * Dùng cho trang hiển thị danh sách tất cả vouchers
+     */
+    @Transactional(readOnly = true)
+    public List<Voucher> getAllActiveVouchers() {
+        LocalDate today = LocalDate.now();
+        
+        return voucherRepository.findAllWithCampaign().stream()
+                // Voucher phải enabled
+                .filter(v -> Boolean.TRUE.equals(v.getEnabled()))
+                // Campaign cũng phải enabled
+                .filter(v -> v.getCampaign() != null && Boolean.TRUE.equals(v.getCampaign().getEnabled()))
+                // Trong thời gian hiệu lực của voucher
+                .filter(v -> !v.getStartDate().isAfter(today))
+                .filter(v -> !v.getEndDate().isBefore(today))
+                // Trong thời gian hiệu lực của campaign
+                .filter(v -> v.getCampaign() != null && !v.getCampaign().getStartDate().isAfter(today))
+                .filter(v -> v.getCampaign() != null && !v.getCampaign().getEndDate().isBefore(today))
+                // Cập nhật status trước khi trả về
+                .peek(v -> {
+                    v.updateStatus();
+                    if (v.getCampaign() != null) {
+                        v.getCampaign().updateStatus();
+                    }
+                })
+                .toList();
+    }
+
+    /**
      * Lấy danh sách voucher để hiển thị cho customer (bao gồm cả voucher không đủ điều kiện)
      * Voucher đủ điều kiện sẽ hiển thị trước, voucher không đủ điều kiện hiển thị màu xám
      */

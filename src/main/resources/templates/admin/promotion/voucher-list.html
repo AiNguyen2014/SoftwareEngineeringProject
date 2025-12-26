@@ -160,12 +160,11 @@
                                 <span th:text="${#temporals.format(v.endDate, 'dd/MM/yyyy')}">31/01</span>
                             </td>
                             <td>
-                                <span class="badge"
-                                      th:classappend="${v.status != null && v.status.name() == 'ACTIVE'} ? 'badge-success' : (${v.status != null && (v.status.name() == 'EXPIRED' || v.status.name() == 'CANCELLED')} ? 'badge-danger' : 'badge-warning')">
-                                    <span th:if="${v.status == null || v.status.name() == 'DRAFT'}">Nháp</span>
-                                    <span th:if="${v.status != null && v.status.name() == 'ACTIVE'}">Đang hoạt động</span>
-                                    <span th:if="${v.status != null && v.status.name() == 'EXPIRED'}">Hết hạn</span>
-                                    <span th:if="${v.status != null && v.status.name() == 'CANCELLED'}">Đã hủy</span>
+                                <span th:switch="${v.status?.name()}">
+                                    <span th:case="'ACTIVE'" class="badge badge-success">Đang hoạt động</span>
+                                    <span th:case="'ENDED'" class="badge badge-danger">Hết hạn</span>
+                                    <span th:case="'CANCELLED'" class="badge badge-danger">Đã hủy</span>
+                                    <span th:case="*" class="badge badge-warning">Nháp</span>
                                 </span>
                             </td>
                             <td>

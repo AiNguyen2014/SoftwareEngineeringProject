@@ -31,12 +31,17 @@ public class PromotionService {
     /* ===== Campaign ===== */
     @Transactional(readOnly = true)
     public List<PromotionCampaign> listCampaigns() {
-        return campaignRepository.findAll();
+        List<PromotionCampaign> campaigns = campaignRepository.findAll();
+        // Cập nhật status dựa trên thời gian hiện tại
+        campaigns.forEach(PromotionCampaign::updateStatus);
+        return campaigns;
     }
 
     @Transactional(readOnly = true)
     public List<PromotionCampaign> searchCampaigns(String keyword, String discountType, String status, Boolean enabled) {
         List<PromotionCampaign> campaigns = campaignRepository.findAll();
+        // Cập nhật status dựa trên thời gian hiện tại trước khi filter
+        campaigns.forEach(PromotionCampaign::updateStatus);
         
         return campaigns.stream()
                 .filter(c -> keyword == null || keyword.isBlank() || 
@@ -51,8 +56,11 @@ public class PromotionService {
 
     @Transactional(readOnly = true)
     public PromotionCampaign getCampaign(Long id) {
-        return campaignRepository.findByIdWithTargets(id)
+        PromotionCampaign campaign = campaignRepository.findByIdWithTargets(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy chiến dịch"));
+        // Cập nhật status dựa trên thời gian hiện tại
+        campaign.updateStatus();
+        return campaign;
     }
 
     @Transactional
@@ -183,12 +191,17 @@ public class PromotionService {
     /* ===== Voucher ===== */
     @Transactional(readOnly = true)
     public List<Voucher> listVouchers() {
-        return voucherRepository.findAllWithCampaign();
+        List<Voucher> vouchers = voucherRepository.findAllWithCampaign();
+        // Cập nhật status dựa trên thời gian hiện tại
+        vouchers.forEach(Voucher::updateStatus);
+        return vouchers;
     }
 
     @Transactional(readOnly = true)
     public List<Voucher> searchVouchers(String keyword, Long campaignId, String discountType, Boolean enabled) {
         List<Voucher> vouchers = voucherRepository.findAllWithCampaign();
+        // Cập nhật status dựa trên thời gian hiện tại trước khi filter
+        vouchers.forEach(Voucher::updateStatus);
         
         return vouchers.stream()
                 .filter(v -> keyword == null || keyword.isBlank() || 
@@ -203,13 +216,19 @@ public class PromotionService {
 
     @Transactional(readOnly = true)
     public Voucher getVoucher(Long id) {
-        return voucherRepository.findByIdWithCampaign(id)
+        Voucher voucher = voucherRepository.findByIdWithCampaign(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy voucher"));
+        // Cập nhật status dựa trên thời gian hiện tại
+        voucher.updateStatus();
+        return voucher;
     }
     
     @Transactional(readOnly = true)
     public List<Voucher> getVouchersByCampaign(Long campaignId) {
-        return voucherRepository.findByCampaign_CampaignId(campaignId);
+        List<Voucher> vouchers = voucherRepository.findByCampaign_CampaignId(campaignId);
+        // Cập nhật status dựa trên thời gian hiện tại
+        vouchers.forEach(Voucher::updateStatus);
+        return vouchers;
     }
 
     @Transactional
