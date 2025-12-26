@@ -3,9 +3,241 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title th:text="${pageTitle}">Chiến dịch</title>
+    <title th:text="${pageTitle}">Chiến dịch khuyến mãi</title>
     <link rel="stylesheet" th:href="@{/css/admin.css}">
     <link rel="stylesheet" th:href="@{/css/common.css}">
+    <style>
+        .form-card {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        
+        .form-header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 24px 32px;
+        }
+        
+        .form-header h3 {
+            margin: 0 0 8px 0;
+            font-size: 1.5rem;
+        }
+        
+        .form-header p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .form-body {
+            padding: 32px;
+        }
+        
+        .form-section {
+            margin-bottom: 28px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .form-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .section-title .icon {
+            width: 28px;
+            height: 28px;
+            background: #d1fae5;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        
+        .section-number {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 16px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+        
+        .form-group label {
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+        
+        .form-group label.required::after {
+            content: " *";
+            color: #ef4444;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 10px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+        
+        .form-group input:disabled {
+            background: #f3f4f6;
+            cursor: not-allowed;
+        }
+        
+        .form-group select[multiple] {
+            height: auto;
+            min-height: 120px;
+        }
+        
+        .form-hint {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+            display: flex;
+            align-items: flex-start;
+            gap: 4px;
+        }
+        
+        .form-hint::before {
+            content: "💡";
+            font-size: 11px;
+        }
+        
+        .error-message {
+            color: #ef4444;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            margin-top: 24px;
+        }
+        
+        .btn {
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+        
+        .info-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: #166534;
+            margin-bottom: 16px;
+        }
+        
+        .info-box strong {
+            color: #15803d;
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-badge.auto {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .form-group.full-width {
+                grid-column: span 1;
+            }
+        }
+    </style>
 </head>
 <body>
 <!-- Loading Overlay -->
@@ -29,136 +261,182 @@
         <main class="page-content">
             <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
 
-            <div class="card" style="max-width: 900px; margin: 0 auto;">
-                <div style="margin-bottom: 24px;">
-                    <h3 class="section-title" th:text="${pageTitle}">Tạo chiến dịch</h3>
-                    <p class="section-sub">Điền đầy đủ thông tin chiến dịch để áp dụng giảm giá cho khách hàng.</p>
+            <div class="form-card">
+                <div class="form-header">
+                    <h3 th:text="${pageTitle}">Tạo chiến dịch mới</h3>
+                    <p>Thiết lập chiến dịch khuyến mãi để áp dụng giảm giá cho khách hàng. Voucher sẽ kế thừa quy tắc từ chiến dịch.</p>
                 </div>
-                <form th:action="${campaign.campaignId} == null ? @{/admin/promotions/campaigns/create} : @{'/admin/promotions/campaigns/' + ${campaign.campaignId} + '/edit'}" method="post" th:object="${campaign}">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="required">Tên chiến dịch</label>
-                            <input type="text" th:field="*{name}" required placeholder="VD: Giảm giá cuối năm">
-                            <small style="color: #6b7280; font-size: 12px;">Tên hiển thị của chiến dịch khuyến mãi</small>
-                            <div class="error-message" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
-                        </div>
-                        <div class="form-group">
-                            <label>Trạng thái</label>
-                            <input type="text" th:value="${campaign.status != null ? campaign.status : 'AUTO'}" disabled style="background: #f3f4f6; color: #6b7280;">
-                            <small style="color: #6b7280; font-size: 12px;">Trạng thái tự động cập nhật theo ngày</small>
-                        </div>
-                    </div>
-
-                    <div class="form-group full-width">
-                        <label>Mô tả</label>
-                        <textarea th:field="*{description}" rows="3" placeholder="Mô tả chi tiết về chiến dịch..."></textarea>
-                        <small style="color: #6b7280; font-size: 12px;">Thông tin bổ sung về chiến dịch (không bắt buộc)</small>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="required">Ngày bắt đầu</label>
-                            <input type="date" name="startDate" 
-                                   th:value="${campaign.startDate != null ? campaign.startDate : ''}"
-                                   required>
-                            <small style="color: #6b7280; font-size: 12px;">Ngày bắt đầu áp dụng chiến dịch</small>
-                            <div class="error-message" th:if="${#fields.hasErrors('startDate')}" th:errors="*{startDate}"></div>
-                        </div>
-                        <div class="form-group">
-                            <label class="required">Ngày kết thúc</label>
-                            <input type="date" name="endDate"
-                                   th:value="${campaign.endDate != null ? campaign.endDate : ''}"
-                                   required>
-                            <small style="color: #6b7280; font-size: 12px;">Ngày kết thúc chiến dịch</small>
-                            <div class="error-message" th:if="${#fields.hasErrors('endDate')}" th:errors="*{endDate}"></div>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="required">Loại giảm</label>
-                            <select th:field="*{discountType}" required>
-                                <option value="">-- Chọn loại giảm --</option>
-                                <option value="PERCENT">Giảm theo phần trăm (%)</option>
-                                <option value="FIXED_AMOUNT">Giảm số tiền cố định (VNĐ)</option>
-                            </select>
-                            <small style="color: #6b7280; font-size: 12px;">PERCENT (%) hoặc FIXED_AMOUNT (VNĐ)</small>
-                            <div class="error-message" th:if="${#fields.hasErrors('discountType')}" th:errors="*{discountType}"></div>
-                        </div>
-                        <div class="form-group">
-                            <label class="required">Giá trị giảm</label>
-                            <input type="number" step="1" min="0" th:field="*{discountValue}" required placeholder="VD: 10 hoặc 100000">
-                            <small style="color: #6b7280; font-size: 12px;">Nếu % thì nhập 10, nếu VNĐ thì nhập 100000</small>
-                            <div class="error-message" th:if="${#fields.hasErrors('discountValue')}" th:errors="*{discountValue}"></div>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Mức giảm tối đa</label>
-                            <input type="number" step="1000" min="0" th:field="*{maxDiscountAmount}" placeholder="VD: 100000">
-                            <small style="color: #6b7280; font-size: 12px;">Giới hạn số tiền giảm (không bắt buộc)</small>
-                        </div>
-                        <div class="form-group">
-                            <label>Giá trị đơn hàng tối thiểu</label>
-                            <input type="number" step="1000" min="0" th:field="*{minOrderValue}" placeholder="VD: 500000">
-                            <small style="color: #6b7280; font-size: 12px;">Đơn hàng tối thiểu để áp dụng (không bắt buộc)</small>
-                        </div>
-                    </div>
-
-                    <!-- Phạm vi áp dụng section -->
-                    <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #e5e7eb;">
-                        <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #1f2937;">Phạm vi áp dụng</h4>
+                
+                <div class="form-body">
+                    <form th:action="${campaign.campaignId} == null ? @{/admin/promotions/campaigns/create} : @{'/admin/promotions/campaigns/' + ${campaign.campaignId} + '/edit'}" 
+                          method="post" th:object="${campaign}" id="campaignForm">
                         
-                        <div class="form-group full-width">
-                            <label class="required">Loại áp dụng</label>
-                            <select th:field="*{targetType}" id="targetTypeSelect" required onchange="toggleTargetSelection()">
-                                <option th:each="t : ${targetTypes}" th:value="${t}"
-                                        th:text="${t == T(ecommerce.shoestore.promotion.ProductTargetType).ALL ? 'Tất cả sản phẩm' :
-                                                  (t == T(ecommerce.shoestore.promotion.ProductTargetType).PRODUCT ? 'Sản phẩm cụ thể' : 'Theo danh mục')}">
-                                </option>
-                            </select>
-                            <small style="color: #6b7280; font-size: 12px;">Chọn phạm vi sản phẩm được áp dụng giảm giá</small>
-                        </div>
-                        
-                        <div id="productSelection" class="form-group full-width" style="display: none;">
-                            <label class="required">Chọn sản phẩm</label>
-                            <select name="shoeIds" multiple size="8" style="height: auto;">
-                                <option th:each="shoe : ${allShoes}" 
-                                        th:value="${shoe.shoeId}" 
-                                        th:text="${shoe.name}"
-                                        th:selected="${selectedShoeIds != null && #lists.contains(selectedShoeIds, shoe.shoeId)}">
-                                </option>
-                            </select>
-                            <small style="color: #6b7280; font-size: 12px;">Giữ Ctrl (Windows) hoặc Cmd (Mac) để chọn nhiều sản phẩm</small>
-                        </div>
-                        
-                        <div id="categorySelection" class="form-group full-width" style="display: none;">
-                            <label class="required">Chọn danh mục</label>
-                            <select name="categoryIds" multiple size="5" style="height: auto;">
-                                <option th:each="cat : ${allCategories}" 
-                                        th:value="${cat.categoryId}" 
-                                    th:text="${cat.name}"
-                                        th:selected="${selectedCategoryIds != null && #lists.contains(selectedCategoryIds, cat.categoryId)}">
-                                </option>
-                            </select>
-                            <small style="color: #6b7280; font-size: 12px;">Giữ Ctrl (Windows) hoặc Cmd (Mac) để chọn nhiều danh mục</small>
-                        </div>
-                    </div>
+                        <!-- Section 1: Thông tin cơ bản -->
+                        <div class="form-section">
+                            <div class="section-title">
+                                <span class="section-number">1</span>
+                                Thông tin cơ bản
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="required">Tên chiến dịch</label>
+                                    <input type="text" th:field="*{name}" required 
+                                           placeholder="VD: Khuyến mãi Tết 2025, Black Friday">
+                                    <div class="form-hint">Tên dễ nhớ để quản lý chiến dịch</div>
+                                    <div class="error-message" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Trạng thái</label>
+                                    <input type="text" th:value="${campaign.status != null ? campaign.status : 'Tự động cập nhật'}" 
+                                           disabled style="background: #f3f4f6;">
+                                    <div class="form-hint">Trạng thái tự động dựa trên ngày bắt đầu/kết thúc</div>
+                                </div>
+                            </div>
 
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary" style="padding: 12px 28px; border-radius: 10px;">
-                            Lưu chiến dịch
-                        </button>
-                        <a th:href="@{/admin/promotions/campaigns}" class="btn btn-secondary" style="padding: 12px 28px; border-radius: 10px;">
-                            Hủy bỏ
-                        </a>
-                    </div>
-                </form>
+                            <div class="form-group full-width">
+                                <label>Mô tả chiến dịch</label>
+                                <textarea th:field="*{description}" rows="3" 
+                                          placeholder="VD: Chương trình giảm giá cuối năm, áp dụng cho tất cả sản phẩm..."></textarea>
+                                <div class="form-hint">Mô tả chi tiết giúp team hiểu mục đích chiến dịch</div>
+                            </div>
+                        </div>
+
+                        <!-- Section 2: Thời gian -->
+                        <div class="form-section">
+                            <div class="section-title">
+                                <span class="section-number">2</span>
+                                Thời gian chiến dịch
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="required">Ngày bắt đầu</label>
+                                    <input type="date" name="startDate" id="startDate"
+                                           th:value="${campaign.startDate != null ? campaign.startDate : ''}"
+                                           required>
+                                    <div class="form-hint">Ngày chiến dịch bắt đầu có hiệu lực</div>
+                                    <div class="error-message" th:if="${#fields.hasErrors('startDate')}" th:errors="*{startDate}"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="required">Ngày kết thúc</label>
+                                    <input type="date" name="endDate" id="endDate"
+                                           th:value="${campaign.endDate != null ? campaign.endDate : ''}"
+                                           required>
+                                    <div class="form-hint">Ngày cuối cùng chiến dịch hoạt động</div>
+                                    <div class="error-message" th:if="${#fields.hasErrors('endDate')}" th:errors="*{endDate}"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 3: Quy tắc giảm giá -->
+                        <div class="form-section">
+                            <div class="section-title">
+                                <span class="section-number">3</span>
+                                Quy tắc giảm giá
+                            </div>
+                            
+                            <div class="info-box">
+                                <strong>Lưu ý:</strong> Các voucher thuộc chiến dịch này sẽ tự động kế thừa quy tắc giảm giá bạn thiết lập ở đây.
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="required">Loại giảm giá</label>
+                                    <select th:field="*{discountType}" required id="discountTypeSelect" 
+                                            onchange="updateDiscountValuePlaceholder()">
+                                        <option value="">-- Chọn loại giảm giá --</option>
+                                        <option value="PERCENT">Giảm theo phần trăm (%)</option>
+                                        <option value="FIXED_AMOUNT">Giảm số tiền cố định (VNĐ)</option>
+                                    </select>
+                                    <div class="form-hint">Chọn cách tính giảm giá cho khách hàng</div>
+                                    <div class="error-message" th:if="${#fields.hasErrors('discountType')}" th:errors="*{discountType}"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="required">Giá trị giảm</label>
+                                    <input type="text" id="discountValue" required placeholder="VD: 10 hoặc 100,000">
+                                    <input type="hidden" th:field="*{discountValue}" id="discountValueHidden">
+                                    <div class="form-hint" id="discountValueHint">Nhập số % hoặc số tiền VNĐ tùy loại</div>
+                                    <div class="error-message" th:if="${#fields.hasErrors('discountValue')}" th:errors="*{discountValue}"></div>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group" id="maxDiscountAmountGroup">
+                                    <label>Mức giảm tối đa (VNĐ)</label>
+                                    <input type="text" id="maxDiscountAmount" placeholder="VD: 100,000">
+                                    <input type="hidden" th:field="*{maxDiscountAmount}" id="maxDiscountAmountHidden">
+                                    <div class="form-hint">Giới hạn số tiền giảm tối đa (chỉ áp dụng cho giảm %)</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Đơn hàng tối thiểu (VNĐ)</label>
+                                    <input type="text" id="minOrderValue" placeholder="VD: 500,000">
+                                    <input type="hidden" th:field="*{minOrderValue}" id="minOrderValueHidden">
+                                    <div class="form-hint">Giá trị đơn hàng tối thiểu để áp dụng giảm giá</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 4: Phạm vi áp dụng -->
+                        <div class="form-section">
+                            <div class="section-title">
+                                <span class="section-number">4</span>
+                                Phạm vi áp dụng
+                            </div>
+                            
+                            <div class="form-group full-width">
+                                <label class="required">Áp dụng cho</label>
+                                <select id="targetTypeSelect" th:field="*{targetType}" 
+                                        required onchange="toggleTargetSelection(true)">
+                                    <option value="">-- Chọn phạm vi áp dụng --</option>
+                                    <option value="ALL">Tất cả sản phẩm</option>
+                                    <option value="PRODUCT">Sản phẩm cụ thể</option>
+                                    <option value="CATEGORY">Theo danh mục</option>
+                                </select>
+                                <div class="form-hint">Chọn sản phẩm nào được áp dụng chiến dịch này</div>
+                            </div>
+                            
+                            <div id="productSelection" class="form-group full-width" style="display: none;">
+                                <label class="required">Chọn sản phẩm</label>
+                                <select name="shoeIds" multiple size="8">
+                                    <option th:each="shoe : ${allShoes}" 
+                                            th:value="${shoe.shoeId}" 
+                                            th:text="${shoe.name}"
+                                            th:selected="${selectedShoeIds != null && #lists.contains(selectedShoeIds, shoe.shoeId)}">
+                                    </option>
+                                </select>
+                                <div class="form-hint">Giữ Ctrl (Windows) hoặc Cmd (Mac) để chọn nhiều sản phẩm</div>
+                            </div>
+                            
+                            <div id="categorySelection" class="form-group full-width" style="display: none;">
+                                <label class="required">Chọn danh mục</label>
+                                <select name="categoryIds" multiple size="5">
+                                    <option th:each="cat : ${allCategories}" 
+                                            th:value="${cat.categoryId}" 
+                                            th:text="${cat.name}"
+                                            th:selected="${selectedCategoryIds != null && #lists.contains(selectedCategoryIds, cat.categoryId)}">
+                                    </option>
+                                </select>
+                                <div class="form-hint">Giữ Ctrl (Windows) hoặc Cmd (Mac) để chọn nhiều danh mục</div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                Lưu chiến dịch
+                            </button>
+                            <a th:href="@{/admin/promotions/campaigns}" class="btn btn-secondary">
+                                Hủy bỏ
+                            </a>
+                        </div>
+                    </form>
+                </div>
             </div>
         </main>
     </div>
 </div>
+
 <script>
     document.addEventListener('click', function (e) {
         if (!e.target.matches('.menu-toggle')) return;
@@ -166,16 +444,116 @@
         if (sidebar) sidebar.classList.toggle('collapsed');
     });
     
-    // Loading indicator for form submission
-    document.querySelector('form').addEventListener('submit', function(e) {
-        const overlay = document.getElementById('loadingOverlay');
-        if (overlay) {
-            overlay.classList.add('show');
-        }
-    });
+    // Format số theo chuẩn Việt Nam
+    function formatNumber(num) {
+        if (!num) return '';
+        return Number(num).toLocaleString('vi-VN');
+    }
     
-    // Toggle target selection based on targetType
-    function toggleTargetSelection() {
+    function parseNumber(str) {
+        if (!str) return '';
+        return str.toString().replace(/[^\d]/g, '');
+    }
+    
+    // Setup currency input với format
+    function setupCurrencyInput(displayId, hiddenId) {
+        const displayInput = document.getElementById(displayId);
+        const hiddenInput = document.getElementById(hiddenId);
+        
+        if (!displayInput || !hiddenInput) return;
+        
+        displayInput.addEventListener('focus', function(e) {
+            const value = parseNumber(e.target.value);
+            if (value) e.target.value = value;
+        });
+        
+        displayInput.addEventListener('blur', function(e) {
+            let value = parseNumber(e.target.value);
+            if (value) {
+                e.target.value = formatNumber(value);
+                hiddenInput.value = value;
+            } else {
+                e.target.value = '';
+                hiddenInput.value = '';
+            }
+        });
+        
+        displayInput.addEventListener('keypress', function(e) {
+            if (!/[0-9]/.test(e.key)) e.preventDefault();
+        });
+    }
+    
+    // Toggle maxDiscountAmount field
+    function toggleMaxDiscountField() {
+        const discountType = document.getElementById('discountTypeSelect').value;
+        const maxDiscountGroup = document.getElementById('maxDiscountAmountGroup');
+        
+        if (discountType === 'PERCENT') {
+            maxDiscountGroup.style.display = 'block';
+        } else {
+            maxDiscountGroup.style.display = 'none';
+            document.getElementById('maxDiscountAmount').value = '';
+            document.getElementById('maxDiscountAmountHidden').value = '';
+        }
+    }
+    
+    // Update placeholder based on discount type
+    function updateDiscountValuePlaceholder() {
+        const discountType = document.getElementById('discountTypeSelect').value;
+        const discountValueInput = document.getElementById('discountValue');
+        const hint = document.getElementById('discountValueHint');
+        
+        if (discountType === 'PERCENT') {
+            discountValueInput.placeholder = 'VD: 10, 20, 50';
+            hint.textContent = 'Nhập số phần trăm (VD: 10 nghĩa là giảm 10%)';
+        } else if (discountType === 'FIXED_AMOUNT') {
+            discountValueInput.placeholder = 'VD: 50,000 hoặc 100,000';
+            hint.textContent = 'Nhập số tiền VNĐ muốn giảm';
+        } else {
+            discountValueInput.placeholder = 'VD: 10 hoặc 100,000';
+            hint.textContent = 'Nhập số % hoặc số tiền VNĐ tùy loại';
+        }
+        
+        toggleMaxDiscountField();
+    }
+    
+    // Setup discount value input
+    function setupDiscountValueInput() {
+        const displayInput = document.getElementById('discountValue');
+        const hiddenInput = document.getElementById('discountValueHidden');
+        const typeSelect = document.getElementById('discountTypeSelect');
+        
+        if (!displayInput || !hiddenInput) return;
+        
+        displayInput.addEventListener('focus', function(e) {
+            const value = parseNumber(e.target.value);
+            if (value) e.target.value = value;
+        });
+        
+        displayInput.addEventListener('blur', function(e) {
+            const discountType = typeSelect.value;
+            let value = parseNumber(e.target.value);
+            
+            if (value) {
+                if (discountType === 'FIXED_AMOUNT') {
+                    e.target.value = formatNumber(value);
+                } else {
+                    e.target.value = value;
+                }
+                hiddenInput.value = value;
+            } else {
+                e.target.value = '';
+                hiddenInput.value = '';
+            }
+        });
+        
+        displayInput.addEventListener('keypress', function(e) {
+            if (!/[0-9]/.test(e.key)) e.preventDefault();
+        });
+    }
+    
+    // Toggle target selection
+    function toggleTargetSelection(isUserAction = false) {
         const targetType = document.getElementById('targetTypeSelect').value;
         const productSelection = document.getElementById('productSelection');
         const categorySelection = document.getElementById('categorySelection');
@@ -185,14 +563,91 @@
         
         if (targetType === 'PRODUCT') {
             productSelection.style.display = 'block';
+            productSelection.querySelector('select').required = true;
+            categorySelection.querySelector('select').required = false;
+            if (isUserAction) {
+                const catSelect = categorySelection.querySelector('select');
+                if (catSelect) Array.from(catSelect.options).forEach(opt => opt.selected = false);
+            }
         } else if (targetType === 'CATEGORY') {
             categorySelection.style.display = 'block';
+            categorySelection.querySelector('select').required = true;
+            productSelection.querySelector('select').required = false;
+            if (isUserAction) {
+                const prodSelect = productSelection.querySelector('select');
+                if (prodSelect) Array.from(prodSelect.options).forEach(opt => opt.selected = false);
+            }
+        } else {
+            productSelection.querySelector('select').required = false;
+            categorySelection.querySelector('select').required = false;
+            if (isUserAction) {
+                const prodSelect = productSelection.querySelector('select');
+                const catSelect = categorySelection.querySelector('select');
+                if (prodSelect) Array.from(prodSelect.options).forEach(opt => opt.selected = false);
+                if (catSelect) Array.from(catSelect.options).forEach(opt => opt.selected = false);
+            }
         }
     }
     
-    // Initialize on page load
+    // Validate dates
+    function validateDates() {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        
+        if (startDate && endDate && startDate > endDate) {
+            alert('Ngày kết thúc phải sau hoặc bằng ngày bắt đầu!');
+            return false;
+        }
+        return true;
+    }
+    
+    // Form submit
+    document.getElementById('campaignForm')?.addEventListener('submit', function(e) {
+        if (!validateDates()) {
+            e.preventDefault();
+            return false;
+        }
+        
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) overlay.classList.add('show');
+    });
+    
+    // Initialize
     window.addEventListener('DOMContentLoaded', function() {
-        toggleTargetSelection();
+        toggleTargetSelection(false);
+        updateDiscountValuePlaceholder();
+        
+        setupCurrencyInput('maxDiscountAmount', 'maxDiscountAmountHidden');
+        setupCurrencyInput('minOrderValue', 'minOrderValueHidden');
+        setupDiscountValueInput();
+        
+        // Load existing values
+        const discountValueHidden = document.getElementById('discountValueHidden');
+        const discountValue = document.getElementById('discountValue');
+        const discountType = document.getElementById('discountTypeSelect');
+        
+        if (discountValueHidden && discountValue && discountValueHidden.value) {
+            const value = discountValueHidden.value;
+            if (discountType.value === 'FIXED_AMOUNT') {
+                discountValue.value = formatNumber(value);
+            } else {
+                discountValue.value = value;
+            }
+        }
+        
+        const maxDiscountHidden = document.getElementById('maxDiscountAmountHidden');
+        const maxDiscount = document.getElementById('maxDiscountAmount');
+        if (maxDiscountHidden && maxDiscount && maxDiscountHidden.value) {
+            maxDiscount.value = formatNumber(maxDiscountHidden.value);
+        }
+        
+        const minOrderHidden = document.getElementById('minOrderValueHidden');
+        const minOrder = document.getElementById('minOrderValue');
+        if (minOrderHidden && minOrder && minOrderHidden.value) {
+            minOrder.value = formatNumber(minOrderHidden.value);
+        }
+        
+        toggleMaxDiscountField();
     });
 </script>
 </body>

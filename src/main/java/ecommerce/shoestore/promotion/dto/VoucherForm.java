@@ -27,6 +27,8 @@ public class VoucherForm {
 
     private BigDecimal maxDiscountValue;
 
+    @NotNull(message = "Đơn hàng tối thiểu không được để trống")
+    @DecimalMin(value = "0", message = "Đơn tối thiểu phải >= 0")
     private BigDecimal minOrderValue;
 
     @NotNull(message = "Ngày bắt đầu không được để trống")

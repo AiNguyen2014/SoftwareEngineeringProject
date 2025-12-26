@@ -23,6 +23,7 @@ public class ShoesDetailDto {
     private BigDecimal basePrice;
     private String description;
     private String category;
+    private Long categoryId;
     private Set<String> sizes;
     private Set<String> colors;
     private String collection;

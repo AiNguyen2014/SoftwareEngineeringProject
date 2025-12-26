@@ -463,6 +463,38 @@
     border-color: var(--primary-blue);
 }
 
+/* Color selector specific styles */
+.color-item span {
+    text-transform: capitalize;
+    min-width: 80px;
+}
+
+/* Out of stock size */
+.selector-item.out-of-stock span {
+    text-decoration: line-through;
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f5f5f5;
+}
+
+.selector-item.out-of-stock span:hover {
+    border-color: var(--border-color);
+}
+
+.selector-item.out-of-stock input:disabled + span {
+    cursor: not-allowed;
+}
+
+/* Select color first message */
+#selectColorFirst {
+    font-size: 0.9rem;
+    padding: 15px 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin: 0;
+    width: 100%;
+}
+
 /* Actions */
 .action-group {
     display: flex;
@@ -637,9 +669,8 @@
 
 .pagination {
     display: flex;
-    gap: 8px;
-    list-style: none;
-    padding: 0;
+    justify-content: center;
+    padding-left: 0;
 }
 
 .page-item.disabled .page-link {
@@ -673,6 +704,140 @@
     background: var(--primary-blue);
     color: white;
     box-shadow: 0 4px 12px rgba(0,102,204,0.3);
+}
+
+/* ============================================
+   PROMOTION BANNER SECTION (HOMEPAGE)
+   ============================================ */
+.promotion-banner-section {
+    background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 40px;
+    color: white;
+}
+
+.promo-banner-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.promo-badge-icon {
+    font-size: 2rem;
+}
+
+.promo-banner-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.promo-banner-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+}
+
+.promo-banner-item {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    transition: background 0.3s;
+}
+
+.promo-banner-item:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.promo-banner-content {
+    flex: 1;
+}
+
+.promo-banner-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.promo-banner-desc {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin-bottom: 8px;
+}
+
+.promo-banner-value {
+    font-size: 1rem;
+}
+
+.promo-banner-value strong {
+    font-size: 1.3rem;
+}
+
+.promo-banner-btn {
+    background: white;
+    color: #e53935;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: all 0.3s;
+}
+
+.promo-banner-btn:hover {
+    background: #fff5f5;
+    transform: translateX(4px);
+}
+
+/* ============================================
+   PROMO BOX - Nhỏ gọn
+   ============================================ */
+.promo-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 16px 0;
+}
+
+.promo-box .promo-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 0.85rem;
+}
+
+.promo-tag {
+    background: #dc2626;
+    color: white;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+.promo-tag.fixed {
+    background: #ea580c;
+}
+
+.promo-info {
+    color: #991b1b;
+    font-weight: 500;
+}
+
+.promo-info small {
+    color: #9ca3af;
+    font-weight: 400;
+    margin-left: 4px;
 }
 
 /* ============================================
@@ -710,4 +875,51 @@
         align-items: flex-start;
         gap: 15px;
     }
+}
+.btn-icon {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+}
+/* ===== DROPDOWN SUBMENU ===== */
+.dropdown-menu .submenu {
+    display: none;
+    position: absolute;
+    left: 100%;
+    top: 0;
+    margin-left: .1rem;
+}
+
+.dropdown-menu li:hover > .submenu {
+    display: block;
+}
+
+.dropdown-menu li {
+    position: relative;
+}
+
+.btn-group .btn {
+    border-radius: 0;
+}
+
+.btn-group .btn:first-child {
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+}
+
+.btn-group .btn:last-child {
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+.btn-icon {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }

@@ -6,6 +6,293 @@
     <title th:text="${pageTitle}">Voucher</title>
     <link rel="stylesheet" th:href="@{/css/admin.css}">
     <link rel="stylesheet" th:href="@{/css/common.css}">
+    <style>
+        .form-card {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        
+        .form-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px 32px;
+        }
+        
+        .form-header h3 {
+            margin: 0 0 8px 0;
+            font-size: 1.5rem;
+        }
+        
+        .form-header p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .form-body {
+            padding: 32px;
+        }
+        
+        .form-section {
+            margin-bottom: 28px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .form-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .section-title .icon {
+            width: 28px;
+            height: 28px;
+            background: #eef2ff;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        
+        .section-number {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 16px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+        
+        .form-group label {
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+        
+        .form-group label.required::after {
+            content: " *";
+            color: #ef4444;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 10px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-group input:disabled {
+            background: #f3f4f6;
+            cursor: not-allowed;
+        }
+        
+        .form-hint {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+            display: flex;
+            align-items: flex-start;
+            gap: 4px;
+        }
+        
+        .form-hint::before {
+            content: "💡";
+            font-size: 11px;
+        }
+        
+        .error-message {
+            color: #ef4444;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        
+        .campaign-info-box {
+            background: #fef3c7;
+            border: 1px solid #fcd34d;
+            border-left: 4px solid #f59e0b;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 12px;
+        }
+        
+        .campaign-info-box .title {
+            font-weight: 600;
+            color: #92400e;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .campaign-info-box .content {
+            font-size: 13px;
+            color: #78350f;
+        }
+        
+        .discount-info-box {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .discount-info-box.show {
+            display: block;
+        }
+        
+        .discount-info-box .title {
+            font-weight: 600;
+            color: #0c4a6e;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .discount-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        
+        .discount-item {
+            background: white;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #075985;
+        }
+        
+        .discount-item .label {
+            color: #6b7280;
+            font-size: 12px;
+            margin-bottom: 2px;
+        }
+        
+        .discount-item .value {
+            font-weight: 600;
+            color: #0369a1;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            margin-top: 24px;
+        }
+        
+        .btn {
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+        
+        .date-range-warning {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-left: 4px solid #ef4444;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #991b1b;
+            display: none;
+            margin-top: 8px;
+        }
+        
+        .date-range-warning.show {
+            display: block;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .form-group.full-width {
+                grid-column: span 1;
+            }
+            .discount-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
 <!-- Loading Overlay -->
@@ -29,106 +316,181 @@
         <main class="page-content">
             <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
 
-            <div class="card" style="max-width: 900px; margin: 0 auto;">
-                <form th:action="${voucher.voucherId} == null ? @{/admin/promotions/vouchers/create} : @{'/admin/promotions/vouchers/' + ${voucher.voucherId} + '/edit'}" method="post" th:object="${voucher}">
-                    <div style="margin-bottom: 32px; border-bottom: 1px solid #e5e7eb; padding-bottom: 16px;">
-                        <h3 class="section-title" style="margin-bottom: 8px;" th:text="${pageTitle}">Tạo voucher</h3>
-                        <p class="section-sub" style="color: #6b7280; font-size: 14px;">Tạo mã voucher cho khách hàng. Quy tắc giảm giá sẽ kế thừa từ chiến dịch.</p>
-                    </div>
+            <div class="form-card">
+                <div class="form-header">
+                    <h3 th:text="${pageTitle}">Tạo voucher mới</h3>
+                    <p>Tạo mã giảm giá cho khách hàng sử dụng khi thanh toán. Quy tắc giảm giá sẽ được kế thừa từ chiến dịch.</p>
+                </div>
+                
+                <div class="form-body">
+                    <form th:action="${voucher.voucherId} == null ? @{/admin/promotions/vouchers/create} : @{'/admin/promotions/vouchers/' + ${voucher.voucherId} + '/edit'}" 
+                          method="post" th:object="${voucher}" id="voucherForm">
+                        
+                        <!-- Section 1: Thông tin cơ bản -->
+                        <div class="form-section">
+                            <div class="section-title">
+                                <span class="section-number">1</span>
+                                Thông tin cơ bản
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="required">Mã voucher</label>
+                                    <input type="text" th:field="*{code}" required 
+                                           placeholder="VD: SUMMER2025, GIAM50K"
+                                           style="text-transform: uppercase;"
+                                           oninput="this.value = this.value.toUpperCase()">
+                                    <div class="form-hint">Mã duy nhất khách hàng nhập khi thanh toán (không có dấu cách)</div>
+                                    <div class="error-message" th:if="${#fields.hasErrors('code')}" th:errors="*{code}"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Tiêu đề voucher</label>
+                                    <input type="text" th:field="*{title}" placeholder="VD: Giảm giá mùa hè, Voucher Tết 2025">
+                                    <div class="form-hint">Tên hiển thị cho khách hàng dễ nhớ</div>
+                                </div>
+                            </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="required">Mã voucher</label>
-                            <input type="text" th:field="*{code}" required placeholder="VD: SUMMER2025">
-                            <small style="color: #6b7280; font-size: 12px;">Mã duy nhất để khách hàng nhập khi thanh toán</small>
-                            <div class="error-message" th:if="${#fields.hasErrors('code')}" th:errors="*{code}"></div>
+                            <div class="form-group full-width">
+                                <label>Mô tả chi tiết</label>
+                                <textarea th:field="*{description}" rows="3" 
+                                          placeholder="VD: Áp dụng cho đơn hàng từ 500.000₫, giảm tối đa 100.000₫..."></textarea>
+                                <div class="form-hint">Thông tin bổ sung giúp khách hàng hiểu rõ điều kiện sử dụng</div>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label>Tiêu đề</label>
-                            <input type="text" th:field="*{title}" placeholder="VD: Giảm giá mùa hè">
-                            <small style="color: #6b7280; font-size: 12px;">Tên hiển thị cho voucher (không bắt buộc)</small>
+
+                        <!-- Section 2: Chiến dịch -->
+                        <div class="form-section">
+                            <div class="section-title">
+                                <span class="section-number">2</span>
+                                Liên kết chiến dịch
+                            </div>
+                            
+                            <div class="form-group full-width">
+                                <label class="required">Chọn chiến dịch</label>
+                                <select th:field="*{campaignId}" required id="campaignSelect">
+                                    <option value="">-- Chọn chiến dịch khuyến mãi --</option>
+                                    <option th:each="c : ${campaigns}" 
+                                        th:value="${c.campaignId}" 
+                                        th:text="${c.name + ' (' + #temporals.format(c.startDate, 'dd/MM/yyyy') + ' - ' + #temporals.format(c.endDate, 'dd/MM/yyyy') + ')'}"
+                                        th:attr="data-discount-type=${c.discountType}, 
+                                                 data-discount-value=${c.discountValue}, 
+                                                 data-max-discount=${c.maxDiscountAmount}, 
+                                                 data-min-order=${c.minOrderValue != null ? c.minOrderValue : 0}, 
+                                                 data-start-date=${#temporals.format(c.startDate, 'yyyy-MM-dd')}, 
+                                                 data-end-date=${#temporals.format(c.endDate, 'yyyy-MM-dd')}">
+                                    </option>
+                                </select>
+                                <div class="form-hint">Voucher sẽ kế thừa quy tắc giảm giá và thời gian từ chiến dịch này</div>
+                                <div class="error-message" th:if="${#fields.hasErrors('campaignId')}" th:errors="*{campaignId}"></div>
+                                
+                                <!-- Campaign date range warning -->
+                                <div class="campaign-info-box" id="campaignDateRange" style="display: none;">
+                                    <div class="title">Lưu ý thời gian chiến dịch</div>
+                                    <div class="content">
+                                        Chiến dịch hoạt động từ <strong id="campaignStartDate">--</strong> đến <strong id="campaignEndDate">--</strong>.<br>
+                                        Voucher chỉ có hiệu lực trong khoảng thời gian này.
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Discount info from campaign -->
+                            <div class="discount-info-box" id="discountInfo">
+                                <div class="title">Quy tắc giảm giá (kế thừa từ chiến dịch)</div>
+                                <div class="discount-grid">
+                                    <div class="discount-item">
+                                        <div class="label">Loại giảm giá</div>
+                                        <div class="value" id="infoDiscountType">-</div>
+                                    </div>
+                                    <div class="discount-item">
+                                        <div class="label">Giá trị giảm</div>
+                                        <div class="value" id="infoDiscountValue">-</div>
+                                    </div>
+                                    <div class="discount-item">
+                                        <div class="label">Giảm tối đa</div>
+                                        <div class="value" id="infoMaxDiscount">-</div>
+                                    </div>
+                                    <div class="discount-item">
+                                        <div class="label">Đơn hàng tối thiểu</div>
+                                        <div class="value" id="infoMinOrder">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Hidden fields: auto-filled from campaign -->
+                            <input type="hidden" th:field="*{discountType}" id="discountType">
+                            <input type="hidden" th:field="*{discountValue}" id="discountValue">
+                            <input type="hidden" th:field="*{maxDiscountValue}" id="maxDiscountValue">
+                            <input type="hidden" th:field="*{minOrderValue}" id="minOrderValue">
                         </div>
-                    </div>
 
-                    <div class="form-group full-width">
-                        <label>Mô tả</label>
-                        <textarea th:field="*{description}" rows="3" placeholder="Mô tả chi tiết về voucher..."></textarea>
-                        <small style="color: #6b7280; font-size: 12px;">Thông tin bổ sung về voucher (không bắt buộc)</small>
-                    </div>
-
-                    <div class="form-group full-width">
-                        <label class="required">Thuộc chiến dịch</label>
-                        <select th:field="*{campaignId}" required id="campaignSelect">
-                            <option value="">-- Chọn chiến dịch --</option>
-                            <option th:each="c : ${campaigns}" 
-                                    th:value="${c.campaignId}" 
-                                    th:text="${c.name}"
-                                    th:attr="data-discount-type=${c.discountType}, data-discount-value=${c.discountValue}, data-max-discount=${c.maxDiscountAmount}, data-min-order=${c.minOrderValue}"></option>
-                        </select>
-                        <small style="color: #6b7280; font-size: 12px;">Voucher sẽ kế thừa quy tắc giảm giá từ chiến dịch này</small>
-                        <div class="error-message" th:if="${#fields.hasErrors('campaignId')}" th:errors="*{campaignId}"></div>
-                    </div>
-
-                    <!-- Hidden fields: sẽ tự động điền từ campaign -->
-                    <input type="hidden" th:field="*{discountType}" id="discountType">
-                    <input type="hidden" th:field="*{discountValue}" id="discountValue">
-                    <input type="hidden" th:field="*{maxDiscountValue}" id="maxDiscountValue">
-                    <input type="hidden" th:field="*{minOrderValue}" id="minOrderValue">
-
-                    <!-- Hiển thị thông tin discount kế thừa từ campaign -->
-                    <div id="discountInfo" style="display: none; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
-                        <div style="font-weight: 600; color: #0c4a6e; margin-bottom: 8px;">Quy tắc giảm giá (kế thừa từ chiến dịch):</div>
-                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 14px; color: #075985;">
-                            <div>Loại giảm: <strong id="infoDiscountType">-</strong></div>
-                            <div>Giá trị: <strong id="infoDiscountValue">-</strong></div>
-                            <div>Giảm tối đa: <strong id="infoMaxDiscount">-</strong></div>
-                            <div>Đơn tối thiểu: <strong id="infoMinOrder">-</strong></div>
+                        <!-- Section 3: Thời gian và giới hạn -->
+                        <div class="form-section">
+                            <div class="section-title">
+                                <span class="section-number">3</span>
+                                Thời gian hiệu lực
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="required">Ngày bắt đầu</label>
+                                    <input type="date" id="startDate" name="startDate" 
+                                        th:value="${voucher.startDate != null ? voucher.startDate : ''}"
+                                        required>
+                                    <div class="form-hint">Ngày voucher bắt đầu có thể sử dụng</div>
+                                    <div class="error-message" th:if="${#fields.hasErrors('startDate')}" th:errors="*{startDate}"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="required">Ngày kết thúc</label>
+                                    <input type="date" id="endDate" name="endDate"
+                                        th:value="${voucher.endDate != null ? voucher.endDate : ''}"
+                                        required>
+                                    <div class="form-hint">Ngày cuối cùng voucher có hiệu lực</div>
+                                    <div class="error-message" th:if="${#fields.hasErrors('endDate')}" th:errors="*{endDate}"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Date range validation warning -->
+                            <div class="date-range-warning" id="dateWarning">
+                                Thời gian voucher phải nằm trong phạm vi thời gian của chiến dịch!
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Số lần tối đa / khách</label>
-                            <input type="number" step="1" min="1" th:field="*{maxRedeemPerCustomer}" placeholder="VD: 3">
-                            <small style="color: #6b7280; font-size: 12px;">Giới hạn số lần sử dụng cho mỗi khách hàng (không bắt buộc)</small>
+                        <!-- Section 4: Giới hạn sử dụng -->
+                        <div class="form-section">
+                            <div class="section-title">
+                                <span class="section-number">4</span>
+                                Giới hạn sử dụng
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Số lần sử dụng tối đa / khách hàng</label>
+                                    <input type="number" step="1" min="1" th:field="*{maxRedeemPerCustomer}" 
+                                           placeholder="VD: 1, 3, 5">
+                                    <div class="form-hint">Để trống = không giới hạn số lần dùng</div>
+                                </div>
+                                <div class="form-group">
+                                    <!-- Placeholder for layout -->
+                                </div>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <!-- Placeholder để giữ layout 2 cột -->
-                        </div>
-                    </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="required">Ngày bắt đầu</label>
-                            <input type="date" name="startDate" 
-                                   th:value="${voucher.startDate != null ? voucher.startDate : ''}"
-                                   required>
-                            <small style="color: #6b7280; font-size: 12px;">Ngày voucher có hiệu lực</small>
-                            <div class="error-message" th:if="${#fields.hasErrors('startDate')}" th:errors="*{startDate}"></div>
+                        <!-- Form Actions -->
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                Lưu voucher
+                            </button>
+                            <a th:href="@{/admin/promotions/vouchers}" class="btn btn-secondary">
+                                Hủy bỏ
+                            </a>
                         </div>
-                        <div class="form-group">
-                            <label class="required">Ngày kết thúc</label>
-                            <input type="date" name="endDate"
-                                   th:value="${voucher.endDate != null ? voucher.endDate : ''}"
-                                   required>
-                            <small style="color: #6b7280; font-size: 12px;">Ngày voucher hết hạn</small>
-                            <div class="error-message" th:if="${#fields.hasErrors('endDate')}" th:errors="*{endDate}"></div>
-                        </div>
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary" style="padding: 12px 28px; border-radius: 10px;">
-                            Lưu voucher
-                        </button>
-                        <a th:href="@{/admin/promotions/vouchers}" class="btn btn-secondary" style="padding: 12px 28px; border-radius: 10px;">
-                            Hủy bỏ
-                        </a>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </main>
     </div>
 </div>
+
 <script>
     document.addEventListener('click', function (e) {
         if (!e.target.matches('.menu-toggle')) return;
@@ -136,9 +498,58 @@
         if (sidebar) sidebar.classList.toggle('collapsed');
     });
 
-    // Auto-fill discount info từ campaign khi chọn
+    // Campaign selection handler
     const campaignSelect = document.getElementById('campaignSelect');
     const discountInfo = document.getElementById('discountInfo');
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+    const campaignDateRange = document.getElementById('campaignDateRange');
+    const dateWarning = document.getElementById('dateWarning');
+    
+    let campaignStartDate = null;
+    let campaignEndDate = null;
+
+    function formatCurrency(value) {
+        if (!value || value === 'null') return '-';
+        return new Intl.NumberFormat('vi-VN').format(value) + ' ₫';
+    }
+    
+    function formatDate(dateStr) {
+        if (!dateStr) return '--';
+        const parts = dateStr.split('-');
+        return parts[2] + '/' + parts[1] + '/' + parts[0];
+    }
+    
+    function validateDates() {
+        if (!campaignStartDate || !campaignEndDate) {
+            dateWarning.classList.remove('show');
+            return true;
+        }
+        
+        const startVal = startDateInput.value;
+        const endVal = endDateInput.value;
+        
+        if (startVal && (startVal < campaignStartDate || startVal > campaignEndDate)) {
+            dateWarning.textContent = 'Ngày bắt đầu phải nằm trong phạm vi: ' + formatDate(campaignStartDate) + ' - ' + formatDate(campaignEndDate);
+            dateWarning.classList.add('show');
+            return false;
+        }
+        
+        if (endVal && (endVal < campaignStartDate || endVal > campaignEndDate)) {
+            dateWarning.textContent = 'Ngày kết thúc phải nằm trong phạm vi: ' + formatDate(campaignStartDate) + ' - ' + formatDate(campaignEndDate);
+            dateWarning.classList.add('show');
+            return false;
+        }
+        
+        if (startVal && endVal && startVal > endVal) {
+            dateWarning.textContent = 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu!';
+            dateWarning.classList.add('show');
+            return false;
+        }
+        
+        dateWarning.classList.remove('show');
+        return true;
+    }
 
     campaignSelect?.addEventListener('change', function() {
         const selectedOption = this.options[this.selectedIndex];
@@ -147,33 +558,91 @@
             const discountType = selectedOption.getAttribute('data-discount-type');
             const discountValue = selectedOption.getAttribute('data-discount-value');
             const maxDiscount = selectedOption.getAttribute('data-max-discount');
-            const minOrder = selectedOption.getAttribute('data-min-order');
+            const minOrderAttr = selectedOption.getAttribute('data-min-order');
+            const minOrder = minOrderAttr && minOrderAttr !== 'null' ? minOrderAttr : '0';
+            const startDate = selectedOption.getAttribute('data-start-date');
+            const endDate = selectedOption.getAttribute('data-end-date');
+
+            // Save campaign dates for validation
+            campaignStartDate = startDate;
+            campaignEndDate = endDate;
 
             // Fill hidden fields
             document.getElementById('discountType').value = discountType || '';
             document.getElementById('discountValue').value = discountValue || '';
-            document.getElementById('maxDiscountValue').value = maxDiscount || '';
-            document.getElementById('minOrderValue').value = minOrder || '';
+            document.getElementById('maxDiscountValue').value = maxDiscount && maxDiscount !== 'null' ? maxDiscount : '0';
+            document.getElementById('minOrderValue').value = minOrder || '0';
 
             // Show discount info
-            document.getElementById('infoDiscountType').textContent = discountType || '-';
-            document.getElementById('infoDiscountValue').textContent = discountValue ? (discountType === 'PERCENT' ? discountValue + '%' : discountValue + ' VNĐ') : '-';
-            document.getElementById('infoMaxDiscount').textContent = maxDiscount ? maxDiscount + ' VNĐ' : 'Không giới hạn';
-            document.getElementById('infoMinOrder').textContent = minOrder ? minOrder + ' VNĐ' : 'Không yêu cầu';
+            const discountTypeText = discountType === 'PERCENT' ? 'Giảm theo %' : 'Giảm cố định';
+            const discountValueText = discountType === 'PERCENT' 
+                ? discountValue + '%' 
+                : formatCurrency(discountValue);
+            
+            document.getElementById('infoDiscountType').textContent = discountTypeText;
+            document.getElementById('infoDiscountValue').textContent = discountValueText;
+            document.getElementById('infoMaxDiscount').textContent = maxDiscount && maxDiscount !== 'null' 
+                ? formatCurrency(maxDiscount) 
+                : 'Không giới hạn';
+            document.getElementById('infoMinOrder').textContent = minOrder && parseFloat(minOrder) > 0 
+                ? formatCurrency(minOrder) 
+                : 'Không yêu cầu';
 
-            discountInfo.style.display = 'block';
+            discountInfo.classList.add('show');
+            
+            // Set date range constraints
+            if (startDate && endDate) {
+                startDateInput.min = startDate;
+                startDateInput.max = endDate;
+                endDateInput.min = startDate;
+                endDateInput.max = endDate;
+                
+                document.getElementById('campaignStartDate').textContent = formatDate(startDate);
+                document.getElementById('campaignEndDate').textContent = formatDate(endDate);
+                campaignDateRange.style.display = 'block';
+                
+                // Auto-fill dates if empty
+                if (!startDateInput.value) {
+                    startDateInput.value = startDate;
+                }
+                if (!endDateInput.value) {
+                    endDateInput.value = endDate;
+                }
+            }
+            
+            validateDates();
         } else {
-            discountInfo.style.display = 'none';
+            discountInfo.classList.remove('show');
+            campaignDateRange.style.display = 'none';
+            dateWarning.classList.remove('show');
+            
+            campaignStartDate = null;
+            campaignEndDate = null;
+            
+            startDateInput.removeAttribute('min');
+            startDateInput.removeAttribute('max');
+            endDateInput.removeAttribute('min');
+            endDateInput.removeAttribute('max');
         }
     });
+    
+    // Date change validation
+    startDateInput?.addEventListener('change', validateDates);
+    endDateInput?.addEventListener('change', validateDates);
 
     // Trigger change on page load if campaign is already selected
     if (campaignSelect && campaignSelect.value) {
         campaignSelect.dispatchEvent(new Event('change'));
     }
     
-    // Loading indicator for form submission
-    document.querySelector('form').addEventListener('submit', function(e) {
+    // Form validation before submit
+    document.getElementById('voucherForm')?.addEventListener('submit', function(e) {
+        if (!validateDates()) {
+            e.preventDefault();
+            alert('Vui lòng kiểm tra lại thời gian voucher!');
+            return false;
+        }
+        
         const overlay = document.getElementById('loadingOverlay');
         if (overlay) {
             overlay.classList.add('show');

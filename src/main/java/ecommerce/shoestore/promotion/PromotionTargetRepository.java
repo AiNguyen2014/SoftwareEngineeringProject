@@ -1,6 +1,7 @@
 package ecommerce.shoestore.promotion;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -12,7 +13,9 @@ public interface PromotionTargetRepository extends JpaRepository<PromotionTarget
     
     List<PromotionTarget> findByCampaign_CampaignId(Long campaignId);
     
-    void deleteByCampaign_CampaignId(Long campaignId);
+    @Modifying
+    @Query("DELETE FROM PromotionTarget pt WHERE pt.campaign.campaignId = :campaignId")
+    void deleteByCampaignId(@Param("campaignId") Long campaignId);
     
     @Query("SELECT pt FROM PromotionTarget pt " +
            "LEFT JOIN FETCH pt.shoe " +

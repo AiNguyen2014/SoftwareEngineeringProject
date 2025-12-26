@@ -49,7 +49,13 @@ public class PromotionAdminController {
     @GetMapping("/campaigns/{id}")
     public String viewCampaign(@PathVariable Long id, Model model) {
         model.addAttribute("activeMenu", "promotions");
-        model.addAttribute("campaign", promotionService.getCampaign(id));
+        PromotionCampaign campaign = promotionService.getCampaign(id);
+        model.addAttribute("campaign", campaign);
+        
+        // Load vouchers của campaign này
+        List<Voucher> vouchers = promotionService.getVouchersByCampaign(id);
+        model.addAttribute("vouchers", vouchers);
+        
         return "admin/promotion/campaign-detail";
     }
 
@@ -91,7 +97,17 @@ public class PromotionAdminController {
                     form.setCategoryIds(categoryIds);
                     model.addAttribute("selectedCategoryIds", categoryIds);
                 }
+                // Nếu targetType là ALL, không cần set gì thêm
+            } else {
+                // Không có targets -> mặc định là ALL
+                form.setTargetType(ProductTargetType.ALL);
             }
+            
+            log.info("Edit campaign {} - targetType: {}, shoeIds: {}, categoryIds: {}", 
+                     id, form.getTargetType(), form.getShoeIds(), form.getCategoryIds());
+        } else {
+            // Tạo mới - mặc định targetType là ALL
+            form.setTargetType(ProductTargetType.ALL);
         }
         
         model.addAttribute("activeMenu", "promotions");
@@ -108,9 +124,9 @@ public class PromotionAdminController {
     @PostMapping({"/campaigns/create", "/campaigns/{id}/edit"})
     public String saveCampaign(@PathVariable(name = "id", required = false) Long id,
                                @Valid @ModelAttribute("campaign") CampaignForm form,
+                               BindingResult bindingResult,
                                @RequestParam(required = false) List<Long> shoeIds,
                                @RequestParam(required = false) List<Long> categoryIds,
-                               BindingResult bindingResult,
                                Model model,
                                RedirectAttributes redirectAttributes) {
         if (id != null) {
@@ -121,6 +137,10 @@ public class PromotionAdminController {
         form.setShoeIds(shoeIds);
         form.setCategoryIds(categoryIds);
         
+        // Log để debug
+        log.info("Saving campaign - targetType: {}, shoeIds: {}, categoryIds: {}", 
+                 form.getTargetType(), shoeIds, categoryIds);
+        
         if (bindingResult.hasErrors()) {
             model.addAttribute("activeMenu", "promotions");
             model.addAttribute("pageTitle", id == null ? "Tạo chiến dịch" : "Sửa chiến dịch");
@@ -129,15 +149,16 @@ public class PromotionAdminController {
             model.addAttribute("targetTypes", ProductTargetType.values());
             model.addAttribute("allShoes", shoesRepository.findAll());
             model.addAttribute("allCategories", categoryRepository.findAll());
+            model.addAttribute("selectedShoeIds", shoeIds);
+            model.addAttribute("selectedCategoryIds", categoryIds);
             return "admin/promotion/campaign-form";
         }
         try {
-            promotionService.saveCampaign(form);
+            PromotionCampaign saved = promotionService.saveCampaign(form);
             redirectAttributes.addFlashAttribute("successMessage", "Lưu chiến dịch thành công");
-            return "redirect:/admin/promotions/campaigns";
+            return "redirect:/admin/promotions/campaigns/" + saved.getCampaignId();
         } catch (Exception e) {
             log.error("Lỗi lưu chiến dịch", e);
-            bindingResult.rejectValue(null, "error", e.getMessage());
             model.addAttribute("activeMenu", "promotions");
             model.addAttribute("pageTitle", id == null ? "Tạo chiến dịch" : "Sửa chiến dịch");
             model.addAttribute("discountTypes", VoucherDiscountType.values());
@@ -145,6 +166,8 @@ public class PromotionAdminController {
             model.addAttribute("targetTypes", ProductTargetType.values());
             model.addAttribute("allShoes", shoesRepository.findAll());
             model.addAttribute("allCategories", categoryRepository.findAll());
+            model.addAttribute("selectedShoeIds", shoeIds);
+            model.addAttribute("selectedCategoryIds", categoryIds);
             model.addAttribute("error", e.getMessage());
             return "admin/promotion/campaign-form";
         }
@@ -266,11 +289,23 @@ public class PromotionAdminController {
         return "redirect:/admin/promotions/vouchers";
     }
 
+    @GetMapping("/vouchers/{id}/delete")
     @PostMapping("/vouchers/{id}/delete")
-    public String deleteVoucher(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    public String deleteVoucher(@PathVariable Long id, 
+                                @RequestParam(required = false) Long campaignId,
+                                RedirectAttributes redirectAttributes) {
         try {
+            Voucher voucher = promotionService.getVoucher(id);
+            Long returnCampaignId = campaignId != null ? campaignId : 
+                    (voucher.getCampaign() != null ? voucher.getCampaign().getCampaignId() : null);
+            
             promotionService.deleteVoucher(id);
             redirectAttributes.addFlashAttribute("successMessage", "Đã xóa voucher");
+            
+            // Redirect back to campaign detail if we have campaignId
+            if (returnCampaignId != null) {
+                return "redirect:/admin/promotions/campaigns/" + returnCampaignId;
+            }
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }

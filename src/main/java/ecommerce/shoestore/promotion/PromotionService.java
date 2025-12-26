@@ -13,8 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -24,7 +24,6 @@ public class PromotionService {
 
     private final PromotionCampaignRepository campaignRepository;
     private final VoucherRepository voucherRepository;
-    private final OrderVoucherRepository orderVoucherRepository;
     private final PromotionTargetRepository promotionTargetRepository;
     private final ShoesRepository shoesRepository;
     private final CategoryRepository categoryRepository;
@@ -32,12 +31,17 @@ public class PromotionService {
     /* ===== Campaign ===== */
     @Transactional(readOnly = true)
     public List<PromotionCampaign> listCampaigns() {
-        return campaignRepository.findAll();
+        List<PromotionCampaign> campaigns = campaignRepository.findAll();
+        // Cập nhật status dựa trên thời gian hiện tại
+        campaigns.forEach(PromotionCampaign::updateStatus);
+        return campaigns;
     }
 
     @Transactional(readOnly = true)
     public List<PromotionCampaign> searchCampaigns(String keyword, String discountType, String status, Boolean enabled) {
         List<PromotionCampaign> campaigns = campaignRepository.findAll();
+        // Cập nhật status dựa trên thời gian hiện tại trước khi filter
+        campaigns.forEach(PromotionCampaign::updateStatus);
         
         return campaigns.stream()
                 .filter(c -> keyword == null || keyword.isBlank() || 
@@ -52,8 +56,11 @@ public class PromotionService {
 
     @Transactional(readOnly = true)
     public PromotionCampaign getCampaign(Long id) {
-        return campaignRepository.findByIdWithTargets(id)
+        PromotionCampaign campaign = campaignRepository.findByIdWithTargets(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy chiến dịch"));
+        // Cập nhật status dựa trên thời gian hiện tại
+        campaign.updateStatus();
+        return campaign;
     }
 
     @Transactional
@@ -72,31 +79,69 @@ public class PromotionService {
         campaign.setMaxDiscountAmount(form.getMaxDiscountAmount());
         campaign.setMinOrderValue(form.getMinOrderValue());
         campaign.setEnabled(form.getEnabled() != null ? form.getEnabled() : Boolean.TRUE);
-        campaign.setStatus(resolveStatus(campaign.getEnabled(), campaign.getStartDate(), campaign.getEndDate()));
+        // Status sẽ được tự động set bởi @PrePersist/@PreUpdate
 
         PromotionCampaign saved = campaignRepository.save(campaign);
+
+        // Xử lý targetType - ưu tiên giá trị từ form
+        ProductTargetType targetType = form.getTargetType();
+        log.info("Processing targets - form targetType: {}, shoeIds: {}, categoryIds: {}", 
+                 targetType, form.getShoeIds(), form.getCategoryIds());
         
+        // Nếu targetType là null hoặc không hợp lệ, xác định dựa trên dữ liệu
+        if (targetType == null) {
+            if (form.getShoeIds() != null && !form.getShoeIds().isEmpty()) {
+                targetType = ProductTargetType.PRODUCT;
+            } else if (form.getCategoryIds() != null && !form.getCategoryIds().isEmpty()) {
+                targetType = ProductTargetType.CATEGORY;
+            } else {
+                targetType = ProductTargetType.ALL;
+            }
+            log.info("Determined targetType from data: {}", targetType);
+        }
+        
+        // Validate: nếu chọn PRODUCT nhưng không có shoeIds -> lỗi
+        if (targetType == ProductTargetType.PRODUCT && 
+            (form.getShoeIds() == null || form.getShoeIds().isEmpty())) {
+            throw new IllegalArgumentException("Vui lòng chọn ít nhất một sản phẩm khi chọn phạm vi 'Sản phẩm cụ thể'");
+        }
+        
+        // Validate: nếu chọn CATEGORY nhưng không có categoryIds -> lỗi
+        if (targetType == ProductTargetType.CATEGORY && 
+            (form.getCategoryIds() == null || form.getCategoryIds().isEmpty())) {
+            throw new IllegalArgumentException("Vui lòng chọn ít nhất một danh mục khi chọn phạm vi 'Theo danh mục'");
+        }
+
         // Save targets
-        saveTargets(saved, form.getTargetType(), form.getShoeIds(), form.getCategoryIds());
+        saveTargets(saved, targetType, form.getShoeIds(), form.getCategoryIds());
         
-        log.info("Saved campaign {} with targets", saved.getCampaignId());
+        // Nếu đây là update (có campaignId), kiểm tra và điều chỉnh vouchers nếu dates thay đổi
+        if (form.getCampaignId() != null) {
+            validateAndAdjustVouchersForCampaignDateChange(saved);
+        }
+        
+        log.info("Saved campaign {} with targetType: {}", saved.getCampaignId(), targetType);
         return saved;
     }
     
     @Transactional
     public void saveTargets(PromotionCampaign campaign, ProductTargetType targetType, List<Long> shoeIds, List<Long> categoryIds) {
-        // Delete existing targets
-        promotionTargetRepository.deleteByCampaign_CampaignId(campaign.getCampaignId());
+        Long campaignId = campaign.getCampaignId();
+        
+        // Delete existing targets và flush để đảm bảo xóa trước khi insert
+        promotionTargetRepository.deleteByCampaignId(campaignId);
+        promotionTargetRepository.flush();
+        
+        log.info("Deleted old targets for campaign {}, now saving new targets with type: {}", campaignId, targetType);
         
         if (targetType == ProductTargetType.ALL) {
-            // Create one target with ALL
             PromotionTarget target = PromotionTarget.builder()
                     .targetType(ProductTargetType.ALL)
                     .campaign(campaign)
                     .build();
             promotionTargetRepository.save(target);
+            log.info("Saved ALL target for campaign {}", campaignId);
         } else if (targetType == ProductTargetType.PRODUCT && shoeIds != null && !shoeIds.isEmpty()) {
-            // Create target for each shoe
             for (Long shoeId : shoeIds) {
                 Shoes shoe = shoesRepository.findById(shoeId).orElse(null);
                 if (shoe != null) {
@@ -108,8 +153,8 @@ public class PromotionService {
                     promotionTargetRepository.save(target);
                 }
             }
+            log.info("Saved {} PRODUCT targets for campaign {}", shoeIds.size(), campaignId);
         } else if (targetType == ProductTargetType.CATEGORY && categoryIds != null && !categoryIds.isEmpty()) {
-            // Create target for each category
             for (Long categoryId : categoryIds) {
                 Category category = categoryRepository.findById(categoryId).orElse(null);
                 if (category != null) {
@@ -121,6 +166,7 @@ public class PromotionService {
                     promotionTargetRepository.save(target);
                 }
             }
+            log.info("Saved {} CATEGORY targets for campaign {}", categoryIds.size(), campaignId);
         }
     }
 
@@ -128,7 +174,7 @@ public class PromotionService {
     public void toggleCampaignEnabled(Long id) {
         PromotionCampaign c = getCampaign(id);
         c.setEnabled(!Boolean.TRUE.equals(c.getEnabled()) ? Boolean.TRUE : Boolean.FALSE);
-        c.setStatus(resolveStatus(c.getEnabled(), c.getStartDate(), c.getEndDate()));
+        // Status sẽ được tự động set bởi @PreUpdate
         campaignRepository.save(c);
     }
 
@@ -145,12 +191,17 @@ public class PromotionService {
     /* ===== Voucher ===== */
     @Transactional(readOnly = true)
     public List<Voucher> listVouchers() {
-        return voucherRepository.findAllWithCampaign();
+        List<Voucher> vouchers = voucherRepository.findAllWithCampaign();
+        // Cập nhật status dựa trên thời gian hiện tại
+        vouchers.forEach(Voucher::updateStatus);
+        return vouchers;
     }
 
     @Transactional(readOnly = true)
     public List<Voucher> searchVouchers(String keyword, Long campaignId, String discountType, Boolean enabled) {
         List<Voucher> vouchers = voucherRepository.findAllWithCampaign();
+        // Cập nhật status dựa trên thời gian hiện tại trước khi filter
+        vouchers.forEach(Voucher::updateStatus);
         
         return vouchers.stream()
                 .filter(v -> keyword == null || keyword.isBlank() || 
@@ -165,14 +216,28 @@ public class PromotionService {
 
     @Transactional(readOnly = true)
     public Voucher getVoucher(Long id) {
-        return voucherRepository.findByIdWithCampaign(id)
+        Voucher voucher = voucherRepository.findByIdWithCampaign(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy voucher"));
+        // Cập nhật status dựa trên thời gian hiện tại
+        voucher.updateStatus();
+        return voucher;
+    }
+    
+    @Transactional(readOnly = true)
+    public List<Voucher> getVouchersByCampaign(Long campaignId) {
+        List<Voucher> vouchers = voucherRepository.findByCampaign_CampaignId(campaignId);
+        // Cập nhật status dựa trên thời gian hiện tại
+        vouchers.forEach(Voucher::updateStatus);
+        return vouchers;
     }
 
     @Transactional
     public Voucher saveVoucher(@Valid VoucherForm form) {
         validateDateRange(form.getStartDate(), form.getEndDate());
         PromotionCampaign campaign = getCampaign(form.getCampaignId());
+        
+        // Validate voucher dates phải nằm trong phạm vi campaign dates
+        validateVoucherDatesWithinCampaign(form.getStartDate(), form.getEndDate(), campaign);
 
         if (form.getVoucherId() == null && voucherRepository.existsByCode(form.getCode())) {
             throw new IllegalArgumentException("Mã voucher đã tồn tại");
@@ -185,8 +250,24 @@ public class PromotionService {
         voucher.setDescription(form.getDescription());
         voucher.setDiscountType(form.getDiscountType());
         voucher.setDiscountValue(form.getDiscountValue());
-        voucher.setMaxDiscountValue(form.getMaxDiscountValue());
-        voucher.setMinOrderValue(form.getMinOrderValue());
+        
+        // Handle maxDiscountValue - use campaign value if not provided, or 0 as fallback
+        BigDecimal maxDiscountValue = form.getMaxDiscountValue();
+        if (maxDiscountValue == null) {
+            maxDiscountValue = campaign.getMaxDiscountAmount() != null 
+                ? campaign.getMaxDiscountAmount() 
+                : BigDecimal.ZERO;
+        }
+        voucher.setMaxDiscountValue(maxDiscountValue);
+
+        BigDecimal minOrderValue = form.getMinOrderValue();
+        if (minOrderValue == null) {
+            // Fallback to campaign rule or default to 0 to respect DB not-null constraint
+            minOrderValue = campaign.getMinOrderValue() != null
+                ? campaign.getMinOrderValue()
+                : BigDecimal.ZERO;
+        }
+        voucher.setMinOrderValue(minOrderValue);
         voucher.setStartDate(form.getStartDate());
         voucher.setEndDate(form.getEndDate());
         voucher.setMaxRedeemPerCustomer(form.getMaxRedeemPerCustomer());
@@ -221,22 +302,116 @@ public class PromotionService {
             throw new IllegalArgumentException("Ngày kết thúc phải >= ngày bắt đầu");
         }
     }
-
-    private PromotionCampaignStatus resolveStatus(Boolean enabled, LocalDate start, LocalDate end) {
-        if (!Boolean.TRUE.equals(enabled)) {
-            return PromotionCampaignStatus.CANCELLED;
+    
+    /**
+     * Validate voucher dates must be within campaign date range.
+     * Voucher can have shorter time range but cannot exceed campaign boundaries.
+     */
+    private void validateVoucherDatesWithinCampaign(LocalDate voucherStart, LocalDate voucherEnd, 
+                                                     PromotionCampaign campaign) {
+        if (voucherStart == null || voucherEnd == null || campaign == null) {
+            return;
         }
-
-        LocalDate today = LocalDate.now();
-
-        if (today.isBefore(start)) {
-            return PromotionCampaignStatus.DRAFT;
+        
+        LocalDate campaignStart = campaign.getStartDate();
+        LocalDate campaignEnd = campaign.getEndDate();
+        
+        // Voucher start date must be >= campaign start date
+        if (voucherStart.isBefore(campaignStart)) {
+            throw new IllegalArgumentException(
+                String.format("Ngày bắt đầu voucher (%s) không được trước ngày bắt đầu chiến dịch (%s). " +
+                              "Voucher chỉ có thể hoạt động trong phạm vi thời gian của chiến dịch.",
+                              voucherStart, campaignStart));
         }
-
-        if (today.isAfter(end)) {
-            return PromotionCampaignStatus.ENDED;
+        
+        // Voucher end date must be <= campaign end date
+        if (voucherEnd.isAfter(campaignEnd)) {
+            throw new IllegalArgumentException(
+                String.format("Ngày kết thúc voucher (%s) không được sau ngày kết thúc chiến dịch (%s). " +
+                              "Voucher chỉ có thể hoạt động trong phạm vi thời gian của chiến dịch.",
+                              voucherEnd, campaignEnd));
         }
-
-        return PromotionCampaignStatus.ACTIVE;
+        
+        // Additional: voucher start cannot be after voucher end
+        if (voucherStart.isAfter(voucherEnd)) {
+            throw new IllegalArgumentException("Ngày bắt đầu voucher không được sau ngày kết thúc voucher");
+        }
+        
+        log.info("Voucher dates validated: {} to {} within campaign {} to {}",
+                 voucherStart, voucherEnd, campaignStart, campaignEnd);
+    }
+    
+    /**
+     * Validate all vouchers of a campaign when campaign dates are updated.
+     * Called when updating campaign to ensure existing vouchers are still valid.
+     * Also updates voucher discount rules to match campaign rules.
+     */
+    @Transactional
+    public void validateAndAdjustVouchersForCampaignDateChange(PromotionCampaign campaign) {
+        List<Voucher> vouchers = voucherRepository.findByCampaign_CampaignId(campaign.getCampaignId());
+        
+        for (Voucher voucher : vouchers) {
+            boolean needsUpdate = false;
+            
+            // If voucher start is before campaign start, adjust it
+            if (voucher.getStartDate().isBefore(campaign.getStartDate())) {
+                voucher.setStartDate(campaign.getStartDate());
+                needsUpdate = true;
+                log.warn("Adjusted voucher {} start date to campaign start date {}", 
+                         voucher.getCode(), campaign.getStartDate());
+            }
+            
+            // If voucher end is after campaign end, adjust it
+            if (voucher.getEndDate().isAfter(campaign.getEndDate())) {
+                voucher.setEndDate(campaign.getEndDate());
+                needsUpdate = true;
+                log.warn("Adjusted voucher {} end date to campaign end date {}", 
+                         voucher.getCode(), campaign.getEndDate());
+            }
+            
+            // Check if voucher dates are now invalid (start > end)
+            if (voucher.getStartDate().isAfter(voucher.getEndDate())) {
+                // Disable the voucher as it's no longer valid
+                voucher.setEnabled(false);
+                needsUpdate = true;
+                log.warn("Disabled voucher {} as its date range became invalid", voucher.getCode());
+            }
+            
+            // Cập nhật quy tắc giảm giá từ campaign sang voucher
+            if (voucher.getDiscountType() != campaign.getDiscountType()) {
+                voucher.setDiscountType(campaign.getDiscountType());
+                needsUpdate = true;
+                log.info("Updated voucher {} discountType to {}", voucher.getCode(), campaign.getDiscountType());
+            }
+            
+            if (campaign.getDiscountValue() != null && 
+                !campaign.getDiscountValue().equals(voucher.getDiscountValue())) {
+                voucher.setDiscountValue(campaign.getDiscountValue());
+                needsUpdate = true;
+                log.info("Updated voucher {} discountValue to {}", voucher.getCode(), campaign.getDiscountValue());
+            }
+            
+            // Cập nhật maxDiscountValue
+            if (campaign.getMaxDiscountAmount() != null) {
+                if (!campaign.getMaxDiscountAmount().equals(voucher.getMaxDiscountValue())) {
+                    voucher.setMaxDiscountValue(campaign.getMaxDiscountAmount());
+                    needsUpdate = true;
+                    log.info("Updated voucher {} maxDiscountValue to {}", voucher.getCode(), campaign.getMaxDiscountAmount());
+                }
+            }
+            
+            // Cập nhật minOrderValue
+            if (campaign.getMinOrderValue() != null) {
+                if (!campaign.getMinOrderValue().equals(voucher.getMinOrderValue())) {
+                    voucher.setMinOrderValue(campaign.getMinOrderValue());
+                    needsUpdate = true;
+                    log.info("Updated voucher {} minOrderValue to {}", voucher.getCode(), campaign.getMinOrderValue());
+                }
+            }
+            
+            if (needsUpdate) {
+                voucherRepository.save(voucher);
+            }
+        }
     }
 }

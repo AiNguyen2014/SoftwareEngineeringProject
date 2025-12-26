@@ -5,27 +5,18 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
-
 @Repository
 public interface ShoesVariantRepository extends JpaRepository<ShoesVariant, Long> {
 
-    /**
-     * Batch load tổng tồn kho cho nhiều sản phẩm cùng lúc
-     * Tránh N+1 query problem
-     */
-    @Query("SELECT v.shoes.shoeId, COALESCE(SUM(v.stock), 0) " +
-           "FROM ShoesVariant v WHERE v.shoes.shoeId IN :shoeIds GROUP BY v.shoes.shoeId")
-    List<Object[]> getTotalStocksByShoeIds(@Param("shoeIds") List<Long> shoeIds);
+    // Tính tổng tồn kho của 1 sản phẩm
+    @Query("SELECT COALESCE(SUM(v.stock), 0) FROM ShoesVariant v WHERE v.shoes.shoeId = :shoeId")
+    Integer getTotalStockByShoeId(@Param("shoeId") Long shoeId);
     
-    /**
-     * Load variant với eager fetch Shoes entity và images
-     * Tránh LazyInitializationException khi access Shoes properties và images
-     */
-    @Query("SELECT v FROM ShoesVariant v " +
-           "LEFT JOIN FETCH v.shoes s " +
-           "LEFT JOIN FETCH s.images " +
-           "WHERE v.variantId = :variantId")
-    Optional<ShoesVariant> findByIdWithShoes(@Param("variantId") Long variantId);
+    // Tính tổng tồn kho của nhiều sản phẩm (batch)
+    @Query("SELECT v.shoes.shoeId, SUM(v.stock) FROM ShoesVariant v WHERE v.shoes.shoeId IN :shoeIds GROUP BY v.shoes.shoeId")
+    java.util.List<Object[]> getTotalStocksByShoeIds(@Param("shoeIds") java.util.List<Long> shoeIds);
+    
+    // Lấy variant với shoes (eager loading)
+    @Query("SELECT v FROM ShoesVariant v LEFT JOIN FETCH v.shoes WHERE v.variantId = :variantId")
+    java.util.Optional<ShoesVariant> findByIdWithShoes(@Param("variantId") Long variantId);
 }

@@ -23,7 +23,7 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-    
+
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -31,7 +31,7 @@ public class SecurityConfig {
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
-    
+
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
@@ -40,21 +40,19 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
-            .securityContext(context -> context
-                .requireExplicitSave(false)  // Tự động lưu SecurityContext vào session
-            )
-            .sessionManagement(session
-                    -> session.sessionFixation().none()
-            )
-            .authorizeHttpRequests(auth -> auth
+
+                .csrf(csrf -> csrf.disable())
+                .securityContext(context -> context
+                    .requireExplicitSave(false)  // Tự động lưu SecurityContext vào session
+                )
+                .authorizeHttpRequests(auth -> auth
                 // PUBLIC
                 .requestMatchers(
                         "/", "/index", "/shoes", "/product/**",
-                        "/auth/**", "/user/**", "/cart/**",
+                        "/auth/**", "/user/**", "/cart/**", "/order/**", "/vouchers/**",
                         "/css/**", "/js/**", "/images/**",
-                        "/error",
-                        "/order/**" // Include all order pages
+                        "/error", "/api/search-suggestions", "/search/**", "/products"
+
                 ).permitAll()
                 // ADMIN
                 .requestMatchers("/admin/**").hasRole("ADMIN")

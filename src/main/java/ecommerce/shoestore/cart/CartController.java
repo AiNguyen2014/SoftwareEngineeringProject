@@ -11,6 +11,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.security.core.Authentication;
 import ecommerce.shoestore.cart.dto.CartSummaryView;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/cart")
@@ -45,7 +47,8 @@ public class CartController {
     @PostMapping("/add")
     public String addToCart(
             HttpSession session,
-            @RequestParam Long variantId,
+            HttpServletRequest request,
+            @RequestParam(required = false) Long variantId,
             @RequestParam int quantity,
             Authentication authentication,
             RedirectAttributes redirectAttributes
@@ -53,6 +56,16 @@ public class CartController {
         Long userId = (Long) session.getAttribute("USER_ID");
         if (userId == null) {
             return "redirect:/auth/login";
+        }
+
+        String referer = request.getHeader("Referer");
+
+        if (variantId == null) {
+            redirectAttributes.addFlashAttribute(
+                    "errorMessage",
+                    "Vui lòng chọn kích thước trước khi thêm vào giỏ hàng"
+            );
+            return "redirect:" + referer;
         }
 
         User customer = userRepository.findById(userId)
@@ -64,7 +77,8 @@ public class CartController {
                 "successMessage",
                 "Đã thêm sản phẩm vào giỏ hàng thành công!"
         );
-        return "redirect:/cart";
+
+        return "redirect:" + referer;
     }
 
     // ================== REMOVE ITEM ==================

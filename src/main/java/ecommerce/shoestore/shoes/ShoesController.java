@@ -1,6 +1,11 @@
 package ecommerce.shoestore.shoes;
 
+import ecommerce.shoestore.promotion.CustomerPromotionService;
+import ecommerce.shoestore.promotion.PromotionCampaign;
+import ecommerce.shoestore.shoes.crud.ShoesSearchService;
+import ecommerce.shoestore.shoes.dto.ShoesDetailDto;
 import ecommerce.shoestore.shoes.dto.ShoesListDto;
+import ecommerce.shoestore.category.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -8,18 +13,27 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.List;
+
+/**
+ * Controller chính cho Shoes - chỉ chứa trang home và chi tiết sản phẩm
+ * Các endpoint search/filter đã được tách ra ShoesSearchController
+ */
 @Controller
 @RequiredArgsConstructor
 public class ShoesController {
 
     private final ShoesService shoesService;
+    private final ShoesSearchService shoesSearchService;
+    private final CategoryRepository categoryRepository;
+    private final CustomerPromotionService customerPromotionService;
 
     @GetMapping("/")
     public String homePage(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "12") int size,
             Model model) {
-        // Session attributes (isLoggedIn, fullname, role, avatar) 
+        // Session attributes (isLoggedIn, fullname, role, avatar)
         // được tự động thêm bởi SessionModelAdvice
 
         ShoesListDto data = shoesService.getShoesList(page, size);
@@ -28,15 +42,24 @@ public class ShoesController {
         model.addAttribute("currentPage", data.getCurrentPage());
         model.addAttribute("totalPages", data.getTotalPages());
         model.addAttribute("totalItems", data.getTotalItems());
+        model.addAttribute("categories", categoryRepository.findAll());
+        model.addAttribute("brands", shoesSearchService.findAllBrands(null));
 
-        return "shoes-list";
+        return "shoe/shoes-list";
     }
 
     @GetMapping("/product/{shoeId}")
     public String productDetail(@PathVariable Long shoeId, Model model) {
         // Session attributes được tự động thêm bởi SessionModelAdvice
+
+        ShoesDetailDto product = shoesService.getShoesDetail(shoeId);
+        model.addAttribute("product", product);
         
-        model.addAttribute("product", shoesService.getShoesDetail(shoeId));
-        return "shoes-detail";
+        // Lấy các campaign khuyến mãi đang áp dụng cho sản phẩm này
+        List<PromotionCampaign> activeCampaigns = customerPromotionService.getActiveCampaignsForProduct(
+                shoeId, product.getCategoryId());
+        model.addAttribute("activeCampaigns", activeCampaigns);
+
+        return "shoe/shoes-detail";
     }
 }

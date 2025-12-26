@@ -19,4 +19,7 @@ public class ShoesListDto {
     private int totalPages;
     
     private long totalItems;
+
+    private long totalSearchResults; // hiển thị tổng số kết quả tìm kiếm
+
 }

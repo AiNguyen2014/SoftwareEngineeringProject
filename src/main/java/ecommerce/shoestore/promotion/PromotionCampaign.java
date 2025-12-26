@@ -65,4 +65,29 @@ public class PromotionCampaign {
     @Builder.Default
     @OneToMany(mappedBy = "campaign", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PromotionTarget> targets = new ArrayList<>();
+    
+    /**
+     * Tự động cập nhật status dựa trên enabled và thời gian
+     */
+    public void updateStatus() {
+        if (!Boolean.TRUE.equals(this.enabled)) {
+            this.status = PromotionCampaignStatus.CANCELLED;
+            return;
+        }
+        
+        LocalDate today = LocalDate.now();
+        if (today.isBefore(this.startDate)) {
+            this.status = PromotionCampaignStatus.DRAFT;
+        } else if (today.isAfter(this.endDate)) {
+            this.status = PromotionCampaignStatus.ENDED;
+        } else {
+            this.status = PromotionCampaignStatus.ACTIVE;
+        }
+    }
+    
+    @PrePersist
+    @PreUpdate
+    protected void onSaveOrUpdate() {
+        updateStatus();
+    }
 }

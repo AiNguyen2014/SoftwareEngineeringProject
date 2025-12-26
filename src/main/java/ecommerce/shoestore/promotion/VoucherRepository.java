@@ -17,4 +17,7 @@ public interface VoucherRepository extends JpaRepository<Voucher, Long> {
     
     @Query("SELECT v FROM Voucher v LEFT JOIN FETCH v.campaign WHERE v.voucherId = :id")
     Optional<Voucher> findByIdWithCampaign(@Param("id") Long id);
+    
+    @Query("SELECT v FROM Voucher v LEFT JOIN FETCH v.campaign WHERE v.campaign.campaignId = :campaignId")
+    List<Voucher> findByCampaign_CampaignId(@Param("campaignId") Long campaignId);
 }

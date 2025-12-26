@@ -21,7 +21,7 @@
                 </div>
                 <div class="topbar-right">
                     <a class="btn btn-secondary" th:href="@{/admin/promotions/campaigns}">Quay lại</a>
-                    <a class="btn btn-primary" th:href="@{|/admin/promotions/campaigns/${campaign.campaignId}/edit|}">Sửa</a>
+                    <a class="btn btn-primary" th:href="@{|/admin/promotions/campaigns/${campaign.campaignId}/edit|}">Chỉnh sửa</a>
                 </div>
             </div>
         </header>
@@ -79,7 +79,8 @@
                         <div>
                             <div style="color: #15803d; font-size: 13px; font-weight: 600; margin-bottom: 4px;">Giá trị giảm</div>
                             <div style="font-size: 24px; font-weight: 700; color: #166534;">
-                                <span th:text="${campaign.discountValue}">10</span>
+                                <span th:if="${campaign.discountType.name() == 'PERCENT'}" th:text="${campaign.discountValue}">10</span>
+                                <span th:if="${campaign.discountType.name() == 'FIXED_AMOUNT'}" th:text="${#numbers.formatDecimal(campaign.discountValue, 0, 'POINT', 0, 'COMMA')}">1.000.000</span>
                                 <span th:if="${campaign.discountType.name() == 'PERCENT'}">%</span>
                                 <span th:if="${campaign.discountType.name() == 'FIXED_AMOUNT'}"> VNĐ</span>
                             </div>
@@ -88,7 +89,7 @@
                             <div style="color: #15803d; font-size: 13px; font-weight: 600; margin-bottom: 4px;">Giảm tối đa</div>
                             <div style="font-size: 16px; font-weight: 600; color: #166534;">
                                 <span th:if="${campaign.maxDiscountAmount != null}">
-                                    <span th:text="${#numbers.formatDecimal(campaign.maxDiscountAmount, 0, 'COMMA', 0, 'POINT')}">100,000</span> VNĐ
+                                    <span th:text="${#numbers.formatDecimal(campaign.maxDiscountAmount, 0, 'POINT', 0, 'COMMA')}">100.000</span> VNĐ
                                 </span>
                                 <span th:unless="${campaign.maxDiscountAmount != null}" style="color: #9ca3af;">Không giới hạn</span>
                             </div>
@@ -97,7 +98,7 @@
                             <div style="color: #15803d; font-size: 13px; font-weight: 600; margin-bottom: 4px;">Đơn hàng tối thiểu</div>
                             <div style="font-size: 16px; font-weight: 600; color: #166534;">
                                 <span th:if="${campaign.minOrderValue != null}">
-                                    <span th:text="${#numbers.formatDecimal(campaign.minOrderValue, 0, 'COMMA', 0, 'POINT')}">500,000</span> VNĐ
+                                    <span th:text="${#numbers.formatDecimal(campaign.minOrderValue, 0, 'POINT', 0, 'COMMA')}">500.000</span> VNĐ
                                 </span>
                                 <span th:unless="${campaign.minOrderValue != null}" style="color: #9ca3af;">Không yêu cầu</span>
                             </div>
@@ -147,15 +148,75 @@
                     </div>
                 </div>
 
-                <!-- Action Buttons -->
-                <div class="detail-actions">
-                    <a th:href="@{|/admin/promotions/campaigns/${campaign.campaignId}/edit|}" class="btn btn-primary" style="padding: 10px 24px;">
-                        Chỉnh sửa chiến dịch
-                    </a>
-                    <a th:href="@{/admin/promotions/campaigns}" class="btn btn-secondary" style="padding: 10px 24px; margin-left: auto;">
-                        Quay lại danh sách
-                    </a>
+                <!-- Vouchers Section -->
+                <div style="background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); border: 2px solid #fdba74; border-radius: 12px; padding: 24px; margin-bottom: 32px;">
+                    <h3 style="margin: 0 0 20px 0; font-size: 18px; font-weight: 700; color: #9a3412;">Danh sách Voucher</h3>
+                    
+                    <div th:if="${vouchers != null and !vouchers.isEmpty()}">
+                        <div style="display: grid; gap: 12px;">
+                            <div th:each="voucher : ${vouchers}" 
+                                 style="background: white; border: 1px solid #fed7aa; border-radius: 8px; padding: 16px;">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                                    <div style="flex: 1;">
+                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                            <code style="background: #fed7aa; color: #9a3412; padding: 4px 8px; border-radius: 4px; font-weight: 700; font-size: 14px;" 
+                                                  th:text="${voucher.code}">VOUCHER123</code>
+                                            <span th:if="${voucher.status != null}" class="badge"
+                                                  th:classappend="${voucher.status.name() == 'ACTIVE'} ? ' badge-success' : (${voucher.status.name() == 'ENDED' || voucher.status.name() == 'CANCELLED'} ? ' badge-danger' : ' badge-warning')">
+                                                <span th:if="${voucher.status.name() == 'DRAFT'}">Nháp</span>
+                                                <span th:if="${voucher.status.name() == 'ACTIVE'}">Hoạt động</span>
+                                                <span th:if="${voucher.status.name() == 'ENDED'}">Hết hạn</span>
+                                                <span th:if="${voucher.status.name() == 'CANCELLED'}">Đã hủy</span>
+                                            </span>
+                                            <span th:if="${voucher.enabled}" class="chip-on" style="font-size: 12px;">Đang bật</span>
+                                            <span th:unless="${voucher.enabled}" class="chip-off" style="font-size: 12px;">Đã tắt</span>
+                                        </div>
+                                        <div style="color: #78350f; font-weight: 600; font-size: 15px; margin-bottom: 4px;" 
+                                             th:text="${voucher.title}">Tiêu đề voucher</div>
+                                        <div style="color: #92400e; font-size: 13px;" 
+                                             th:text="${voucher.description}">Mô tả voucher</div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="font-size: 20px; font-weight: 700; color: #9a3412;">
+                                            <span th:text="${voucher.discountValue}">10</span>
+                                            <span th:if="${voucher.discountType.name() == 'PERCENT'}">%</span>
+                                            <span th:if="${voucher.discountType.name() == 'FIXED_AMOUNT'}">đ</span>
+                                        </div>
+                                        <div style="color: #92400e; font-size: 12px;">
+                                            <span th:if="${voucher.maxDiscountValue != null}">
+                                                Max: <span th:text="${#numbers.formatDecimal(voucher.maxDiscountValue, 0, 'COMMA', 0, 'POINT')}">100,000</span>đ
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid #fed7aa;">
+                                    <div style="display: flex; gap: 16px; font-size: 13px; color: #92400e;">
+                                        <span>
+                                            <strong>Từ:</strong> <span th:text="${#temporals.format(voucher.startDate, 'dd/MM/yyyy')}">01/01/2024</span>
+                                        </span>
+                                        <span>
+                                            <strong>Đến:</strong> <span th:text="${#temporals.format(voucher.endDate, 'dd/MM/yyyy')}">31/12/2024</span>
+                                        </span>
+                                        <span th:if="${voucher.minOrderValue != null}">
+                                            <strong>Đơn tối thiểu:</strong> <span th:text="${#numbers.formatDecimal(voucher.minOrderValue, 0, 'COMMA', 0, 'POINT')}">100,000</span>đ
+                                        </span>
+                                        <span th:if="${voucher.maxRedeemPerCustomer != null}">
+                                            <strong>Giới hạn:</strong> <span th:text="${voucher.maxRedeemPerCustomer}">5</span> lượt/KH
+                                        </span>
+                                    </div>
+                                    <!-- Chỉ hiển thị thông tin, không cho sửa/xóa từ trang chi tiết chiến dịch -->
+                                    <!-- Muốn sửa/xóa voucher thì vào danh sách voucher -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div th:unless="${vouchers != null and !vouchers.isEmpty()}" 
+                         style="color: #9ca3af; font-style: italic; text-align: center; padding: 20px;">
+                        Chưa có voucher nào trong chiến dịch này
+                    </div>
                 </div>
+
+
             </div>
         </main>
     </div>

@@ -42,8 +42,9 @@ public class Voucher {
     @Column(name = "\"maxDiscountValue\"")
     private BigDecimal maxDiscountValue;
 
-    @Column(name = "\"minOrderValue\"")
-    private BigDecimal minOrderValue;
+    @Builder.Default
+    @Column(name = "\"minOrderValue\"", nullable = false)
+    private BigDecimal minOrderValue = BigDecimal.ZERO;
 
     @Column(name = "\"startDate\"", nullable = false)
     private LocalDate startDate;
@@ -56,8 +57,38 @@ public class Voucher {
 
     @Column(name = "enabled", nullable = false)
     private Boolean enabled;
+    
+    @Enumerated(EnumType.STRING)
+    @JdbcType(PostgreSQLEnumJdbcType.class)
+    @Column(name = "status", length = 20, columnDefinition = "voucher_status")
+    private VoucherStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "\"campaignId\"", nullable = false)
     private PromotionCampaign campaign;
+    
+    /**
+     * Tự động cập nhật status dựa trên enabled và thời gian
+     */
+    public void updateStatus() {
+        if (!Boolean.TRUE.equals(this.enabled)) {
+            this.status = VoucherStatus.CANCELLED;
+            return;
+        }
+        
+        LocalDate today = LocalDate.now();
+        if (today.isBefore(this.startDate)) {
+            this.status = VoucherStatus.DRAFT;
+        } else if (today.isAfter(this.endDate)) {
+            this.status = VoucherStatus.ENDED;
+        } else {
+            this.status = VoucherStatus.ACTIVE;
+        }
+    }
+    
+    @PrePersist
+    @PreUpdate
+    protected void onSaveOrUpdate() {
+        updateStatus();
+    }
 }

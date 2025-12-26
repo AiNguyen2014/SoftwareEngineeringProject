@@ -59,10 +59,12 @@ public class Shoes {
     @Column(name = "\"createdAt\"", updatable = false)
     private OffsetDateTime createdAt;
 
+    @Builder.Default
     @OneToMany(mappedBy = "shoes", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("isThumbnail DESC, imageId ASC")
     private List<ShoesImage> images = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "shoes", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<ShoesVariant> variants = new HashSet<>();
 }

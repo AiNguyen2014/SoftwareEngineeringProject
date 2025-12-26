@@ -21,7 +21,13 @@
         <header class="topbar">
             <div class="topbar-inner">
                 <div class="topbar-left">
-                    <button class="menu-toggle" aria-label="Toggle menu">☰</button>
+                    <button class="menu-toggle" aria-label="Toggle menu">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
                     <h3 th:text="${pageTitle} ?: 'Dashboard'">Dashboard</h3>
                 </div>
                 <div class="topbar-right">
@@ -41,12 +47,26 @@
 </div>
 
 <script>
-    // Xử lý toggle menu đơn giản
-    document.addEventListener('click', function (e) {
-        if (!e.target.matches('.menu-toggle')) return;
+    // Xử lý toggle menu - đóng mở sidebar
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleBtn = document.querySelector('.menu-toggle');
         const sidebar = document.querySelector('.sidebar');
-        if (sidebar) {
-            sidebar.classList.toggle('collapsed');
+        
+        if (toggleBtn && sidebar) {
+            toggleBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                sidebar.classList.toggle('collapsed');
+                
+                // Lưu trạng thái vào localStorage
+                const isCollapsed = sidebar.classList.contains('collapsed');
+                localStorage.setItem('sidebarCollapsed', isCollapsed);
+            });
+            
+            // Khôi phục trạng thái từ localStorage
+            const savedState = localStorage.getItem('sidebarCollapsed');
+            if (savedState === 'true') {
+                sidebar.classList.add('collapsed');
+            }
         }
     });
 </script>
