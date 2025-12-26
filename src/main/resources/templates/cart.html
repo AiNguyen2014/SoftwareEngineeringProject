@@ -62,8 +62,8 @@
                         <!-- CHECKBOX -->
                         <input type="checkbox"
                             class="cart-item-checkbox"
-                            name="selectedCartItemIds"
                             th:value="${item.cartItemId}"
+                            th:attr="data-price=${item.unitPrice}"
                             checked>
 
                         <!-- PRODUCT -->
@@ -147,19 +147,19 @@
 
                 <div class="summary-row">
                     <span>Tạm tính</span>
-                    <span th:text="${#numbers.formatDecimal(cartSubtotal, 0, 'POINT', 0, 'COMMA')} + '₫'"></span>
+                    <span id="cart-subtotal"></span>
                 </div>
 
                 <div class="summary-row">
                     <span>Phí vận chuyển</span>
-                    <span th:text="${#numbers.formatDecimal(cartShipping, 0, 'POINT', 0, 'COMMA')} + '₫'"></span>
+                    <span id="cart-shipping"></span>
                 </div>
 
                 <div class="summary-divider"></div>
 
                 <div class="summary-row total">
                     <span>Tổng cộng</span>
-                    <span th:text="${#numbers.formatDecimal(cartTotal, 0, 'POINT', 0, 'COMMA')} + '₫'"></span>
+                    <span id="cart-total"></span>
                 </div>
 
                 <!-- CHECKOUT -->
@@ -176,36 +176,54 @@
 
 </main>
 
-
-</body>
-
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
+    const SHIPPING_FEE = 30000;
+
+    function formatVND(amount) {
+        return amount.toLocaleString('vi-VN') + '₫';
+    }
+
+    function calculateSummary() {
+        let subtotal = 0;
+
+        document.querySelectorAll(".cart-item-checkbox:checked")
+            .forEach(cb => {
+                const row = cb.closest(".cart-item-row");
+                const price = parseInt(cb.dataset.price);
+                const quantity = parseInt(
+                    row.querySelector(".qty-input-cart").value
+                );
+                subtotal += price * quantity;
+            });
+
+        const shipping = subtotal > 0 ? SHIPPING_FEE : 0;
+        const total = subtotal + shipping;
+
+        document.getElementById("cart-subtotal").innerText = formatVND(subtotal);
+        document.getElementById("cart-shipping").innerText = formatVND(shipping);
+        document.getElementById("cart-total").innerText = formatVND(total);
+    }
+
+    document.querySelectorAll(".cart-item-checkbox")
+        .forEach(cb => cb.addEventListener("change", calculateSummary));
+
     document.querySelectorAll(".btn-decrease").forEach(btn => {
         btn.addEventListener("click", function (e) {
-
             const qty = parseInt(btn.dataset.qty);
-
-            // Nếu còn 1 sản phẩm mà bấm "-"
             if (qty === 1) {
-                e.preventDefault(); // chặn submit form update
-
-                const confirmDelete = confirm(
-                    "Bạn có muốn xóa sản phẩm khỏi giỏ hàng không?"
-                );
-
-                if (confirmDelete) {
-                    // submit form remove cùng dòng
-                    const row = btn.closest(".cart-item-row");
-                    const removeForm = row.querySelector(".cart-item-remove form");
-                    removeForm.submit();
+                e.preventDefault();
+                if (confirm("Bạn có muốn xóa sản phẩm khỏi giỏ hàng không?")) {
+                    btn.closest(".cart-item-row")
+                        .querySelector(".cart-item-remove form")
+                        .submit();
                 }
-                // Cancel → không làm gì
             }
         });
     });
 
+    calculateSummary();
 });
 </script>
 

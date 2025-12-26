@@ -463,6 +463,38 @@
     border-color: var(--primary-blue);
 }
 
+/* Color selector specific styles */
+.color-item span {
+    text-transform: capitalize;
+    min-width: 80px;
+}
+
+/* Out of stock size */
+.selector-item.out-of-stock span {
+    text-decoration: line-through;
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f5f5f5;
+}
+
+.selector-item.out-of-stock span:hover {
+    border-color: var(--border-color);
+}
+
+.selector-item.out-of-stock input:disabled + span {
+    cursor: not-allowed;
+}
+
+/* Select color first message */
+#selectColorFirst {
+    font-size: 0.9rem;
+    padding: 15px 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin: 0;
+    width: 100%;
+}
+
 /* Actions */
 .action-group {
     display: flex;

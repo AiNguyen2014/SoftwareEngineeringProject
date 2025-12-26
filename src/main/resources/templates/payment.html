@@ -344,37 +344,6 @@
                     </button>
                 </div>
                 
-                <!-- Chọn voucher -->
-                <div class="form-section">
-                    <h3>Áp dụng mã giảm giá</h3>
-                    <div class="voucher-list" th:if="${!vouchers.empty}">
-                        <div class="voucher-item" th:each="voucher : ${vouchers}" 
-                             th:onclick="'selectVoucher(' + ${voucher.voucherId} + ', ' + ${voucher.discountValue} + ', \'' + ${voucher.discountType} + '\')'" 
-                             th:id="'voucher-' + ${voucher.voucherId}">
-                            <input type="radio" name="voucherCode" th:value="${voucher.code}" th:id="'radio-' + ${voucher.voucherId}">
-                            <div class="voucher-header">
-                                <span class="voucher-code" th:text="${voucher.code}"></span>
-                                <span class="voucher-title" th:text="${voucher.title}"></span>
-                                <span class="voucher-discount" 
-                                      th:text="${voucher.discountType == 'PERCENTAGE' ? voucher.discountValue + '%' : '-' + #numbers.formatDecimal(voucher.discountValue, 0, 'COMMA', 0, 'POINT') + '₫'}">
-                                </span>
-                            </div>
-                            <div class="voucher-description" th:text="${voucher.description}"></div>
-                            <div class="voucher-conditions">
-                                <span th:if="${voucher.minOrderValue}">
-                                    Đơn tối thiểu: <span th:text="${#numbers.formatDecimal(voucher.minOrderValue, 0, 'COMMA', 0, 'POINT')} + '₫'"></span>
-                                </span>
-                                <span th:if="${voucher.maxDiscountValue && voucher.discountType == 'PERCENTAGE'}">
-                                    | Giảm tối đa: <span th:text="${#numbers.formatDecimal(voucher.maxDiscountValue, 0, 'COMMA', 0, 'POINT')} + '₫'"></span>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="no-voucher" th:if="${vouchers.empty}">
-                        Không có mã giảm giá khả dụng cho đơn hàng này
-                    </div>
-                </div>
-                
                 <!-- Chọn phương thức thanh toán -->
                 <div class="form-section">
                     <h3>Phương thức thanh toán</h3>
@@ -455,10 +424,6 @@
                     <span>Phí vận chuyển:</span>
                     <span id="shipping-display" th:text="${#numbers.formatDecimal(shipping, 0, 'COMMA', 0, 'POINT')} + ' ₫'"></span>
                 </div>
-                <div class="summary-row discount" id="discount-row" style="display: none;">
-                    <span>Giảm giá:</span>
-                    <span id="discount-display">-0 ₫</span>
-                </div>
                 <div class="summary-row total">
                     <span>Tổng cộng:</span>
                     <span id="total-display" th:text="${#numbers.formatDecimal(total, 0, 'COMMA', 0, 'POINT')} + ' ₫'"></span>
@@ -470,46 +435,6 @@
     <script th:inline="javascript">
         const subtotal = [[${subtotal}]];
         const shipping = [[${shipping}]];
-        let selectedVoucherId = null;
-        let discountAmount = 0;
-        
-        function selectVoucher(voucherId, discountValue, discountType) {
-            // Deselect all vouchers
-            document.querySelectorAll('.voucher-item').forEach(item => {
-                item.classList.remove('selected');
-            });
-            
-            // Toggle selection
-            const voucherElement = document.getElementById('voucher-' + voucherId);
-            const radioElement = document.getElementById('radio-' + voucherId);
-            
-            if (selectedVoucherId === voucherId) {
-                // Deselect if clicking same voucher
-                selectedVoucherId = null;
-                radioElement.checked = false;
-                discountAmount = 0;
-            } else {
-                // Select new voucher
-                selectedVoucherId = voucherId;
-                voucherElement.classList.add('selected');
-                radioElement.checked = true;
-                
-                // Calculate discount
-                if (discountType === 'PERCENTAGE') {
-                    discountAmount = subtotal * (discountValue / 100);
-                    
-                    // Check max discount if exists
-                    const maxDiscount = [[${vouchers}]].find(v => v.voucherId === voucherId)?.maxDiscountValue;
-                    if (maxDiscount && discountAmount > maxDiscount) {
-                        discountAmount = maxDiscount;
-                    }
-                } else {
-                    discountAmount = discountValue;
-                }
-            }
-            
-            updatePricing();
-        }
         
         function selectPayment(method, element) {
             document.querySelectorAll('.payment-method').forEach(item => {
@@ -520,17 +445,10 @@
         }
         
         function updatePricing() {
-            const total = subtotal + shipping - discountAmount;
+            const total = subtotal + shipping;
             
             // Update display
             document.getElementById('total-display').textContent = formatCurrency(total) + ' ₫';
-            
-            if (discountAmount > 0) {
-                document.getElementById('discount-row').style.display = 'flex';
-                document.getElementById('discount-display').textContent = '-' + formatCurrency(discountAmount) + ' ₫';
-            } else {
-                document.getElementById('discount-row').style.display = 'none';
-            }
         }
         
         function formatCurrency(amount) {

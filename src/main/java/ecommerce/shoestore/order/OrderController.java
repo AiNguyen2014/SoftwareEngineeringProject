@@ -204,15 +204,12 @@ public class OrderController {
             newAddress.setDistrict(district);
             newAddress.setCommune(commune);
             newAddress.setStreetDetail(streetDetail);
+            // Luôn set default nếu user chọn
             newAddress.setIsDefault(setAsDefault);
             
-            // Chỉ lưu vào database nếu user chọn "Lưu địa chỉ"
-            if (saveAddress) {
-                newAddress = orderAddressService.saveAddress(newAddress);
-            } else {
-                // Tạo temporary address (không lưu vào DB)
-                newAddress.setAddressId(-1L); // Temporary ID
-            }
+            // Luôn lưu địa chỉ vào database để có thể hiển thị trong order confirmation
+            // Chỉ khác là có set làm default hay không
+            newAddress = orderAddressService.saveAddress(newAddress);
             
             addressId = newAddress.getAddressId();
         } else {
@@ -333,6 +330,11 @@ public class OrderController {
             model.addAttribute("recipientName", address.getRecipientName());
             model.addAttribute("recipientPhone", address.getRecipientPhone());
             model.addAttribute("recipientAddress", address.getFullAddress());
+        } else {
+            // Fallback nếu không tìm thấy địa chỉ
+            model.addAttribute("recipientName", "Không có thông tin");
+            model.addAttribute("recipientPhone", "");
+            model.addAttribute("recipientAddress", "Không có thông tin");
         }
         model.addAttribute("type", type);
         
@@ -352,6 +354,8 @@ public class OrderController {
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
             
             model.addAttribute("cartItems", cart.getItems());
+            model.addAttribute("variant", null);
+            model.addAttribute("quantity", 0);
         } else {
             Long variantId = (Long) session.getAttribute("SHIPPING_VARIANT_ID");
             Integer quantity = (Integer) session.getAttribute("SHIPPING_QUANTITY");
@@ -363,6 +367,7 @@ public class OrderController {
             
             model.addAttribute("variant", variant);
             model.addAttribute("quantity", quantity);
+            model.addAttribute("cartItems", List.of());
         }
         
         model.addAttribute("subtotal", subtotal);
@@ -377,9 +382,9 @@ public class OrderController {
                 .filter(v -> v.getMinOrderValue() == null || subtotal.compareTo(v.getMinOrderValue()) >= 0)
                 .toList();
         
-        model.addAttribute("vouchers", availableVouchers);
-        model.addAttribute("recipientEmail", session.getAttribute("SHIPPING_RECIPIENT_EMAIL"));
-        model.addAttribute("note", session.getAttribute("SHIPPING_NOTE"));
+        model.addAttribute("vouchers", availableVouchers != null ? availableVouchers : List.of());
+        model.addAttribute("recipientEmail", session.getAttribute("SHIPPING_RECIPIENT_EMAIL") != null ? session.getAttribute("SHIPPING_RECIPIENT_EMAIL") : "");
+        model.addAttribute("note", session.getAttribute("SHIPPING_NOTE") != null ? session.getAttribute("SHIPPING_NOTE") : "");
         
         return "payment";
     }
