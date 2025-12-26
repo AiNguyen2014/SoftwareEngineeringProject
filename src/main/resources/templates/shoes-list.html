@@ -29,18 +29,22 @@
 
         <div class="d-flex align-items-center gap-2 mb-3">
 
-            <form method="get" th:action="@{/products}" id="filterForm">
+            <form method="get" th:action="@{/products}" id="filterForm"  class="d-flex align-items-center gap-2">
 
+                <!-- PAGE -->
+                <input type="hidden" name="page" id="fPage"
+                       th:value="${currentPage != null ? currentPage : 1}">
+
+                <!-- FILTERS -->
                 <input type="hidden" name="gender" th:value="${gender}">
                 <input type="hidden" name="keyword" th:value="${keyword}">
-                <input type="hidden" name="sort" th:value="${sort}">
+                <input type="hidden" name="sort" id="fSort" th:value="${sort}">
+                <input type="hidden" name="categoryId" id="fCategory" th:value="${categoryId}">
+                <input type="hidden" name="brand" id="fBrand" th:value="${brand}">
+                <input type="hidden" name="minPrice" id="fMin" th:value="${minPrice}">
+                <input type="hidden" name="maxPrice" id="fMax" th:value="${maxPrice}">
 
-                <input type="hidden" name="categoryId" id="fCategory">
-                <input type="hidden" name="brand" id="fBrand">
-                <input type="hidden" name="minPrice" id="fMin">
-                <input type="hidden" name="maxPrice" id="fMax">
-
-                <div class="dropdown">
+                <div class="btn-group shadow-sm" role="group">
                     <button class="btn btn-dark btn-icon"
                             type="button"
                             data-bs-toggle="dropdown"
@@ -95,18 +99,9 @@
                         </li>
 
                     </ul>
-                </div>
-            </form>
+<!--                </div>-->
 
-            <form method="get" th:action="@{/products}">
-                <input type="hidden" name="gender" th:value="${gender}">
-                <input type="hidden" name="keyword" th:value="${keyword}">
-                <input type="hidden" name="categoryId" th:value="${categoryId}">
-                <input type="hidden" name="brand" th:value="${brand}">
-                <input type="hidden" name="minPrice" th:value="${minPrice}">
-                <input type="hidden" name="maxPrice" th:value="${maxPrice}">
-
-                <div class="dropdown">
+<!--                <div class="btn-group">-->
                     <button class="btn btn-dark btn-icon"
                             type="button"
                             data-bs-toggle="dropdown"
@@ -115,40 +110,40 @@
                     </button>
 
                     <ul class="dropdown-menu">
-                        <li><button class="dropdown-item" name="sort" value="price_asc">Giá ↑</button></li>
-                        <li><button class="dropdown-item" name="sort" value="price_desc">Giá ↓</button></li>
-                        <li><button class="dropdown-item" name="sort" value="name_asc">Tên A → Z</button></li>
-                        <li><button class="dropdown-item" name="sort" value="name_desc">Tên Z → A</button></li>
+                        <li><a class="dropdown-item" onclick="setSort('sold')">Bán chạy</a></li>
+                        <li><a class="dropdown-item" onclick="setSort('newest')">Mới nhất</a></li>
+                        <li><a class="dropdown-item" onclick="setSort('price_asc')">Giá ↑</a></li>
+                        <li><a class="dropdown-item" onclick="setSort('price_desc')">Giá ↓</a></li>
+                        <li><a class="dropdown-item" onclick="setSort('name_asc')">Tên A → Z</a></li>
+                        <li><a class="dropdown-item" onclick="setSort('name_desc')">Tên Z → A</a></li>
                     </ul>
+                    <a class="btn btn-dark btn-icon"
+                       title="Xóa bộ lọc & sắp xếp"
+                       th:href="@{/products(
+                keyword=${keyword},
+                gender=${gender}
+                )}">
+                        <i class="fas fa-times"></i>
+                    </a>
+
                 </div>
             </form>
-
-            <a class="btn btn-dark btn-icon"
-               title="Xóa bộ lọc & sắp xếp"
-               th:href="@{/products(
-       keyword=${keyword},
-       gender=${gender}
-   )}">
-                <i class="fas fa-times"></i>
-            </a>
-
         </div>
     </div>
             <!-- SEARCH RESULT INFO -->
     <div class="search-result-info"
-         th:if="${keyword != null}"
-         style="margin: 15px 0; font-size: 16px; color: #444;">
+         th:if="${keyword != null and !#strings.isEmpty(keyword)}">
 
-    <span th:if="${resultCount > 0}">
+    <span th:if="${totalItems > 0}">
         Tìm thấy
-        <strong th:text="${resultCount}">0</strong>
-        kết quả cho từ khóa
-        "<strong th:text="${keyword}">nike</strong>"
+        <strong th:text="${totalItems}">0</strong>
+        sản phẩm cho từ khóa
+        <strong th:text="|&quot;${keyword}&quot;|">keyword</strong>
     </span>
 
-        <span th:if="${resultCount == 0}">
-        Không tìm thấy kết quả nào cho từ khóa
-        "<strong th:text="${keyword}">nike</strong>"
+        <span class="text-danger"
+              th:if="${totalItems == 0}">
+        Không tìm thấy sản phẩm phù hợp
     </span>
 
     </div>
@@ -182,102 +177,41 @@
 
     <nav th:if="${totalPages > 1}" class="pagination-wrapper">
         <ul class="pagination">
+
+            <!-- PREV -->
             <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
-                <a class="page-link"
-                   th:if="${currentPage > 1}"
-                   th:href="@{/products(
-                    page=${currentPage - 1},
-                    gender=${gender},
-                    keyword=${keyword},
-                    sort=${sort},
-                    categoryId=${categoryId},
-                    brand=${brand},
-                    minPrice=${minPrice},
-                    maxPrice=${maxPrice}
-               )}">
-                    <i class="fas fa-chevron-left"></i>
-                </a>
-                <span class="page-link" th:unless="${currentPage > 1}">
-                <i class="fas fa-chevron-left"></i>
-            </span>
+                <button class="page-link"
+                        type="button"
+                        th:attr="data-page=${currentPage - 1}"
+                        th:disabled="${currentPage == 1}"
+                        onclick="goPage(this.dataset.page)">
+                    ‹
+                </button>
             </li>
 
-            <li class="page-item" th:classappend="${currentPage == 1} ? 'active'">
-                <a class="page-link"
-                   th:href="@{/products(page=1, gender=${gender}, keyword=${keyword})}">
-                    1
-                </a>
-            </li>
-
-            <li class="page-item disabled" th:if="${currentPage > 3}">
-                <span class="page-link">...</span>
-            </li>
-
+            <!-- PAGE NUMBERS -->
             <li class="page-item"
-                th:each="i : ${#numbers.sequence(
-                currentPage > 2 ? currentPage - 1 : 2,
-                currentPage < totalPages - 1 ? currentPage + 1 : totalPages - 1
-            )}"
-                th:if="${i > 1 and i < totalPages}"
+                th:each="i : ${#numbers.sequence(1, totalPages)}"
                 th:classappend="${i == currentPage} ? 'active'">
-
-                <a class="page-link"
-                   th:text="${i}"
-                   th:href="@{/products(
-                    page=${i},
-                    gender=${gender},
-                    keyword=${keyword},
-                    sort=${sort},
-                    categoryId=${categoryId},
-                    brand=${brand},
-                    minPrice=${minPrice},
-                    maxPrice=${maxPrice}
-               )}">
-                </a>
+                <button class="page-link"
+                        type="button"
+                        th:attr="data-page=${i}"
+                        onclick="goPage(this.dataset.page)">
+                    <span th:text="${i}"></span>
+                </button>
             </li>
 
-            <li class="page-item disabled" th:if="${currentPage < totalPages - 2}">
-                <span class="page-link">...</span>
-            </li>
-
-            <li class="page-item"
-                th:if="${totalPages > 1}"
-                th:classappend="${currentPage == totalPages} ? 'active'">
-                <a class="page-link"
-                   th:href="@{/products(
-                    page=${totalPages},
-                    gender=${gender},
-                    keyword=${keyword},
-                    sort=${sort},
-                    categoryId=${categoryId},
-                    brand=${brand},
-                    minPrice=${minPrice},
-                    maxPrice=${maxPrice}
-               )}"
-                   th:text="${totalPages}">
-                </a>
-            </li>
-
+            <!-- NEXT -->
             <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
-                <a class="page-link"
-                   th:if="${currentPage < totalPages}"
-                   th:href="@{/products(
-                    page=${currentPage + 1},
-                    gender=${gender},
-                    keyword=${keyword},
-                    sort=${sort},
-                    categoryId=${categoryId},
-                    brand=${brand},
-                    minPrice=${minPrice},
-                    maxPrice=${maxPrice}
-               )}">
-                    <i class="fas fa-chevron-right"></i>
-                </a>
-                <span class="page-link" th:unless="${currentPage < totalPages}">
-                <i class="fas fa-chevron-right"></i>
-            </span>
+                <button class="page-link"
+                        type="button"
+                        th:attr="data-page=${currentPage + 1}"
+                        th:disabled="${currentPage == totalPages}"
+                        onclick="goPage(this.dataset.page)">
+                    ›
+                </button>
             </li>
-    </ul>
+        </ul>
     </nav>
 </main>
 
@@ -348,24 +282,57 @@
 </script>
 
 <script>
-    function submitFilter() {
+    function submitFilter(resetPage = true) {
+        if (resetPage) {
+            document.getElementById("fPage").value = 1;
+        }
         document.getElementById("filterForm").submit();
     }
 
     function setCategory(id) {
         document.getElementById("fCategory").value = id;
-        submitFilter();
+        submitFilter(true);
     }
 
     function setBrand(brand) {
         document.getElementById("fBrand").value = brand;
-        submitFilter();
+        submitFilter(true);
     }
 
     function setPrice(min, max) {
         document.getElementById("fMin").value = min;
         document.getElementById("fMax").value = max;
-        submitFilter();
+        submitFilter(true);
+    }
+
+<!--    function setSort(value) {-->
+<!--        document.getElementById("fSort").value = value;-->
+<!--        submitFilter(true);-->
+<!--    }-->
+function setSort(sortValue) {
+    const params = new URLSearchParams(window.location.search);
+
+    // giữ nguyên page hiện tại
+    params.set("sort", sortValue);
+
+    // nếu chưa có page → mặc định 1
+    if (!params.has("page")) {
+        params.set("page", "1");
+    }
+
+    window.location.search = params.toString();
+}
+</script>
+
+<script>
+    function goPage(page) {
+        const pageInput = document.getElementById("fPage");
+        const form = document.getElementById("filterForm");
+
+        if (!pageInput || !form) return;
+
+        pageInput.value = page;
+        form.submit();
     }
 </script>
 

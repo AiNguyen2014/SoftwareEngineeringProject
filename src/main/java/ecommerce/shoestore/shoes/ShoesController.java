@@ -3,7 +3,6 @@ package ecommerce.shoestore.shoes;
 import ecommerce.shoestore.shoes.dto.ShoesListDto;
 import ecommerce.shoestore.category.CategoryService;
 import ecommerce.shoestore.category.CategoryRepository;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
