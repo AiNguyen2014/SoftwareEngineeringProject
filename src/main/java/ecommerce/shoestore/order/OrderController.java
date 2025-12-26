@@ -4,6 +4,7 @@ import ecommerce.shoestore.auth.user.User;
 import ecommerce.shoestore.auth.user.UserRepository;
 import ecommerce.shoestore.cart.Cart;
 import ecommerce.shoestore.cart.CartRepository;
+import ecommerce.shoestore.cartitem.CartItem;
 import ecommerce.shoestore.promotion.CustomerPromotionService;
 import ecommerce.shoestore.promotion.Voucher;
 import ecommerce.shoestore.promotion.dto.VoucherValidationResult;
@@ -17,6 +18,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Controller
@@ -38,6 +42,7 @@ public class OrderController {
     @GetMapping("/checkout")
     public String showCheckoutPage(
             @RequestParam String type,
+            @RequestParam(required = false) String cartItemIds,
             @RequestParam(required = false) Long variantId,
             @RequestParam(required = false) Integer quantity,
             HttpSession session,
@@ -59,14 +64,14 @@ public class OrderController {
         System.out.println("  - ROLE: " + session.getAttribute("ROLE"));
         
         if (userId == null) {
-            System.out.println("❌ USER_ID is null - user not logged in");
+            System.out.println("USER_ID is null - user not logged in");
             
             // Nếu là BUY_NOW, lưu redirect URL vào session để quay lại sau khi login
             if ("BUY_NOW".equals(type) && variantId != null && quantity != null) {
                 String redirectUrl = String.format("/order/checkout?type=BUY_NOW&variantId=%d&quantity=%d", 
                         variantId, quantity);
                 session.setAttribute("REDIRECT_AFTER_LOGIN", redirectUrl);
-                System.out.println("💾 Saved redirect URL to session: " + redirectUrl);
+                System.out.println("Saved redirect URL to session: " + redirectUrl);
                 System.out.println("Verify saved: " + session.getAttribute("REDIRECT_AFTER_LOGIN"));
             }
             
@@ -76,7 +81,7 @@ public class OrderController {
             return "redirect:/auth/login";
         }
         
-        System.out.println("✅ USER_ID found: " + userId + " - user is logged in");
+        System.out.println("USER_ID found: " + userId + " - user is logged in");
         
         System.out.println("USER_ID found: " + userId + " - proceeding with checkout");
         
@@ -95,6 +100,7 @@ public class OrderController {
         
         if ("CART".equals(type)) {
             System.out.println("Processing CART checkout");
+            System.out.println("Received cartItemIds parameter: " + cartItemIds);
             // Đặt hàng từ giỏ
             Cart cart = cartRepository.findCartWithItems(user).orElse(null);
             
@@ -105,19 +111,59 @@ public class OrderController {
             }
             
             System.out.println("Cart has " + cart.getItems().size() + " items");
+            for (CartItem item : cart.getItems()) {
+                System.out.println("  - CartItem ID: " + item.getCartItemId() + 
+                                 ", Shoe: " + item.getVariant().getShoes().getName() +
+                                 ", Price: " + item.getUnitPrice() +
+                                 ", Qty: " + item.getQuantity());
+            }
             
-            // Tính tổng tiền - sử dụng unitPrice đã lưu trong CartItem
-            BigDecimal subtotal = cart.getItems().stream()
-                    .map(item -> item.getUnitPrice()
-                            .multiply(BigDecimal.valueOf(item.getQuantity())))
+            // Lọc các items được chọn
+            List<CartItem> selectedItems;
+            if (cartItemIds != null && !cartItemIds.isEmpty()) {
+                System.out.println("CartItemIds is not empty: " + cartItemIds);
+                List<Long> selectedIds = Arrays.stream(cartItemIds.split(","))
+                    .map(Long::parseLong)
+                    .toList();
+                
+                System.out.println("Parsed selected IDs: " + selectedIds);
+                
+                selectedItems = cart.getItems().stream()
+                    .filter(item -> selectedIds.contains(item.getCartItemId()))
+                    .toList();
+                
+                System.out.println("Filtered to " + selectedItems.size() + " selected items");
+            } else {
+                System.out.println("WARNING: No cartItemIds provided, using ALL items");
+                selectedItems = new ArrayList<>(cart.getItems());
+            }
+            
+            if (selectedItems.isEmpty()) {
+                System.out.println("ERROR: No items selected after filtering");
+                redirectAttributes.addFlashAttribute("error", "Vui lòng chọn sản phẩm!");
+                return "redirect:/cart";
+            }
+            
+            // Tính tổng tiền CHỈ cho items được chọn
+            BigDecimal subtotal = selectedItems.stream()
+                    .map(item -> {
+                        BigDecimal itemTotal = item.getUnitPrice()
+                                .multiply(BigDecimal.valueOf(item.getQuantity()));
+                        System.out.println("  Item " + item.getCartItemId() + " total: " + itemTotal);
+                        return itemTotal;
+                    })
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
             
-            System.out.println("Subtotal calculated: " + subtotal);
+            System.out.println("Final subtotal calculated: " + subtotal);
             
-            model.addAttribute("cartItems", cart.getItems());
+            model.addAttribute("cartItems", selectedItems);
             model.addAttribute("subtotal", subtotal);
             model.addAttribute("shipping", new BigDecimal("30000"));
             model.addAttribute("total", subtotal.add(new BigDecimal("30000")));
+            
+            // Lưu cartItemIds vào session để dùng khi tạo order
+            session.setAttribute("SELECTED_CART_ITEM_IDS", cartItemIds);
+            System.out.println("Saved SELECTED_CART_ITEM_IDS to session: " + cartItemIds);
             
         } else if ("BUY_NOW".equals(type)) {
             System.out.println("Processing BUY_NOW checkout");
@@ -457,10 +503,31 @@ public class OrderController {
                 Cart cart = cartRepository.findCartWithItems(user)
                         .orElseThrow(() -> new RuntimeException("Giỏ hàng trống"));
                 
-                order = orderService.createOrderFromCart(
+                // Lấy danh sách IDs được chọn từ session
+                String cartItemIds = (String) session.getAttribute("SELECTED_CART_ITEM_IDS");
+                
+                // Lọc items được chọn
+                List<CartItem> selectedItems;
+                if (cartItemIds != null && !cartItemIds.isEmpty()) {
+                    List<Long> selectedIds = Arrays.stream(cartItemIds.split(","))
+                        .map(Long::parseLong)
+                        .toList();
+                    
+                    selectedItems = cart.getItems().stream()
+                        .filter(item -> selectedIds.contains(item.getCartItemId()))
+                        .toList();
+                } else {
+                    selectedItems = new ArrayList<>(cart.getItems());
+                }
+                
+                // Tạo order CHỈ với items được chọn
+                order = orderService.createOrderFromSelectedItems(
                         user.getUserId(), addressId, recipientEmail,
-                        paymentMethod, note, cart, voucherCode
+                        paymentMethod, note, selectedItems, voucherCode
                 );
+                
+                // Xóa session data
+                session.removeAttribute("SELECTED_CART_ITEM_IDS");
                 
             } else if ("BUY_NOW".equals(type)) {
                 // Tạo đơn từ mua ngay

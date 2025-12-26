@@ -32,7 +32,7 @@ public class OrderAddressService {
                 });
         }
         
-        // If this is the first address, make it default
+        
         if (orderAddressRepository.countByUserId(address.getUserId()) == 0) {
             address.setIsDefault(true);
         }
@@ -42,7 +42,6 @@ public class OrderAddressService {
     
     @Transactional
     public void setDefaultAddress(Long addressId, Long userId) {
-        // Remove default from all addresses of this user
         orderAddressRepository.findByUserIdAndIsDefaultTrue(userId)
             .ifPresent(existingDefault -> {
                 existingDefault.setIsDefault(false);

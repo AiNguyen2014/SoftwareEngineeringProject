@@ -5,7 +5,10 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "shoes_variant")
+@Table(name = "shoes_variant", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"\"shoeId\"", "size", "color"}, 
+                      name = "uk_shoes_variant_shoe_size_color")
+})
 @Getter
 @Setter
 @NoArgsConstructor

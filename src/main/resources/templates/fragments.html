@@ -7,11 +7,12 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <link th:href="@{/css/common.css}" rel="stylesheet">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     </th:block>
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg sticky-top" th:fragment="header">
+<nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top" th:fragment="header">
     <div class="container">
         <a class="navbar-brand" th:href="@{/}">
             <span class="me-2" style="font-size: 1.5rem;">👟</span>WEBSHOE
@@ -24,20 +25,65 @@
         <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
             <ul class="navbar-nav">
                 <li class="nav-item">
-                    <a class="nav-link active" th:href="@{/}">Tất Cả</a>
+                    <a class="nav-link"
+                       th:href="@{/}"
+                       th:classappend="${gender == null} ? ' active'">
+                        Tất Cả
+                    </a>
                 </li>
+
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Nam</a>
+                    <a class="nav-link"
+                       th:href="@{/products(gender='male')}"
+                       th:classappend="${gender == 'male'} ? ' active'">
+                        Nam
+                    </a>
                 </li>
+
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Nữ</a>
+                    <a class="nav-link"
+                       th:href="@{/products(gender='female')}"
+                       th:classappend="${gender == 'female'} ? ' active'">
+                        Nữ
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link"
+                       th:href="@{/products(gender='unisex')}"
+                       th:classappend="${gender == 'unisex'} ? ' active'">
+                        Unisex
+                    </a>
                 </li>
             </ul>
         </div>
 
+
         <div class="d-flex gap-3 align-items-center">
-            <div class="nav-icon">
-                <i class="fas fa-search"></i>
+            <!--thanh tìm kiếm, gợi ý dropdown-->
+            <div class="search-box position-relative">
+                <form action="/products" method="get" id="searchForm">
+                    <button class="btn-search" type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+
+                    <input type="hidden"
+                           name="gender"
+                           th:value="${param.gender}">
+
+                    <input type="text"
+                           id="searchInput"
+                           name="keyword"
+                           class="input-search"
+                           placeholder="Tìm tên giày, thương hiệu ..."
+                           autocomplete="off">
+                </form>
+
+                <!-- ĐỂ NGOÀI FORM -->
+                <ul id="searchSuggestions"
+                    class="list-group position-absolute w-100 d-none"
+                    style="top: 100%; z-index: 999;">
+                </ul>
             </div>
 
             <!--Cart icon  -->
@@ -46,14 +92,15 @@
             th:href="@{/cart}" class="nav-icon position-relative text-dark text-decoration-none">
 
                 <i class="fas fa-shopping-cart"></i>
-                <span th:if="${isLoggedIn != null && isLoggedIn && cartItemCount != null && cartItemCount > 0}" 
-                      class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" 
-                      style="font-size: 0.6rem" 
+                <span th:if="${isLoggedIn != null && isLoggedIn && cartItemCount != null && cartItemCount > 0}"
+                      class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                      style="font-size: 0.6rem"
                       th:text="${cartItemCount}">0</span>
             </a>
 
             <div th:if="${isLoggedIn == null or !isLoggedIn}" class="d-flex gap-2 align-items-center">
                 <a th:href="@{/auth/login}" class="btn btn-outline-dark btn-sm rounded-pill px-3">Đăng nhập</a>
+
                 <a th:href="@{/auth/register}" class="btn btn-outline-dark btn-sm rounded-pill px-3">Đăng ký</a>
             </div>
 

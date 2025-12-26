@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <title>WebShoe - Tất cả sản phẩm</title>
+    <th:block th:replace="~{fragments :: head_header}"></th:block>
+    <link th:href="@{/css/shoes.css}" rel="stylesheet">
+</head>
+<body>
+
+<div th:replace="~{fragments :: header}"></div>
+
+<div class="container-fluid px-0 mb-5">
+    <div class="hero-banner">
+        <div class="hero-content">
+            <span class="hero-subtitle">NEW ARRIVALS 2025</span>
+            <h1 class="hero-title">ĐẲNG CẤP<br>THỜI THƯỢNG</h1>
+            <p class="hero-desc">Bộ sưu tập giới hạn dành riêng cho mùa đông này.</p>
+            <a href="#shop" class="btn-hero">Mua Ngay</a>
+        </div>
+    </div>
+</div>
+
+<main class="container my-5" id="shop">
+    <div class="section-header">
+        <div>
+            <h2 class="section-title">Sản Phẩm Mới</h2>
+            <p class="section-subtitle">Cập nhật những mẫu giày hot nhất hiện nay</p>
+        </div>
+
+        <div class="d-flex align-items-center gap-2 mb-3">
+
+            <form method="get" th:action="@{/products}" id="filterForm"  class="d-flex align-items-center gap-2">
+
+                <!-- PAGE -->
+                <input type="hidden" name="page" id="fPage"
+                       th:value="${currentPage != null ? currentPage : 1}">
+
+                <!-- FILTERS -->
+                <input type="hidden" name="gender" th:value="${gender}">
+                <input type="hidden" name="keyword" th:value="${keyword}">
+                <input type="hidden" name="sort" id="fSort" th:value="${sort}">
+                <input type="hidden" name="categoryId" id="fCategory" th:value="${categoryId}">
+                <input type="hidden" name="brand" id="fBrand" th:value="${brand}">
+                <input type="hidden" name="minPrice" id="fMin" th:value="${minPrice}">
+                <input type="hidden" name="maxPrice" id="fMax" th:value="${maxPrice}">
+
+                <div class="btn-group shadow-sm" role="group">
+                    <button class="btn btn-dark btn-icon"
+                            type="button"
+                            data-bs-toggle="dropdown"
+                            title="Lọc">
+                        <i class="fas fa-filter"></i>
+                    </button>
+
+                    <ul class="dropdown-menu p-2" style="min-width:260px">
+
+                        <!-- PHÂN LOẠI -->
+                        <li class="position-relative">
+                            <a class="dropdown-item d-flex justify-content-between submenu-toggle">
+                                Phân loại <i class="fas fa-angle-right"></i>
+                            </a>
+                            <div class="dropdown-menu submenu">
+                                <a class="dropdown-item" onclick="setCategory('')">Tất cả</a>
+                                <a class="dropdown-item"
+                                   th:each="c : ${categories}"
+                                   th:text="${c.name}"
+                                   th:attr="data-category-id=${c.categoryId}"
+                                   onclick="setCategory(this.dataset.categoryId)">
+                                </a>
+                            </div>
+                        </li>
+
+                        <!-- THƯƠNG HIỆU -->
+                        <li class="position-relative">
+                            <a class="dropdown-item d-flex justify-content-between submenu-toggle">
+                                Thương hiệu <i class="fas fa-angle-right"></i>
+                            </a>
+                            <div class="dropdown-menu submenu">
+                                <a class="dropdown-item"
+                                   th:each="b : ${brands}"
+                                   th:text="${b}"
+                                   th:attr="data-brand=${b}"
+                                   onclick="setBrand(this.dataset.brand)">
+                                </a>
+                            </div>
+                        </li>
+
+                        <!-- GIÁ -->
+                        <li class="position-relative">
+                            <a class="dropdown-item d-flex justify-content-between submenu-toggle">
+                                Giá <i class="fas fa-angle-right"></i>
+                            </a>
+                            <div class="dropdown-menu submenu">
+                                <a class="dropdown-item" onclick="setPrice(0,1000000)">Dưới 1 triệu</a>
+                                <a class="dropdown-item" onclick="setPrice(1000000,2000000)">1 – 2 triệu</a>
+                                <a class="dropdown-item" onclick="setPrice(2000000,3000000)">2 – 3 triệu</a>
+                                <a class="dropdown-item" onclick="setPrice(3000000,'')">Trên 3 triệu</a>
+                            </div>
+                        </li>
+
+                    </ul>
+
+                    <button class="btn btn-dark btn-icon"
+                            type="button"
+                            data-bs-toggle="dropdown"
+                            title="Sắp xếp">
+                        <i class="fas fa-sort"></i>
+                    </button>
+
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" onclick="setSort('sold')">Bán chạy</a></li>
+                        <li><a class="dropdown-item" onclick="setSort('newest')">Mới nhất</a></li>
+                        <li><a class="dropdown-item" onclick="setSort('price_asc')">Giá ↑</a></li>
+                        <li><a class="dropdown-item" onclick="setSort('price_desc')">Giá ↓</a></li>
+                        <li><a class="dropdown-item" onclick="setSort('name_asc')">Tên A → Z</a></li>
+                        <li><a class="dropdown-item" onclick="setSort('name_desc')">Tên Z → A</a></li>
+                    </ul>
+                    <a class="btn btn-dark btn-icon"
+                       title="Xóa bộ lọc & sắp xếp"
+                       th:href="@{/products(
+                keyword=${keyword},
+                gender=${gender}
+                )}">
+                        <i class="fas fa-times"></i>
+                    </a>
+
+                </div>
+            </form>
+        </div>
+    </div>
+            <!-- SEARCH RESULT INFO -->
+    <div class="search-result-info"
+         th:if="${keyword != null and !#strings.isEmpty(keyword)}">
+
+    <span th:if="${totalItems > 0}">
+        Tìm thấy
+        <strong th:text="${totalItems}">0</strong>
+        sản phẩm cho từ khóa
+        <strong th:text="|&quot;${keyword}&quot;|">keyword</strong>
+    </span>
+
+        <span class="text-danger"
+              th:if="${totalItems == 0}">
+        Không tìm thấy sản phẩm phù hợp
+    </span>
+
+    </div>
+
+    <div class="product-grid">
+        <div class="product-card" th:each="product : ${products}" th:classappend="${product.outOfStock} ? 'out-of-stock' : ''">
+            <a th:href="@{/product/{shoeId}(shoeId=${product.shoeId})}" class="product-img-wrap">
+                <img th:src="${product.thumbnailUrl}"
+                     th:alt="${product.name}"
+                     loading="lazy"
+                     onerror="this.src='https://placehold.co/400x400?text=No+Image'">
+                <div class="badge-overlay">
+                    <span class="badge-new" th:if="${product.isNew}">NEW</span>
+                    <span class="badge-soldout" th:if="${product.outOfStock}">HẾT HÀNG</span>
+                </div>
+            </a>
+            <div class="product-info">
+                <div class="product-brand" th:text="${product.brand ?: 'WEBSHOE'}">NIKE</div>
+                <a th:href="@{/product/{shoeId}(shoeId=${product.shoeId})}"
+                   class="product-title"
+                   th:text="${product.name}">Tên Giày</a>
+                <div class="product-price">
+                    <span class="price-current"
+                          th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + '₫'">
+                        3.000.000₫
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav th:if="${totalPages > 1}" class="pagination-wrapper">
+        <ul class="pagination">
+
+            <!-- PREV -->
+            <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
+                <button class="page-link"
+                        type="button"
+                        th:attr="data-page=${currentPage - 1}"
+                        th:disabled="${currentPage == 1}"
+                        onclick="goPage(this.dataset.page)">
+                    ‹
+                </button>
+            </li>
+
+            <!-- PAGE NUMBERS -->
+            <li class="page-item"
+                th:each="i : ${#numbers.sequence(1, totalPages)}"
+                th:classappend="${i == currentPage} ? 'active'">
+                <button class="page-link"
+                        type="button"
+                        th:attr="data-page=${i}"
+                        onclick="goPage(this.dataset.page)">
+                    <span th:text="${i}"></span>
+                </button>
+            </li>
+
+            <!-- NEXT -->
+            <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
+                <button class="page-link"
+                        type="button"
+                        th:attr="data-page=${currentPage + 1}"
+                        th:disabled="${currentPage == totalPages}"
+                        onclick="goPage(this.dataset.page)">
+                    ›
+                </button>
+            </li>
+        </ul>
+    </nav>
+</main>
+
+<div th:replace="~{fragments :: footer}"></div>
+
+<script th:inline="javascript">
+    document.addEventListener("DOMContentLoaded", function () {
+
+    const input = document.getElementById("searchInput");
+    const box = document.getElementById("searchSuggestions");
+    const form = document.getElementById("searchForm");
+
+    if (!input || !box || !form) return;
+
+    let timer = null;
+
+    input.addEventListener("input", function () {
+        const keyword = this.value.trim();
+
+        if (keyword.length < 2) {
+            box.classList.add("d-none");
+            box.innerHTML = "";
+            return;
+        }
+
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+            fetch("/api/search-suggestions?keyword=" + encodeURIComponent(keyword))
+                .then(res => res.json())
+                .then(data => {
+                    box.innerHTML = "";
+
+                    if (!data || data.length === 0) {
+                        box.classList.add("d-none");
+                        return;
+                    }
+
+                    data.forEach(item => {
+                        const li = document.createElement("li");
+                        li.className = "list-group-item list-group-item-action";
+                        li.textContent = item;
+
+                        li.addEventListener("click", function () {
+                            input.value = item;
+                            form.submit();
+                        });
+
+                        box.appendChild(li);
+                    });
+
+                    box.classList.remove("d-none");
+                });
+        }, 300);
+    });
+
+    input.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+            form.submit();
+        }
+    });
+
+    document.addEventListener("click", function (e) {
+        if (!e.target.closest("#searchForm")) {
+            box.classList.add("d-none");
+        }
+    });
+});
+</script>
+
+<script>
+    function submitFilter(resetPage = true) {
+        if (resetPage) {
+            document.getElementById("fPage").value = 1;
+        }
+        document.getElementById("filterForm").submit();
+    }
+
+    function setCategory(id) {
+        document.getElementById("fCategory").value = id;
+        submitFilter(true);
+    }
+
+    function setBrand(brand) {
+        document.getElementById("fBrand").value = brand;
+        submitFilter(true);
+    }
+
+    function setPrice(min, max) {
+        document.getElementById("fMin").value = min;
+        document.getElementById("fMax").value = max;
+        submitFilter(true);
+    }
+
+    function setSort(sortValue) {
+    document.getElementById("fSort").value = sortValue;
+    document.getElementById("fPage").value = 1; // đổi sort → về trang 1 (UX chuẩn)
+    document.getElementById("filterForm").submit();
+    }
+
+</script>
+
+<script>
+    function goPage(page) {
+        const pageInput = document.getElementById("fPage");
+        const form = document.getElementById("filterForm");
+
+        if (!pageInput || !form) return;
+
+        pageInput.value = page;
+        form.submit();
+    }
+</script>
+
+
+</body>
+</html>

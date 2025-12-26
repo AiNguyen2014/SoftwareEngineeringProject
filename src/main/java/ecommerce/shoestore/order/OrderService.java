@@ -3,6 +3,7 @@ package ecommerce.shoestore.order;
 import ecommerce.shoestore.cart.Cart;
 import ecommerce.shoestore.cart.CartRepository;
 import ecommerce.shoestore.cartitem.CartItem;
+import ecommerce.shoestore.cartitem.CartItemRepository;
 import ecommerce.shoestore.promotion.CustomerPromotionService;
 import ecommerce.shoestore.promotion.Voucher;
 import ecommerce.shoestore.promotion.dto.VoucherValidationResult;
@@ -23,6 +24,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final CartRepository cartRepository;
+    private final CartItemRepository cartItemRepository;
     private final ShoesVariantRepository shoesVariantRepository;
     private final CustomerPromotionService customerPromotionService;
     
@@ -199,5 +201,92 @@ public class OrderService {
     
     public List<OrderItem> getOrderItems(Long orderId) {
         return orderItemRepository.findByOrderId(orderId);
+    }
+    
+    @Transactional
+    public Order createOrderFromSelectedItems(Long userId, Long addressId, String recipientEmail,
+                                              String paymentMethod, String note, 
+                                              List<CartItem> selectedItems, String voucherCode) {
+        
+        System.out.println("=== Creating order from selected items ===");
+        System.out.println("VoucherCode received: [" + voucherCode + "]");
+        
+        // Tính subTotal từ items được chọn
+        BigDecimal subTotal = BigDecimal.ZERO;
+        for (CartItem item : selectedItems) {
+            BigDecimal itemTotal = item.getUnitPrice()
+                    .multiply(BigDecimal.valueOf(item.getQuantity()));
+            subTotal = subTotal.add(itemTotal);
+        }
+        
+        System.out.println("SubTotal calculated: " + subTotal);
+        
+        // Validate và tính discountAmount từ voucher
+        BigDecimal discountAmount = BigDecimal.ZERO;
+        Voucher appliedVoucher = null;
+        
+        // Chỉ validate voucher nếu có code thực sự
+        if (voucherCode != null && !voucherCode.trim().isEmpty()) {
+            System.out.println("Validating voucher: " + voucherCode.trim());
+            VoucherValidationResult validation = customerPromotionService.validateVoucher(
+                    voucherCode.trim(), userId, subTotal);
+            
+            if (validation.isValid()) {
+                appliedVoucher = validation.getVoucher();
+                discountAmount = validation.getDiscountAmount();
+                System.out.println("Voucher valid! Discount: " + discountAmount);
+            } else {
+                System.out.println("Voucher validation failed: " + validation.getErrorMessage());
+                throw new IllegalArgumentException(validation.getErrorMessage());
+            }
+        } else {
+            System.out.println("No voucher code provided, skipping validation");
+        }
+        
+        BigDecimal totalAmount = subTotal.add(SHIPPING_FEE).subtract(discountAmount);
+        
+        // Tạo Order
+        Order order = new Order();
+        order.setUserId(userId);
+        order.setOrderAddressId(addressId);
+        order.setRecipientEmail(recipientEmail);
+        order.setSubTotal(subTotal);
+        order.setShippingFee(SHIPPING_FEE);
+        order.setDiscountAmount(discountAmount);
+        order.setTotalAmount(totalAmount);
+        order.setPaymentMethod(paymentMethod);
+        order.setNote(note);
+        order.setStatus("PENDING");
+        
+        order = orderRepository.save(order);
+        
+        // Tạo OrderItems CHỈ cho items được chọn
+        for (CartItem item : selectedItems) {
+            ShoesVariant variant = item.getVariant();
+            
+            OrderItem orderItem = new OrderItem();
+            orderItem.setOrderId(order.getOrderId());
+            orderItem.setShoeId(variant.getShoes().getShoeId());
+            orderItem.setQuantity((long) item.getQuantity());
+            orderItem.setProductName(variant.getShoes().getName());
+            orderItem.setVariantInfo("Size: " + variant.getSize() + ", Color: " + variant.getColor());
+            orderItem.setUnitPrice(item.getUnitPrice());
+            orderItem.setShopDiscount(BigDecimal.ZERO);
+            orderItem.setItemTotal(item.getUnitPrice()
+                    .multiply(BigDecimal.valueOf(item.getQuantity())));
+            orderItemRepository.save(orderItem);
+        }
+        
+        // Áp dụng voucher vào order nếu có
+        if (appliedVoucher != null) {
+            customerPromotionService.applyVoucherToOrder(order, appliedVoucher, userId);
+        }
+        
+        // Xóa CHỈ các items đã đặt hàng khỏi giỏ
+        for (CartItem item : selectedItems) {
+            cartItemRepository.delete(item);
+        }
+        
+        return order;
     }
 }
