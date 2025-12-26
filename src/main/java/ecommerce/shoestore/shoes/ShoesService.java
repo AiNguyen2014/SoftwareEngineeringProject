@@ -253,7 +253,7 @@ public class ShoesService {
             String keyword,
             Long categoryId,
             String brand,
-            ShoesType shoesType,
+            String type,
             BigDecimal minPrice,
             BigDecimal maxPrice,
             int page,
@@ -276,13 +276,14 @@ public class ShoesService {
                     keyword,
                     categoryId,
                     brand,
-                    shoesType,
+                    type,
                     minPrice,
                     maxPrice,
                     page,
                     size
             );
         }
+
         Sort sortObj = buildSort(sort);
         Pageable pageable = PageRequest.of(page - 1, size, sortObj);
 
@@ -294,7 +295,7 @@ public class ShoesService {
                 kw,
                 categoryId,
                 brand,
-                shoesType,
+                type,          // ✅ truyền thẳng String
                 minPrice,
                 maxPrice,
                 pageable
@@ -313,7 +314,10 @@ public class ShoesService {
     }
 
     public List<String> findAllBrands(ShoesType type) {
-        return shoesRepository.findDistinctBrands(type);
+        if (type == null) {
+            return shoesRepository.findDistinctBrands();
+        }
+        return shoesRepository.findDistinctBrandsByType(type);
     }
 
     private Pageable buildPageable(int page, int size, String sort) {
@@ -326,44 +330,42 @@ public class ShoesService {
         return PageRequest.of(page - 1, size, sortObj);
     }
 
-@Transactional(readOnly = true)
-public ShoesListDto searchProductsWithSoldSort(
-        String keyword,
-        Long categoryId,
-        String brand,
-        ShoesType shoesType,
-        BigDecimal minPrice,
-        BigDecimal maxPrice,
-        int page,
-        int size
-) {
-    Pageable pageable = PageRequest.of(page - 1, size);
+    @Transactional(readOnly = true)
+    public ShoesListDto searchProductsWithSoldSort(
+            String keyword,
+            Long categoryId,
+            String brand,
+            String type,
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            int page,
+            int size
+    ) {
+        Pageable pageable = PageRequest.of(page - 1, size);
 
-    String type = shoesType != null ? shoesType.name() : null;
-    String kw = (keyword != null && !keyword.isBlank())
-            ? keyword.trim()
-            : null;
+        String kw = (keyword != null && !keyword.isBlank())
+                ? keyword.trim()
+                : null;
 
-    Page<Shoes> pageResult = shoesRepository.findBestSeller(
-            kw,
-            categoryId,
-            brand,
-            type,
-            minPrice,
-            maxPrice,
-            pageable
-    );
+        Page<Shoes> pageResult = shoesRepository.findBestSeller(
+                kw,
+                categoryId,
+                brand,
+                type,          // ✅ dùng trực tiếp String
+                minPrice,
+                maxPrice,
+                pageable
+        );
 
-    List<ShoesSummaryDto> products = pageResult.getContent().stream()
-            .map(this::convertToSummaryDto)
-            .toList();
+        List<ShoesSummaryDto> products = pageResult.getContent().stream()
+                .map(this::convertToSummaryDto)
+                .toList();
 
-    return ShoesListDto.builder()
-            .products(products)
-            .currentPage(page)
-            .totalPages(pageResult.getTotalPages())
-            .totalItems(pageResult.getTotalElements())
-            .build();
-}
-
+        return ShoesListDto.builder()
+                .products(products)
+                .currentPage(page)
+                .totalPages(pageResult.getTotalPages())
+                .totalItems(pageResult.getTotalElements())
+                .build();
+    }
 }

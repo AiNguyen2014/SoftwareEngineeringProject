@@ -61,10 +61,10 @@ public interface ShoesRepository extends JpaRepository<Shoes, Long> {
      * search + sort
      */
     @Query("""
-                SELECT s FROM Shoes s
-                WHERE LOWER(s.name) LIKE LOWER(CONCAT('%', :kw, '%'))
-                   OR LOWER(s.brand) LIKE LOWER(CONCAT('%', :kw, '%'))
-            """)
+    SELECT s FROM Shoes s
+    WHERE s.name ILIKE CONCAT('%', :kw, '%')
+       OR s.brand ILIKE CONCAT('%', :kw, '%')
+""")
     Page<Shoes> search(
             @Param("kw") String keyword,
             Pageable pageable
@@ -74,41 +74,57 @@ public interface ShoesRepository extends JpaRepository<Shoes, Long> {
      * Gợi ý search autocomplete
      */
     @Query("""
-                SELECT s.name
-                FROM Shoes s
-                WHERE LOWER(s.name) LIKE LOWER(CONCAT('%', :kw, '%'))
-                   OR LOWER(s.brand) LIKE LOWER(CONCAT('%', :kw, '%'))
-            """)
+    SELECT s.name
+    FROM Shoes s
+    WHERE s.name ILIKE CONCAT('%', :kw, '%')
+       OR s.brand ILIKE CONCAT('%', :kw, '%')
+""")
     List<String> findSuggestions(@Param("kw") String keyword);
 
 
-    @Query("""
-                SELECT s FROM Shoes s
-                WHERE (:kw IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :kw, '%')) OR LOWER(s.brand) LIKE LOWER(CONCAT('%', :kw, '%')))
-                  AND (:categoryId IS NULL OR s.category.categoryId = :categoryId)
-                  AND (:brand IS NULL OR LOWER(s.brand) LIKE LOWER(CONCAT('%', :brand, '%')))
-                  AND (:type IS NULL OR s.type = :type)
-                  AND (:minPrice IS NULL OR s.basePrice >= :minPrice)
-                  AND (:maxPrice IS NULL OR s.basePrice <= :maxPrice)
-            """)
+    @Query(value = """
+    SELECT *
+    FROM shoes s
+    WHERE (:kw IS NULL
+            OR s.name ILIKE '%' || :kw || '%'
+            OR s.brand ILIKE '%' || :kw || '%')
+      AND (:categoryId IS NULL OR s."categoryId" = :categoryId)
+      AND (:brand IS NULL OR s.brand ILIKE '%' || :brand || '%')
+      AND (:type IS NULL OR s.type = CAST(:type AS varchar))
+      AND (:minPrice IS NULL OR s."basePrice" >= :minPrice)
+      AND (:maxPrice IS NULL OR s."basePrice" <= :maxPrice)
+    """,
+            countQuery = """
+        SELECT COUNT(*)
+        FROM shoes s
+    """,
+            nativeQuery = true)
     Page<Shoes> searchAndFilter(
             @Param("kw") String keyword,
             @Param("categoryId") Long categoryId,
             @Param("brand") String brand,
-            @Param("type") ShoesType type,
-            @Param("minPrice") java.math.BigDecimal minPrice,
-            @Param("maxPrice") java.math.BigDecimal maxPrice,
+            @Param("type") String type,   // ⚠️ ENUM → STRING
+            @Param("minPrice") BigDecimal minPrice,
+            @Param("maxPrice") BigDecimal maxPrice,
             Pageable pageable
     );
 
     // lấy brand
     @Query("""
-                SELECT DISTINCT s.brand
-                FROM Shoes s
-                WHERE (:type IS NULL OR s.type = :type)
-                AND s.brand IS NOT NULL
-            """)
-    List<String> findDistinctBrands(@Param("type") ShoesType type);
+    SELECT DISTINCT s.brand
+    FROM Shoes s
+    WHERE s.brand IS NOT NULL
+""")
+    List<String> findDistinctBrands();
+
+    @Query("""
+    SELECT DISTINCT s.brand
+    FROM Shoes s
+    WHERE s.brand IS NOT NULL
+      AND s.type = :type
+""")
+    List<String> findDistinctBrandsByType(@Param("type") ShoesType type);
+
 
     @Query(value = """
             SELECT s.*

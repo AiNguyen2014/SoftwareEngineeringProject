@@ -80,19 +80,21 @@ public class ShoesController {
             @RequestParam(defaultValue = "12") int size,
             Model model
     ) {
-
         ShoesType shoesType = parseGender(gender);
+
         model.addAttribute("categories",
                 categoryRepository.findCategoriesByShoesType(shoesType));
+
         model.addAttribute("brands",
                 shoesService.findAllBrands(shoesType));
 
+        String type = shoesType != null ? shoesType.name() : null;
 
         ShoesListDto data = shoesService.searchProducts(
                 keyword,
                 categoryId,
                 brand,
-                shoesType,
+                type,
                 minPrice,
                 maxPrice,
                 page,
@@ -106,10 +108,11 @@ public class ShoesController {
         model.addAttribute("totalItems", data.getTotalItems());
         model.addAttribute("resultCount", data.getTotalSearchResults());
 
-        // GIỮ TRẠNG THÁI
+        // GIỮ TRẠNG THÁI FILTER
         model.addAttribute("keyword", keyword);
         model.addAttribute("gender", gender);
         model.addAttribute("categoryId", categoryId);
+        model.addAttribute("brand", brand);
         model.addAttribute("minPrice", minPrice);
         model.addAttribute("maxPrice", maxPrice);
         model.addAttribute("sort", sort);
