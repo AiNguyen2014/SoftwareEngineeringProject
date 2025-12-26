@@ -497,27 +497,23 @@ public class OrderController {
             }
             
             Long addressId = (Long) session.getAttribute("SHIPPING_ADDRESS_ID");
-            String recipientEmail = (String) session.getAttribute("SHIPPING_RECIPIENT_EMAIL");
-            String note = (String) session.getAttribute("SHIPPING_NOTE");
+            String finalRecipientEmail = (String) session.getAttribute("SHIPPING_RECIPIENT_EMAIL");
+            if (finalRecipientEmail == null) {
+                finalRecipientEmail = recipientEmail;
+            }
+            String finalNote = (String) session.getAttribute("SHIPPING_NOTE");
+            if (finalNote == null) {
+                finalNote = note;
+            }
             
             String finalRecipientPhone = (String) session.getAttribute("SHIPPING_RECIPIENT_PHONE");
             if (finalRecipientPhone == null) {
                 finalRecipientPhone = recipientPhone;
             }
             
-            String finalRecipientEmail = (String) session.getAttribute("SHIPPING_RECIPIENT_EMAIL");
-            if (finalRecipientEmail == null) {
-                finalRecipientEmail = recipientEmail;
-            }
-            
             String finalRecipientAddress = (String) session.getAttribute("SHIPPING_RECIPIENT_ADDRESS");
             if (finalRecipientAddress == null) {
                 finalRecipientAddress = recipientAddress;
-            }
-            
-            String finalNote = (String) session.getAttribute("SHIPPING_NOTE");
-            if (finalNote == null) {
-                finalNote = note;
             }
             
             System.out.println("Type: " + type);

@@ -199,7 +199,12 @@ public class OrderHistoryService {
             OrderStatus orderStatus = OrderStatus.WAITING_CONFIRMATION; // Default value
             try {
                 if (trackingLog.getNewStatus() != null && !trackingLog.getNewStatus().trim().isEmpty()) {
-                    orderStatus = OrderStatus.valueOf(trackingLog.getNewStatus().toUpperCase().trim());
+                    String status = trackingLog.getNewStatus().toUpperCase().trim();
+                    // Map PENDING to WAITING_CONFIRMATION for enum compatibility
+                    if ("PENDING".equals(status)) {
+                        status = "WAITING_CONFIRMATION";
+                    }
+                    orderStatus = OrderStatus.valueOf(status);
                 }
             } catch (IllegalArgumentException e) {
                 System.err.println("WARNING: Invalid newStatus '" + trackingLog.getNewStatus() + 
@@ -208,7 +213,7 @@ public class OrderHistoryService {
             
             return OrderHistoryDto.builder()
                     .orderId(order.getOrderId())
-                    .customerName(order.getRecipientName() != null ? order.getRecipientName() : "Customer") 
+                    .customerName(order.getRecipientEmail() != null ? order.getRecipientEmail() : "Customer") 
                     .customerEmail(order.getRecipientEmail() != null ? order.getRecipientEmail() : "customer@example.com")  
                     .createAt(trackingLog.getChangedAt()) // Sử dụng changedAt từ tracking log
                     .status(orderStatus) // Sử dụng newStatus từ tracking log
@@ -247,7 +252,12 @@ public class OrderHistoryService {
             OrderStatus orderStatus = OrderStatus.WAITING_CONFIRMATION; // Default value
             try {
                 if (order.getStatus() != null && !order.getStatus().trim().isEmpty()) {
-                    orderStatus = OrderStatus.valueOf(order.getStatus().toUpperCase().trim());
+                    String status = order.getStatus().toUpperCase().trim();
+                    // Map PENDING to WAITING_CONFIRMATION for enum compatibility
+                    if ("PENDING".equals(status)) {
+                        status = "WAITING_CONFIRMATION";
+                    }
+                    orderStatus = OrderStatus.valueOf(status);
                 }
             } catch (IllegalArgumentException e) {
                 System.err.println("WARNING: Invalid status '" + order.getStatus() + "' for order " + order.getOrderId() + ". Using default WAITING_CONFIRMATION");
@@ -255,7 +265,7 @@ public class OrderHistoryService {
             
             return OrderHistoryDto.builder()
                     .orderId(order.getOrderId())
-                    .customerName(order.getRecipientName() != null ? order.getRecipientName() : "Customer") 
+                    .customerName(order.getRecipientEmail() != null ? order.getRecipientEmail() : "Customer") 
                     .customerEmail(order.getRecipientEmail() != null ? order.getRecipientEmail() : "customer@example.com")  
                     .createAt(order.getCreateAt())
                     .status(orderStatus) // Sử dụng orderStatus đã xử lý
