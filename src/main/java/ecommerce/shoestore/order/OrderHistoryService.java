@@ -213,7 +213,7 @@ public class OrderHistoryService {
             
             return OrderHistoryDto.builder()
                     .orderId(order.getOrderId())
-                    .customerName(order.getRecipientEmail() != null ? order.getRecipientEmail() : "Customer") 
+                    .customerName(order.getRecipientName() != null ? order.getRecipientName() : "Customer") 
                     .customerEmail(order.getRecipientEmail() != null ? order.getRecipientEmail() : "customer@example.com")  
                     .createAt(trackingLog.getChangedAt()) // Sử dụng changedAt từ tracking log
                     .status(orderStatus) // Sử dụng newStatus từ tracking log
@@ -265,7 +265,7 @@ public class OrderHistoryService {
             
             return OrderHistoryDto.builder()
                     .orderId(order.getOrderId())
-                    .customerName(order.getRecipientEmail() != null ? order.getRecipientEmail() : "Customer") 
+                    .customerName(order.getRecipientName() != null ? order.getRecipientName() : "Customer") 
                     .customerEmail(order.getRecipientEmail() != null ? order.getRecipientEmail() : "customer@example.com")  
                     .createAt(order.getCreateAt())
                     .status(orderStatus) // Sử dụng orderStatus đã xử lý
