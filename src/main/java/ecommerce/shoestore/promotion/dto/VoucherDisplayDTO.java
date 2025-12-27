@@ -33,14 +33,30 @@ public class VoucherDisplayDTO {
     // Campaign info
     private String campaignName;
     
+    // Giới hạn lượt dùng
+    private Long maxRedeemPerCustomer;
+    private Long userUsageCount; // Số lần user đã sử dụng voucher này
+    
     // Trạng thái có thể áp dụng
     private boolean applicable;
     private String reason; // Lý do không áp dụng được (nếu có)
     
     /**
-     * Tạo DTO từ Voucher entity
+     * Tạo DTO từ Voucher entity (không kiểm tra giới hạn lượt dùng)
      */
     public static VoucherDisplayDTO fromVoucher(Voucher voucher, BigDecimal orderSubTotal) {
+        return fromVoucher(voucher, orderSubTotal, null, 0L);
+    }
+    
+    /**
+     * Tạo DTO từ Voucher entity với kiểm tra giới hạn lượt dùng
+     * @param voucher Voucher entity
+     * @param orderSubTotal Tổng tiền đơn hàng
+     * @param maxRedeemPerCustomer Giới hạn lượt dùng của voucher (có thể null)
+     * @param userUsageCount Số lần user đã dùng voucher này
+     */
+    public static VoucherDisplayDTO fromVoucher(Voucher voucher, BigDecimal orderSubTotal, 
+                                                 Long maxRedeemPerCustomer, Long userUsageCount) {
         VoucherDisplayDTO dto = VoucherDisplayDTO.builder()
                 .voucherId(voucher.getVoucherId())
                 .code(voucher.getCode())
@@ -52,15 +68,18 @@ public class VoucherDisplayDTO {
                 .startDate(voucher.getStartDate())
                 .endDate(voucher.getEndDate())
                 .campaignName(voucher.getCampaign() != null ? voucher.getCampaign().getName() : null)
+                .maxRedeemPerCustomer(maxRedeemPerCustomer)
+                .userUsageCount(userUsageCount != null ? userUsageCount : 0L)
                 .build();
         
-        // Kiểm tra điều kiện áp dụng
-        dto.checkApplicability(voucher, orderSubTotal);
+        // Kiểm tra điều kiện áp dụng (bao gồm cả giới hạn lượt dùng)
+        dto.checkApplicability(voucher, orderSubTotal, maxRedeemPerCustomer, userUsageCount);
         
         return dto;
     }
     
-    private void checkApplicability(Voucher voucher, BigDecimal orderSubTotal) {
+    private void checkApplicability(Voucher voucher, BigDecimal orderSubTotal, 
+                                      Long maxRedeemPerCustomer, Long userUsageCount) {
         LocalDate today = LocalDate.now();
         
         // Kiểm tra voucher enabled
@@ -99,6 +118,15 @@ public class VoucherDisplayDTO {
             if (today.isAfter(voucher.getCampaign().getEndDate())) {
                 this.applicable = false;
                 this.reason = "Chiến dịch đã kết thúc";
+                return;
+            }
+        }
+        
+        // Kiểm tra giới hạn lượt dùng của user
+        if (maxRedeemPerCustomer != null && maxRedeemPerCustomer > 0 && userUsageCount != null) {
+            if (userUsageCount >= maxRedeemPerCustomer) {
+                this.applicable = false;
+                this.reason = "Đã hết lượt sử dụng (" + userUsageCount + "/" + maxRedeemPerCustomer + " lượt)";
                 return;
             }
         }
