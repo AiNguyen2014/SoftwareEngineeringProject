@@ -491,8 +491,12 @@ public class OrderController {
             String type = (String) session.getAttribute("SHIPPING_TYPE");
 
             Long addressId = (Long) session.getAttribute("SHIPPING_ADDRESS_ID");
-            String recipientEmail = (String) session.getAttribute("SHIPPING_RECIPIENT_EMAIL");
-            String note = (String) session.getAttribute("SHIPPING_NOTE");
+            String sessionRecipientEmail = (String) session.getAttribute("SHIPPING_RECIPIENT_EMAIL");
+            String sessionNote = (String) session.getAttribute("SHIPPING_NOTE");
+            
+            // Ưu tiên dùng giá trị từ session, nếu không có thì dùng từ form
+            String finalRecipientEmail = sessionRecipientEmail != null ? sessionRecipientEmail : recipientEmail;
+            String finalNote = sessionNote != null ? sessionNote : note;
             
             System.out.println("Type: " + type);
             System.out.println("AddressId: " + addressId);
