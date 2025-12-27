@@ -96,7 +96,7 @@ public class ShoesSearchController {
             model.addAttribute("errorMessage", "Không tìm thấy sản phẩm phù hợp");
         }
 
-        return "shoes-list";
+        return "shoe/shoes-list";
     }
 
     /**

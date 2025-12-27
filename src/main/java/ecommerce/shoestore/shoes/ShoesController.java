@@ -39,7 +39,7 @@ public class ShoesController {
         model.addAttribute("categories", categoryRepository.findAll());
         model.addAttribute("brands", shoesSearchService.findAllBrands(null));
 
-        return "shoes-list";
+        return "shoe/shoes-list";
     }
 
     @GetMapping("/product/{shoeId}")
@@ -47,6 +47,6 @@ public class ShoesController {
         // Session attributes được tự động thêm bởi SessionModelAdvice
 
         model.addAttribute("product", shoesService.getShoesDetail(shoeId));
-        return "shoes-detail";
+        return "shoe/shoes-detail";
     }
 }

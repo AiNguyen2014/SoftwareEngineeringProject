@@ -31,7 +31,7 @@
 
                     <div class="badge-overlay-detail" th:if="${product.type}">
                         <span class="badge-type"
-                              th:text="${product.type == 'FOR_MALE' ? 'GIÀY NAM' : (product.type == 'FOR_FEMALE' ? 'GIÀY NỮ' : 'GIÀY TRẺ EM')}">
+                              th:text="${product.type == 'FOR_MALE' ? 'GIÀY NAM' : (product.type == 'FOR_FEMALE' ? 'GIÀY NỮ' : (product.type == 'FOR_UNISEX' ? 'UNISEX' : product.type))}">
                             GIÀY NAM
                         </span>
                     </div>
@@ -161,7 +161,7 @@
                         </li>
                         <li th:if="${product.type}">
                             <strong>Phân loại:</strong>
-                            <span th:text="${product.type == 'FOR_MALE' ? 'Giày Nam' : (product.type == 'FOR_FEMALE' ? 'Giày Nữ' : 'Giày Trẻ Em')}"></span>
+                            <span th:text="${product.type == 'FOR_MALE' ? 'Giày Nam' : (product.type == 'FOR_FEMALE' ? 'Giày Nữ' : (product.type == 'FOR_UNISEX' ? 'Unisex' : product.type))}"></span>
                         </li>
                     </ul>
                 </div>
