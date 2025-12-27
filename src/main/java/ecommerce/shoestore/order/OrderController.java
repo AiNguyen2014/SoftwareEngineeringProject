@@ -426,11 +426,28 @@ public class OrderController {
                 return "redirect:/cart";
             }
             
-            subtotal = cart.getItems().stream()
+            // Lấy danh sách selected items từ session
+            String cartItemIds = (String) session.getAttribute("SELECTED_CART_ITEM_IDS");
+            List<CartItem> selectedItems;
+            
+            if (cartItemIds != null && !cartItemIds.isEmpty()) {
+                List<Long> selectedIds = Arrays.stream(cartItemIds.split(","))
+                    .map(Long::parseLong)
+                    .toList();
+                
+                selectedItems = cart.getItems().stream()
+                    .filter(item -> selectedIds.contains(item.getCartItemId()))
+                    .toList();
+            } else {
+                // Fallback: lấy tất cả nếu không có selected IDs
+                selectedItems = new ArrayList<>(cart.getItems());
+            }
+            
+            subtotal = selectedItems.stream()
                     .map(item -> item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
             
-            model.addAttribute("cartItems", cart.getItems());
+            model.addAttribute("cartItems", selectedItems);
             model.addAttribute("variant", null);
             model.addAttribute("quantity", 0);
         } else {
