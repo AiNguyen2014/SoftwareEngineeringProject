@@ -452,6 +452,11 @@
             border-color: #e0e0e0;
         }
         
+        .voucher-item.disabled:hover {
+            border-color: #e0e0e0;
+            background: #f8f8f8;
+        }
+        
         .voucher-item.disabled .voucher-code {
             background: #9e9e9e;
         }
@@ -460,8 +465,24 @@
             color: #9e9e9e;
         }
         
+        .voucher-item.disabled .voucher-description {
+            color: #999;
+        }
+        
         .disabled-text {
             color: #9e9e9e !important;
+        }
+        
+        .usage-limit-info {
+            display: inline-block;
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+        
+        .usage-exceeded {
+            color: #e53935;
+            font-weight: 500;
         }
         
         .voucher-item input[type="radio"] {
@@ -642,8 +663,9 @@
                             <div th:each="voucher : ${vouchers}" 
                                  class="voucher-item"
                                  th:classappend="${!voucher.applicable} ? 'disabled' : ''"
-                                 th:attr="data-code=${voucher.code},data-min=${voucher.minOrderValue != null ? voucher.minOrderValue : 0}"
-                                 th:onclick="${voucher.applicable} ? 'selectVoucher(this)' : ''">
+                                 th:data-code="${voucher.code}"
+                                 th:data-min="${voucher.minOrderValue != null ? voucher.minOrderValue : 0}"
+                                 th:data-applicable="${voucher.applicable}">
                                 
                                 <div class="voucher-header">
                                     <span class="voucher-code" th:text="${voucher.code}">VOUCHER123</span>
@@ -665,6 +687,13 @@
                                 <div class="voucher-conditions">
                                     <span th:if="${voucher.minOrderValue != null and voucher.minOrderValue > 0}">
                                         Đơn tối thiểu: <span th:text="${#numbers.formatDecimal(voucher.minOrderValue, 0, 'COMMA', 0, 'POINT')}">100000</span>₫
+                                    </span>
+                                    <!-- Hiển thị giới hạn lượt dùng -->
+                                    <span th:if="${voucher.maxRedeemPerCustomer != null and voucher.maxRedeemPerCustomer > 0}">
+                                        <br>Giới hạn: <span th:text="${voucher.maxRedeemPerCustomer}">5</span> lượt/người
+                                        <span th:if="${voucher.userUsageCount > 0}">
+                                            (đã dùng <span th:text="${voucher.userUsageCount}">0</span> lượt)
+                                        </span>
                                     </span>
                                     <!-- Hiển thị lý do không áp dụng được -->
                                     <span th:if="${!voucher.applicable}" class="not-applicable">
@@ -756,6 +785,25 @@
         
         console.log('Payment page loaded. Subtotal:', subtotal, 'Shipping:', shipping);
         
+        // Khởi tạo event listeners khi DOM đã sẵn sàng
+        document.addEventListener('DOMContentLoaded', function() {
+            // Thêm click event cho tất cả voucher items
+            document.querySelectorAll('.voucher-item').forEach(function(item) {
+                item.addEventListener('click', function() {
+                    const isApplicable = this.getAttribute('data-applicable') === 'true';
+                    if (isApplicable) {
+                        selectVoucher(this);
+                    } else {
+                        // Hiển thị thông báo khi click vào voucher không khả dụng
+                        const reason = this.querySelector('.not-applicable span');
+                        if (reason) {
+                            showVoucherMessage(reason.textContent, 'error');
+                        }
+                    }
+                });
+            });
+        });
+        
         function selectPayment(method, element) {
             document.querySelectorAll('.payment-method').forEach(item => {
                 item.classList.remove('selected');
@@ -769,6 +817,11 @@
             console.log('Selecting voucher:', code);
             document.getElementById('voucherCodeInput').value = code;
             applyVoucherCode();
+        }
+        
+        function showVoucherMessage(message, type) {
+            const messageEl = document.getElementById('voucherMessage');
+            messageEl.innerHTML = '<span class="' + type + '">' + message + '</span>';
         }
         
         function applyVoucherCode() {

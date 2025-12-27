@@ -18,9 +18,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -197,11 +194,11 @@ public class OrderController {
             System.out.println("BUY_NOW - Quantity: " + quantity + ", Subtotal: " + subtotal);
             
             model.addAttribute("variant", variant);
+            model.addAttribute("variantId", variantId);
             model.addAttribute("quantity", quantity);
             model.addAttribute("subtotal", subtotal);
             model.addAttribute("shipping", new BigDecimal("30000"));
             model.addAttribute("total", subtotal.add(new BigDecimal("30000")));
-            model.addAttribute("variantId", variantId);
         }
         
         System.out.println("Returning checkout template");
@@ -492,32 +489,18 @@ public class OrderController {
             
             // Lấy thông tin từ session hoặc form
             String type = (String) session.getAttribute("SHIPPING_TYPE");
-            if (type == null) {
-                type = "CART"; // Default to CART if not specified
-            }
-            
+
             Long addressId = (Long) session.getAttribute("SHIPPING_ADDRESS_ID");
-            String finalRecipientEmail = (String) session.getAttribute("SHIPPING_RECIPIENT_EMAIL");
-            if (finalRecipientEmail == null) {
-                finalRecipientEmail = recipientEmail;
-            }
-            String finalNote = (String) session.getAttribute("SHIPPING_NOTE");
-            if (finalNote == null) {
-                finalNote = note;
-            }
+            String sessionRecipientEmail = (String) session.getAttribute("SHIPPING_RECIPIENT_EMAIL");
+            String sessionNote = (String) session.getAttribute("SHIPPING_NOTE");
             
-            String finalRecipientPhone = (String) session.getAttribute("SHIPPING_RECIPIENT_PHONE");
-            if (finalRecipientPhone == null) {
-                finalRecipientPhone = recipientPhone;
-            }
-            
-            String finalRecipientAddress = (String) session.getAttribute("SHIPPING_RECIPIENT_ADDRESS");
-            if (finalRecipientAddress == null) {
-                finalRecipientAddress = recipientAddress;
-            }
+            // Ưu tiên dùng giá trị từ session, nếu không có thì dùng từ form
+            String finalRecipientEmail = sessionRecipientEmail != null ? sessionRecipientEmail : recipientEmail;
+            String finalNote = sessionNote != null ? sessionNote : note;
             
             System.out.println("Type: " + type);
             System.out.println("AddressId: " + addressId);
+
             System.out.println("PaymentMethod: " + paymentMethod);
             System.out.println("VoucherCode: " + voucherCode);
             
@@ -531,6 +514,7 @@ public class OrderController {
                 Cart cart = cartRepository.findCartWithItems(user)
                         .orElseThrow(() -> new RuntimeException("Giỏ hàng trống"));
                 
+
                 // Lấy danh sách IDs được chọn từ session
                 String cartItemIds = (String) session.getAttribute("SELECTED_CART_ITEM_IDS");
                 
@@ -552,6 +536,7 @@ public class OrderController {
                 order = orderService.createOrderFromSelectedItems(
                         user.getUserId(), addressId, recipientEmail,
                         paymentMethod, note, selectedItems, voucherCode
+
                 );
                 
                 // Xóa session data
@@ -563,8 +548,10 @@ public class OrderController {
                 Integer quantity = (Integer) session.getAttribute("SHIPPING_QUANTITY");
                 
                 order = orderService.createOrderBuyNow(
+
                         user.getUserId(), addressId, recipientEmail,
                         paymentMethod, note, variantId, quantity, voucherCode
+
                 );
                 
             } else {

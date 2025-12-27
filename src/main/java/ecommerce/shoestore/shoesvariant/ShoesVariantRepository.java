@@ -16,7 +16,10 @@ public interface ShoesVariantRepository extends JpaRepository<ShoesVariant, Long
     @Query("SELECT v.shoes.shoeId, SUM(v.stock) FROM ShoesVariant v WHERE v.shoes.shoeId IN :shoeIds GROUP BY v.shoes.shoeId")
     java.util.List<Object[]> getTotalStocksByShoeIds(@Param("shoeIds") java.util.List<Long> shoeIds);
     
-    // Lấy variant với shoes (eager loading)
-    @Query("SELECT v FROM ShoesVariant v LEFT JOIN FETCH v.shoes WHERE v.variantId = :variantId")
+    // Lấy variant với shoes và images (eager loading)
+    @Query("SELECT v FROM ShoesVariant v " +
+           "LEFT JOIN FETCH v.shoes s " +
+           "LEFT JOIN FETCH s.images " +
+           "WHERE v.variantId = :variantId")
     java.util.Optional<ShoesVariant> findByIdWithShoes(@Param("variantId") Long variantId);
 }

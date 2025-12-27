@@ -104,8 +104,15 @@ public class CustomerPromotionService {
                 // Chỉ lấy voucher trong thời gian campaign
                 .filter(v -> v.getCampaign() != null && !v.getCampaign().getStartDate().isAfter(today))
                 .filter(v -> v.getCampaign() != null && !v.getCampaign().getEndDate().isBefore(today))
-                // Chuyển sang DTO (bao gồm kiểm tra minOrderValue)
-                .map(v -> VoucherDisplayDTO.fromVoucher(v, orderSubTotal))
+                // Chuyển sang DTO (bao gồm kiểm tra minOrderValue và giới hạn lượt dùng)
+                .map(v -> {
+                    // Lấy số lần user đã sử dụng voucher này
+                    Long userUsageCount = 0L;
+                    if (userId != null && v.getMaxRedeemPerCustomer() != null && v.getMaxRedeemPerCustomer() > 0) {
+                        userUsageCount = orderVoucherRepository.countByVoucher_VoucherIdAndUserId(v.getVoucherId(), userId);
+                    }
+                    return VoucherDisplayDTO.fromVoucher(v, orderSubTotal, v.getMaxRedeemPerCustomer(), userUsageCount);
+                })
                 // Sắp xếp: voucher áp dụng được trước, sau đó theo giá trị giảm
                 .sorted(Comparator.comparing(VoucherDisplayDTO::isApplicable).reversed()
                         .thenComparing(VoucherDisplayDTO::getDiscountValue, Comparator.reverseOrder()))
