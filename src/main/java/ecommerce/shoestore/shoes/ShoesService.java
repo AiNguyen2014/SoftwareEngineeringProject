@@ -68,12 +68,17 @@ public class ShoesService {
      */
     @Transactional(readOnly = true)
     public ShoesDetailDto getShoesDetail(Long shoeId) {
-        // Lấy shoes với images
+        // Lấy shoes với images và category
         Shoes shoes = shoesRepository.findByIdWithImages(shoeId)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy sản phẩm ID: " + shoeId));
 
         // Lấy thêm variants (query riêng để tránh tích Descartes)
-        shoesRepository.findByIdWithVariants(shoeId);
+        // Cần gán lại vào biến shoes để có variants
+        Shoes shoesWithVariants = shoesRepository.findByIdWithVariants(shoeId)
+                .orElse(shoes);
+        
+        // Gán variants từ query thứ 2 vào shoes entity
+        shoes.setVariants(shoesWithVariants.getVariants());
 
         return convertToDetailDto(shoes);
     }
