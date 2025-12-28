@@ -21,6 +21,8 @@
             padding: 2rem;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 2;
         }
         
         .checkout-summary {
@@ -31,6 +33,7 @@
             height: fit-content;
             position: sticky;
             top: 2rem;
+            z-index: 0;
         }
         
         .progress-steps {
@@ -180,7 +183,7 @@
             border: 2px solid #e53935;
             border-radius: 8px;
             padding: 1.5rem;
-            background: #fffafalse
+            background: #fffafa;
             margin-bottom: 1.5rem;
         }
         
@@ -339,6 +342,7 @@
             
             <form id="shippingForm" action="/order/shipping" method="POST">
                 <input type="hidden" name="type" th:value="${type}">
+                <input type="hidden" name="cartItemIds" th:value="${cartItemIds}">
                 <input type="hidden" name="variantId" th:value="${variantId}">
                 <input type="hidden" name="quantity" th:value="${quantity}">
                 

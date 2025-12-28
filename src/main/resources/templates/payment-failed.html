@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanh toán thất bại - WEBSHOE</title>
+    <th:block th:replace="~{fragments :: head_header}"></th:block>
+    <style>
+        .failed-container {
+            max-width: 800px;
+            margin: 3rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .failed-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            background: #f44336;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+        }
+        
+        .failed-container h1 {
+            color: #f44336;
+            margin-bottom: 1rem;
+        }
+        
+        .failed-message {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .error-details {
+            background: #ffebee;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            text-align: left;
+            border-left: 4px solid #f44336;
+        }
+        
+        .error-details h3 {
+            margin-top: 0;
+            color: #c62828;
+        }
+        
+        .error-details p {
+            color: #666;
+            margin: 0.5rem 0;
+        }
+        
+        .order-info {
+            background: #f5f5f5;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .info-value {
+            color: #666;
+        }
+        
+        .info-value.failed {
+            color: #f44336;
+            font-weight: 600;
+        }
+        
+        .info-value.amount {
+            color: #333;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        
+        .help-info {
+            background: #e3f2fd;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            text-align: left;
+            border-left: 4px solid #2196f3;
+        }
+        
+        .help-info h3 {
+            margin-top: 0;
+            color: #1976d2;
+        }
+        
+        .help-info ul {
+            margin: 0;
+            padding-left: 1.5rem;
+            color: #666;
+        }
+        
+        .help-info li {
+            margin: 0.5rem 0;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #e53935;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #c62828;
+        }
+        
+        .btn-warning {
+            background: #ff9800;
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background: #f57c00;
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #666;
+            border: 1px solid #ddd;
+        }
+        
+        .btn-secondary:hover {
+            background: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+    
+    <div th:replace="~{fragments :: header}"></div>
+    
+    <div class="failed-container">
+        <div class="failed-icon">✗</div>
+        
+        <h1>Thanh toán không thành công</h1>
+        <p class="failed-message">
+            Rất tiếc, giao dịch thanh toán của bạn không thể hoàn tất. Vui lòng kiểm tra lại thông tin và thử lại.
+        </p>
+        
+        <div class="error-details">
+            <h3>Lý do thất bại</h3>
+            <p th:text="${errorMessage}">Không thể kết nối đến cổng thanh toán</p>
+        </div>
+        
+        <div class="order-info" th:if="${order != null}">
+            <div class="info-row">
+                <span class="info-label">Mã đơn hàng:</span>
+                <span class="info-value" th:text="${order.orderId}">#12345</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Trạng thái thanh toán:</span>
+                <span class="info-value failed">Chưa thanh toán</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Trạng thái đơn hàng:</span>
+                <span class="info-value">
+                    <span th:if="${order.status == 'PENDING'}">Chờ thanh toán</span>
+                    <span th:unless="${order.status == 'PENDING'}">Đã hủy</span>
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Tổng tiền cần thanh toán:</span>
+                <span class="info-value amount" th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' ₫'">500,000 ₫</span>
+            </div>
+        </div>
+        
+        <div class="help-info">
+            <h3>Một số nguyên nhân có thể gây ra lỗi:</h3>
+            <ul>
+                <li>Tài khoản không đủ số dư</li>
+                <li>Thông tin thẻ không chính xác</li>
+                <li>Đã hủy giao dịch trên cổng thanh toán</li>
+                <li>Thẻ chưa đăng ký dịch vụ thanh toán trực tuyến</li>
+                <li>Đã quá hạn thanh toán (15 phút)</li>
+                <li>Ngân hàng từ chối giao dịch</li>
+            </ul>
+        </div>
+        
+        <div class="action-buttons">
+            <form th:if="${order != null}" th:action="@{/payment/create-vnpay}" method="POST">
+                <input type="hidden" name="orderId" th:value="${order.orderId}">
+                <button type="submit" class="btn btn-warning">Thử thanh toán lại</button>
+            </form>
+            <a th:href="@{/order/payment}" class="btn btn-secondary">Chọn phương thức khác</a>
+            <a th:href="@{/}" class="btn btn-secondary">Về trang chủ</a>
+        </div>
+        
+        <p style="margin-top: 2rem; color: #999; font-size: 0.9rem;">
+            Nếu bạn cần hỗ trợ, vui lòng liên hệ: <strong>1900 55 55 77</strong>
+        </p>
+    </div>
+    
+    <div th:replace="~{fragments :: footer}"></div>
+</body>
+</html>

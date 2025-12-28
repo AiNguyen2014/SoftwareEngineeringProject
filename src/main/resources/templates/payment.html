@@ -21,6 +21,8 @@
             padding: 2rem;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 2;
         }
         
         .checkout-summary {
@@ -31,6 +33,7 @@
             height: fit-content;
             position: sticky;
             top: 2rem;
+            z-index: 0;
         }
         
         .form-section {
@@ -148,6 +151,9 @@
             display: flex;
             align-items: center;
             gap: 1rem;
+            pointer-events: auto;
+            position: relative;
+            z-index: 2;
         }
         
         .payment-method:hover {
@@ -246,6 +252,10 @@
             font-weight: 600;
             cursor: pointer;
             margin-top: 1.5rem;
+            position: sticky;
+            bottom: 0;
+            z-index: 3;
+            box-shadow: 0 -6px 12px rgba(0,0,0,0.06);
         }
         
         .btn-submit:hover {
@@ -583,6 +593,13 @@
             </div>
             
             <form action="/order/create" method="POST" id="paymentForm">
+                <!-- Hidden inputs để gửi thông tin giao hàng -->
+                <input type="hidden" name="recipientName" th:value="${recipientName ?: ''}">
+                <input type="hidden" name="recipientPhone" th:value="${recipientPhone ?: ''}">
+                <input type="hidden" name="recipientEmail" th:value="${recipientEmail ?: ''}">
+                <input type="hidden" name="recipientAddress" th:value="${recipientAddress ?: ''}">
+                <input type="hidden" name="note" th:value="${note ?: ''}">
+                
                 <!-- Thông tin giao hàng (chỉ hiển thị) -->
                 <div class="form-section">
                     <h3>Thông tin giao hàng</h3>
@@ -611,12 +628,12 @@
                             </div>
                         </div>
                         
-                        <div class="payment-method" onclick="selectPayment('TRANSFER', this)" id="payment-transfer">
-                            <input type="radio" name="paymentMethod" value="TRANSFER" id="radio-transfer" required>
-                            <img th:src="@{/images/vnpay.jpg}" alt="Chuyển khoản" class="payment-method-icon">
+                        <div class="payment-method" onclick="selectPayment('VNPAY', this)" id="payment-vnpay">
+                            <input type="radio" name="paymentMethod" value="VNPAY" id="radio-vnpay" required>
+                            <img th:src="@{/images/vnpay.jpg}" alt="VNPay" class="payment-method-icon">
                             <div class="payment-method-info">
-                                <div class="payment-method-name">Chuyển khoản ngân hàng</div>
-                                <div class="payment-method-desc">Chuyển khoản qua tài khoản ngân hàng</div>
+                                <div class="payment-method-name">Thanh toán VNPay</div>
+                                <div class="payment-method-desc">Thanh toán trực tuyến qua cổng VNPay (ATM, Visa, MasterCard, QR Code) </div>
                             </div>
                         </div>
                     </div>
@@ -779,6 +796,7 @@
     </div>
     
     <script th:inline="javascript">
+
         const subtotal = [[${subtotal}]];
         const shipping = [[${shipping}]];
         let currentDiscount = 0;
@@ -803,6 +821,10 @@
                 });
             });
         });
+        /*<![CDATA[*/
+        const subtotal = /*[[${subtotal}]]*/ 0;
+        const shipping = /*[[${shipping}]]*/ 0;
+        /*]]*/
         
         function selectPayment(method, element) {
             document.querySelectorAll('.payment-method').forEach(item => {

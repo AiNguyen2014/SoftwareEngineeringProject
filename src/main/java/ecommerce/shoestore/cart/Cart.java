@@ -4,9 +4,8 @@ import ecommerce.shoestore.auth.user.User;
 import ecommerce.shoestore.cartitem.CartItem;
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
+import java.util.ArrayList;
 
 @Entity
 @Table(name = "cart")
@@ -31,7 +30,7 @@ public class Cart {
             fetch = FetchType.EAGER
     )
 
-    private Set<CartItem> items = new HashSet<>();
+    private List<CartItem> items = new ArrayList<>();
 
     public Cart(User customer) {
         this.customer = customer;

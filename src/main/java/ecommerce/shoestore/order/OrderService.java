@@ -6,8 +6,11 @@ import ecommerce.shoestore.cartitem.CartItem;
 import ecommerce.shoestore.cartitem.CartItemRepository;
 import ecommerce.shoestore.promotion.CustomerPromotionService;
 import ecommerce.shoestore.promotion.Voucher;
-import ecommerce.shoestore.order.OrderStatus;
 import ecommerce.shoestore.promotion.dto.VoucherValidationResult;
+import ecommerce.shoestore.payment.Payment;
+import ecommerce.shoestore.payment.PaymentRepository;
+import ecommerce.shoestore.payment.PaymentTransaction;
+import ecommerce.shoestore.payment.PaymentTransactionRepository;
 import ecommerce.shoestore.shoesvariant.ShoesVariant;
 import ecommerce.shoestore.shoesvariant.ShoesVariantRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +31,9 @@ public class OrderService {
     private final CartItemRepository cartItemRepository;
     private final ShoesVariantRepository shoesVariantRepository;
     private final CustomerPromotionService customerPromotionService;
-    
+    private final PaymentRepository paymentRepository;
+    private final PaymentTransactionRepository paymentTransactionRepository;
+    private final OrderAddressRepository orderAddressRepository;
     private static final BigDecimal SHIPPING_FEE = new BigDecimal("30000");
     
     @Transactional
@@ -69,15 +74,30 @@ public class OrderService {
         } else {
             System.out.println("No voucher code provided, skipping validation");
         }
-        
+
         // Tính totalAmount
         BigDecimal totalAmount = subTotal.add(SHIPPING_FEE).subtract(discountAmount);
-        
+
+        // Lấy thông tin địa chỉ để điền recipient fields
+        OrderAddress address = orderAddressRepository.findById(addressId)
+                .orElseThrow(() -> new RuntimeException("Địa chỉ không tồn tại"));
+
+        // Generate order code
+        String orderCode = "ORDER" + System.currentTimeMillis();
+
         // Tạo Order
         Order order = new Order();
         order.setUserId(userId);
         order.setOrderAddressId(addressId);
         order.setRecipientEmail(recipientEmail);
+        order.setRecipientName(address.getRecipientName());
+        order.setRecipientPhone(address.getRecipientPhone());
+        order.setRecipientAddress(
+                address.getProvince() + ", "
+                + address.getDistrict() + ", "
+                + address.getCommune() + ", "
+                + address.getStreetDetail()
+        );
         order.setSubTotal(subTotal);
         order.setShippingFee(SHIPPING_FEE);
         order.setDiscountAmount(discountAmount);
@@ -85,8 +105,15 @@ public class OrderService {
         // Use payment method value directly from form (COD or TRANSFER)
         order.setPaymentMethod(paymentMethod);
         order.setNote(note);
-        order.setStatus(OrderStatus.PENDING);
-        
+        order.setStatus("PENDING");
+
+        // Set payment status based on payment method
+        if ("VNPAY".equals(paymentMethod)) {
+            order.setPaymentStatus("UNPAID");
+        } else {
+            order.setPaymentStatus("UNPAID");
+        }
+
         order = orderRepository.save(order);
         
         // Tạo OrderItems
@@ -158,21 +185,44 @@ public class OrderService {
         
         // Tính totalAmount
         BigDecimal totalAmount = subTotal.add(SHIPPING_FEE).subtract(discountAmount);
-        
+
+        // Lấy thông tin địa chỉ để điền recipient fields
+        OrderAddress address = orderAddressRepository.findById(addressId)
+                .orElseThrow(() -> new RuntimeException("Địa chỉ không tồn tại"));
+
+        // Generate order code
+        String orderCode = "ORDER" + System.currentTimeMillis();
+
         // Tạo Order
         Order order = new Order();
         order.setUserId(userId);
         order.setOrderAddressId(addressId);
         order.setRecipientEmail(recipientEmail);
+        order.setRecipientName(address.getRecipientName());
+        order.setRecipientPhone(address.getRecipientPhone());
+        order.setRecipientAddress(
+                address.getProvince() + ", "
+                + address.getDistrict() + ", "
+                + address.getCommune() + ", "
+                + address.getStreetDetail()
+        );
         order.setSubTotal(subTotal);
         order.setShippingFee(SHIPPING_FEE);
         order.setDiscountAmount(discountAmount);
         order.setTotalAmount(totalAmount);
         // Use payment method value directly from form (COD or TRANSFER)
         order.setPaymentMethod(paymentMethod);
+        order.setOrderCode(orderCode);
         order.setNote(note);
-        order.setStatus(OrderStatus.PENDING);
-        
+        order.setStatus("PENDING");
+
+        // Set payment status based on payment method
+        if ("VNPAY".equals(paymentMethod)) {
+            order.setPaymentStatus("UNPAID");
+        } else {
+            order.setPaymentStatus("UNPAID");
+        }
+
         order = orderRepository.save(order);
         
         // Tạo OrderItem
@@ -206,9 +256,9 @@ public class OrderService {
     
     @Transactional
     public Order createOrderFromSelectedItems(Long userId, Long addressId, String recipientEmail,
-                                              String paymentMethod, String note, 
-                                              List<CartItem> selectedItems, String voucherCode) {
-        
+            String paymentMethod, String note,
+            List<CartItem> selectedItems, String voucherCode) {
+
         System.out.println("=== Creating order from selected items ===");
         System.out.println("VoucherCode received: [" + voucherCode + "]");
         
@@ -243,9 +293,9 @@ public class OrderService {
         } else {
             System.out.println("No voucher code provided, skipping validation");
         }
-        
+
         BigDecimal totalAmount = subTotal.add(SHIPPING_FEE).subtract(discountAmount);
-        
+
         // Tạo Order
         Order order = new Order();
         order.setUserId(userId);
@@ -257,14 +307,14 @@ public class OrderService {
         order.setTotalAmount(totalAmount);
         order.setPaymentMethod(paymentMethod);
         order.setNote(note);
-        order.setStatus(OrderStatus.PENDING);
-        
+        order.setStatus("PENDING");
+
         order = orderRepository.save(order);
-        
+
         // Tạo OrderItems CHỈ cho items được chọn
         for (CartItem item : selectedItems) {
             ShoesVariant variant = item.getVariant();
-            
+
             OrderItem orderItem = new OrderItem();
             orderItem.setOrderId(order.getOrderId());
             orderItem.setShoeId(variant.getShoes().getShoeId());
@@ -277,31 +327,37 @@ public class OrderService {
                     .multiply(BigDecimal.valueOf(item.getQuantity())));
             orderItemRepository.save(orderItem);
         }
-        
         // Áp dụng voucher vào order nếu có
         if (appliedVoucher != null) {
             customerPromotionService.applyVoucherToOrder(order, appliedVoucher, userId);
         }
-        
-        // Xóa CHỈ các items đã đặt hàng khỏi giỏ
-        for (CartItem item : selectedItems) {
-            cartItemRepository.delete(item);
-        }
-        
+
+        // === XÓA CART ITEMS ĐÃ ĐẶT HÀNG ===
+        List<Long> cartItemIdsToRemove = selectedItems.stream()
+                .map(CartItem::getCartItemId)
+                .toList();
+
+        System.out.println("Deleting selected cart items: " + cartItemIdsToRemove);
+        // Use batch delete for immediate removal and better consistency
+        cartItemRepository.deleteAllByIdInBatch(cartItemIdsToRemove);
+        // Ensure delete is flushed before returning
+        cartItemRepository.flush();
+        System.out.println("Deleted selected cart items successfully");
+
         return order;
     }
     //Thêm hàm cập nhật trạng thái đơn hàng
-    public void updateOrderStatus(Long orderId, OrderStatus newStatus) { 
+    public void updateOrderStatus(Long orderId, OrderStatus newStatus) {
     Order order = orderRepository.findById(orderId)
             .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng ID: " + orderId));
-    
+
     if (order.getStatus() == OrderStatus.CANCELLED) {
         throw new RuntimeException("Đơn hàng đã bị huỷ, không thể cập nhật!");
     }
     if (order.getStatus() == OrderStatus.COMPLETED) {
         throw new RuntimeException("Đã giao thành công!");
     }
-    
+
     order.setStatus(newStatus);
     orderRepository.save(order);
 }

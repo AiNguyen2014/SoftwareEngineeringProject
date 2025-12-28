@@ -81,25 +81,6 @@ public class CartController {
         return "redirect:" + referer;
     }
 
-    // ================== REMOVE ITEM ==================
-    @PostMapping("/remove")
-    public String removeItem(
-            HttpSession session,
-            @RequestParam Long cartItemId
-    ) {
-        Long userId = (Long) session.getAttribute("USER_ID");
-        if (userId == null) {
-            return "redirect:/auth/login";
-        }
-
-        User customer = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        cartService.removeItem(customer, cartItemId);
-
-        return "redirect:/cart";
-    }
-
     // ================== UPDATE QUANTITY ==================
     @PostMapping("/update")
     public String updateQuantity(
@@ -107,6 +88,7 @@ public class CartController {
             @RequestParam Long cartItemId,
             @RequestParam String action
     ) {
+        //Check login
         Long userId = (Long) session.getAttribute("USER_ID");
         if (userId == null) {
             return "redirect:/auth/login";
@@ -115,8 +97,10 @@ public class CartController {
         User customer = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        //Handle action increase/decrease
         if ("increase".equals(action)) {
             cartService.increaseQuantity(customer, cartItemId);
+
         } else if ("decrease".equals(action)) {
             cartService.decreaseQuantity(customer, cartItemId);
         }

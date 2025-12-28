@@ -44,7 +44,31 @@ public class Order {
     @org.hibernate.annotations.ColumnTransformer(
         write = "CAST(? AS payment_method)"
     )
-    private String paymentMethod; // "COD" hoặc "TRANSFER"
+    private String paymentMethod; // "COD", "VNPAY", "TRANSFER"
+    
+    @Column(name = "payment_status")
+    private String paymentStatus; // "UNPAID", "PAID", "REFUNDED"
+    
+    @Column(name = "\"order_code\"")
+    private String orderCode;
+    
+    @Column(name = "\"transaction_id\"")
+    private String transactionId;
+    
+    @Column(name = "\"paid_at\"")
+    private LocalDateTime paidAt;
+    
+    @Column(name = "\"voucher_code\"")
+    private String voucherCode;
+    
+    @Column(name = "\"recipientAddress\"")
+    private String recipientAddress;
+    
+    @Column(name = "\"recipientName\"")
+    private String recipientName;
+    
+    @Column(name = "\"recipientPhone\"")
+    private String recipientPhone;
     
     @Column(name = "note", columnDefinition = "TEXT")
     private String note;
