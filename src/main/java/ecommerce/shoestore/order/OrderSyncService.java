@@ -36,7 +36,7 @@ public class OrderSyncService {
                     OrderTrackingLog trackingLog = OrderTrackingLog.builder()
                             .orderId(order.getOrderId())
                             .oldStatus("Không có") // Cột trống thì để "Không có"
-                            .newStatus(order.getStatus() != null ? order.getStatus() : "PENDING")
+                            .newStatus(order.getStatus() != null ? order.getStatus().name() : "PENDING")
                             .changedAt(order.getCreateAt() != null ? order.getCreateAt() : LocalDateTime.now())
                             .changedBy("System")
                             .comment(order.getNote() != null ? order.getNote() : "Không có")

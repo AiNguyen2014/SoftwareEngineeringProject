@@ -37,41 +37,45 @@ public class OrderHistoryService {
     /**
      * Chuyển đổi trạng thái đơn hàng sang tiếng Việt
      */
-    private String getVietnameseStatus(String status) {
-        if (status == null) return "Không xác định";
+    private String getVietnameseStatus(String statusStr) {
+        if (statusStr == null) return "Không xác định";
         
-        switch (status.toUpperCase()) {
-            case "PENDING": return "Chờ xử lý";
-            case "CONFIRMED": return "Đã xác nhận"; 
-            case "SHIPPING": return "Đang giao hàng";
-            case "COMPLETED": return "Hoàn thành";
-            case "CANCELLED": return "Đã hủy";
-            // Thêm các trạng thái mở rộng
-            case "WAITING_PAYMENT": return "Chờ thanh toán";
-            case "PAID": return "Đã thanh toán";
-            case "WAITING_CONFIRMATION": return "Chờ xác nhận";
-            case "PACKING": return "Đang đóng gói";
-            case "COMPLETE_DELIVERY": return "Giao hàng thành công";
-            case "CANCELED": return "Đã hủy";
-            case "REQUEST_REFUND": return "Yêu cầu hoàn tiền";
-            case "REFUND": return "Đã hoàn tiền";
-            default: return status;
+        try {
+            // Chấp nhận cả String thường và Enum name
+            String statusUpper = statusStr.toUpperCase().trim();
+            
+            switch (statusUpper) {
+                case "PENDING":   return "Chờ xử lý";
+                case "CONFIRMED": return "Đã xác nhận";
+                case "SHIPPING":  return "Đang giao hàng";
+                case "COMPLETED": return "Hoàn thành";
+                case "CANCELLED":  return "Đã hủy";
+                default:        return statusStr;
+            }
+        } catch (Exception e) {
+            return statusStr;
         }
     }
     
     /**
      * Lấy CSS class cho trạng thái
      */
-    private String getStatusColorClass(String status) {
-        if (status == null) return "secondary";
-        
-        switch (status.toUpperCase()) {
-            case "PENDING": return "warning";
-            case "CONFIRMED": return "info"; 
-            case "SHIPPING": return "primary";
-            case "COMPLETED": return "success";
-            case "CANCELLED": return "danger";
-            default: return "secondary";
+    /*Mới sửa từ Pb */
+    private String getStatusColorClass(String statusStr) {
+        if (statusStr == null) return "secondary";
+        try {
+            String statusUpper = statusStr.toUpperCase().trim();
+
+            switch (statusUpper) {
+                case "PENDING":   return "warning text-dark"; // Màu vàng
+                case "CONFIRMED": return "info text-dark";    // Màu xanh dương nhạt
+                case "SHIPPING":  return "primary"; // Màu xanh dương đậm
+                case "COMPLETED": return "success"; // Màu xanh lá
+                case "CANCELLED":  return "danger";  // Màu đỏ
+                default:        return "secondary";
+            }
+        } catch (Exception e) {
+            return "secondary";
         }
     }
     
@@ -85,8 +89,7 @@ public class OrderHistoryService {
         
         // Sync dữ liệu từ Order sang OrderTrackingLog trước
         orderSyncService.syncOrdersToTrackingLog();
-        
-        System.out.println("DEBUG: Looking for orders with userId: " + customerId);
+        /*Đã xoá cái print kia bởi PB */
         List<OrderTrackingLog> allTrackingLogs = trackingLogRepository.findAllByOrderByChangeAtDesc();
         
         // Group theo orderId và lấy log mới nhất của mỗi order
@@ -153,20 +156,28 @@ public class OrderHistoryService {
      * Thêm tracking log mới khi thay đổi trạng thái đơn hàng
      */
     @Transactional
-    public void addOrderStatusChange(Long orderId, String oldStatus, String newStatus, 
+    public void addOrderStatusChange(Long orderId, String oldStatus, String newStatusStr, 
                                    String changedBy, String comment) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy đơn hàng"));
-        
+        // Chuyển đổi oldStatus và newStatus từ String sang Enum nếu cần (PB mới sửa)
+        try {
+            OrderStatus newStatusEnum = OrderStatus.valueOf(newStatusStr);
+            order.setStatus(newStatusEnum);
+        } catch (IllegalArgumentException e) {
+            // Nếu string không khớp enum, cố gắng map thủ công hoặc giữ nguyên nếu cần thiết
+            // Nhưng Order.status là Enum nên bắt buộc phải khớp
+            System.err.println("Lỗi convert status: " + newStatusStr);
+            throw new RuntimeException("Trạng thái không hợp lệ: " + newStatusStr);
+        }
         // Cập nhật trạng thái đơn hàng
-        order.setStatus(newStatus);
         orderRepository.save(order);
         
-        // Tạo tracking log
+        // Tạo tracking log (Có chỉnh lại tên biến)
         OrderTrackingLog trackingLog = OrderTrackingLog.builder()
                 .orderId(order.getOrderId())
                 .oldStatus(oldStatus)
-                .newStatus(newStatus)
+                .newStatus(newStatusStr)
                 .changedAt(LocalDateTime.now()) // Explicitly set changedAt
                 .changedBy(changedBy)
                 .comment(comment)
@@ -178,10 +189,21 @@ public class OrderHistoryService {
     /**
      * Lấy tất cả đơn hàng (cho admin)
      */
-    public Page<OrderHistoryDto> getAllOrders(int page, int size) {
+    public Page<OrderHistoryDto> getAllOrders(String statusStr, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<Order> orders = orderRepository.findAll(pageable);
-        
+        Page<Order> orders;
+        if (statusStr == null || statusStr.trim().isEmpty() || statusStr.equals("ALL")) {
+            orders = orderRepository.findAll(pageable);
+        } else {
+            try {
+                // Chuyển String sang Enum
+                OrderStatus status = OrderStatus.valueOf(statusStr.toUpperCase().trim());
+                orders = orderRepository.findByStatus(status, pageable);
+            } catch (IllegalArgumentException e) {
+                // Nếu status sai -> Lấy tất cả (fallback)
+                orders = orderRepository.findAll(pageable);
+            }
+        }
         return orders.map(this::convertToHistoryDto);
     }
     
@@ -196,19 +218,19 @@ public class OrderHistoryService {
                               " with newStatus: " + trackingLog.getNewStatus());
             
             // Sử dụng newStatus từ tracking log làm trạng thái hiện tại
-            OrderStatus orderStatus = OrderStatus.WAITING_CONFIRMATION; // Default value
+            OrderStatus orderStatus = OrderStatus.PENDING; // Default value
             try {
                 if (trackingLog.getNewStatus() != null && !trackingLog.getNewStatus().trim().isEmpty()) {
-                    String status = trackingLog.getNewStatus().toUpperCase().trim();
-                    // Map PENDING to WAITING_CONFIRMATION for enum compatibility
-                    if ("PENDING".equals(status)) {
-                        status = "WAITING_CONFIRMATION";
+                    String statusStr = trackingLog.getNewStatus().toUpperCase().trim();
+                    // Map PENDING for enum compatibility
+                    if ("PENDING".equals(statusStr)) {
+                        statusStr = "PENDING";
                     }
-                    orderStatus = OrderStatus.valueOf(status);
+                    orderStatus = OrderStatus.valueOf(statusStr);
                 }
             } catch (IllegalArgumentException e) {
                 System.err.println("WARNING: Invalid newStatus '" + trackingLog.getNewStatus() + 
-                                 "' for tracking log " + trackingLog.getLogId() + ". Using default WAITING_CONFIRMATION");
+                                 "' for tracking log " + trackingLog.getLogId() + ". Using default PENDING");
             }
             
             // Lấy fullname từ User table via userId
@@ -221,7 +243,7 @@ public class OrderHistoryService {
                     if (user != null) {
                         customerName = user.getFullname() != null ? user.getFullname() : "Customer";
                         // Use actual user email if recipientEmail is null
-                        if (order.getRecipientEmail() == null) {
+                        if (customerEmail == null) {
                             customerEmail = user.getEmail();
                         }
                     }
@@ -233,7 +255,7 @@ public class OrderHistoryService {
             return OrderHistoryDto.builder()
                     .orderId(order.getOrderId())
                     .customerName(customerName) 
-                    .customerEmail(customerEmail)  
+                    .customerEmail(customerEmail != null ? customerEmail : "N/A")
                     .createAt(trackingLog.getChangedAt()) // Sử dụng changedAt từ tracking log
                     .status(orderStatus) // Sử dụng newStatus từ tracking log
                     .statusDisplay(getVietnameseStatus(trackingLog.getNewStatus())) // Tiếng Việt
@@ -253,7 +275,7 @@ public class OrderHistoryService {
                     .customerName("Customer")
                     .customerEmail("customer@example.com")
                     .createAt(trackingLog.getChangedAt() != null ? trackingLog.getChangedAt() : LocalDateTime.now())
-                    .status(OrderStatus.WAITING_CONFIRMATION)
+                    .status(OrderStatus.PENDING)
                     .subTotal(BigDecimal.ZERO)
                     .discountAmount(BigDecimal.ZERO)
                     .totalAmount(BigDecimal.ZERO)
@@ -261,73 +283,53 @@ public class OrderHistoryService {
                     .build();
         }
     }
-
+    // Convert từ Order sang OrderHistoryDto
     private OrderHistoryDto convertToHistoryDto(Order order) {
         try {
-            // Debug: Log conversion
-            System.out.println("DEBUG Converting order: " + order.getOrderId() + " with status: " + order.getStatus());
-            
-            // Xử lý OrderStatus safely
-            OrderStatus orderStatus = OrderStatus.WAITING_CONFIRMATION; // Default value
-            try {
-                if (order.getStatus() != null && !order.getStatus().trim().isEmpty()) {
-                    String status = order.getStatus().toUpperCase().trim();
-                    // Map PENDING to WAITING_CONFIRMATION for enum compatibility
-                    if ("PENDING".equals(status)) {
-                        status = "WAITING_CONFIRMATION";
-                    }
-                    orderStatus = OrderStatus.valueOf(status);
-                }
-            } catch (IllegalArgumentException e) {
-                System.err.println("WARNING: Invalid status '" + order.getStatus() + "' for order " + order.getOrderId() + ". Using default WAITING_CONFIRMATION");
-            }
-            
-            // Lấy fullname từ User table via userId
+            OrderStatus statusEnum = order.getStatus() != null ? order.getStatus() : OrderStatus.PENDING;
             String customerName = "Customer"; // Default fallback
             String customerEmail = order.getRecipientEmail() != null ? order.getRecipientEmail() : "customer@example.com";
             
+            // Xử lý OrderStatus safely
             try {
                 if (order.getUserId() != null) {
                     User user = userRepository.findById(order.getUserId()).orElse(null);
                     if (user != null) {
-                        customerName = user.getFullname() != null ? user.getFullname() : "Customer";
-                        // Use actual user email if recipientEmail is null
-                        if (order.getRecipientEmail() == null) {
-                            customerEmail = user.getEmail();
-                        }
+                        if (user.getFullname() != null) customerName = user.getFullname();
+                        if (customerEmail.isEmpty()) customerEmail = user.getEmail();
                     }
                 }
-            } catch (Exception e) {
-                System.err.println("Warning: Could not fetch user info for userId " + order.getUserId() + ": " + e.getMessage());
+            } catch (Exception ex) {
+                // Log nhẹ, không chặn luồng
             }
+                return OrderHistoryDto.builder()
+                        .orderId(order.getOrderId())
+                        .customerName(customerName)
+                        .customerEmail(customerEmail)  
+                        .createAt(order.getCreateAt())
+                        .status(statusEnum)
+                        .statusDisplay(getVietnameseStatus(statusEnum.name()))
+                        .statusColorClass(getStatusColorClass(statusEnum.name()))
+                        .subTotal(order.getSubTotal() != null ? order.getSubTotal() : BigDecimal.ZERO)
+                        .discountAmount(order.getDiscountAmount() != null ? order.getDiscountAmount() : BigDecimal.ZERO)
+                        .totalAmount(order.getTotalAmount() != null ? order.getTotalAmount() : BigDecimal.ZERO)
+                        .note(order.getNote())
+                        .build();
+        } catch (Exception ex) {
+            System.err.println("ERROR converting order " + order.getOrderId() + ": " + ex.getMessage());
+            ex.printStackTrace();
             
             return OrderHistoryDto.builder()
-                    .orderId(order.getOrderId())
-                    .customerName(customerName)
-                    .customerEmail(customerEmail)  
-                    .createAt(order.getCreateAt())
-                    .status(orderStatus) // Sử dụng orderStatus đã xử lý
-                    .subTotal(order.getSubTotal() != null ? order.getSubTotal() : BigDecimal.ZERO)
-                    .discountAmount(order.getDiscountAmount() != null ? order.getDiscountAmount() : BigDecimal.ZERO)
-                    .totalAmount(order.getTotalAmount() != null ? order.getTotalAmount() : BigDecimal.ZERO)
-                    .note(order.getNote())
-                    .build();
-        } catch (Exception e) {
-            System.err.println("ERROR converting order " + order.getOrderId() + ": " + e.getMessage());
-            e.printStackTrace();
-            
-            // Return a fallback DTO instead of null
-            return OrderHistoryDto.builder()
-                    .orderId(order.getOrderId())
-                    .customerName("Customer")
-                    .customerEmail("customer@example.com")
-                    .createAt(order.getCreateAt() != null ? order.getCreateAt() : LocalDateTime.now())
-                    .status(OrderStatus.WAITING_CONFIRMATION)
-                    .subTotal(BigDecimal.ZERO)
-                    .discountAmount(BigDecimal.ZERO)
-                    .totalAmount(BigDecimal.ZERO)
-                    .note("Lỗi xử lý dữ liệu")
-                    .build();
+                .orderId(order.getOrderId())
+                .customerName("Error Loading")
+                .customerEmail("error@example.com")
+                .createAt(LocalDateTime.now())
+                .status(OrderStatus.PENDING)
+                .subTotal(BigDecimal.ZERO)
+                .discountAmount(BigDecimal.ZERO)
+                .totalAmount(BigDecimal.ZERO)
+                .note("Lỗi xử lý dữ liệu")
+                .build();
         }
     }
     

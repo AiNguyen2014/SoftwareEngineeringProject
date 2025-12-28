@@ -33,16 +33,11 @@ public class OrderHistoryDto {
         if (status == null) return "";
         
         switch (status) {
-            case WAITING_PAYMENT: return "Chờ thanh toán";
-            case PAID: return "Đã thanh toán";
-            case WAITING_CONFIRMATION: return "Chờ xác nhận";
+            case PENDING: return "Chờ xác nhận";
             case CONFIRMED: return "Đã xác nhận";
-            case PACKING: return "Đang đóng gói";
             case SHIPPING: return "Đang giao hàng";
-            case COMPLETE_DELIVERY: return "Giao hàng thành công";
-            case CANCELED: return "Đã hủy";
-            case REQUEST_REFUND: return "Yêu cầu hoàn tiền";
-            case REFUND: return "Đã hoàn tiền";
+            case COMPLETED: return "Giao hàng thành công";
+            case CANCELLED: return "Đã hủy";
             default: return status.name();
         }
     }
@@ -51,17 +46,12 @@ public class OrderHistoryDto {
         if (status == null) return "secondary";
         
         switch (status) {
-            case WAITING_PAYMENT: return "warning";
-            case PAID: return "info";
-            case WAITING_CONFIRMATION: return "warning";
-            case CONFIRMED: return "primary";
-            case PACKING: return "info";
-            case SHIPPING: return "primary";
-            case COMPLETE_DELIVERY: return "success";
-            case CANCELED: return "danger";
-            case REQUEST_REFUND: return "warning";
-            case REFUND: return "secondary";
-            default: return "secondary";
+            case PENDING: return "Chờ xác nhận";
+            case CONFIRMED: return "Đã xác nhận";
+            case SHIPPING: return "Đang giao hàng";
+            case COMPLETED: return "Giao hàng thành công";
+            case CANCELLED: return "Đã hủy";
+            default: return status.name();
         }
     }
 }

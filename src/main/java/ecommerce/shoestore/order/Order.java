@@ -48,12 +48,13 @@ public class Order {
     
     @Column(name = "note", columnDefinition = "TEXT")
     private String note;
-    
+    //Mới sửa lại trạng kiểu string thành enum cho OrderStatus
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     @org.hibernate.annotations.ColumnTransformer(
-        write = "CAST(? AS order_status)"
+        write = "CAST(? AS order_status)"  // Ép kiểu String thành order_status khi lưu
     )
-    private String status; // "PENDING", "CONFIRMED", "SHIPPING", "COMPLETED", "CANCELLED"
+    private OrderStatus status;
     
     @Column(name = "\"createAt\"", nullable = false)
     private LocalDateTime createAt;
@@ -62,7 +63,7 @@ public class Order {
     protected void onCreate() {
         createAt = LocalDateTime.now();
         if (status == null) {
-            status = "PENDING";
+            status = OrderStatus.PENDING; //mới sửa lại trạng thái mặc định
         }
         if (discountAmount == null) {
             discountAmount = BigDecimal.ZERO;

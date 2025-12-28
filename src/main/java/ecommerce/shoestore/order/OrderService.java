@@ -6,6 +6,7 @@ import ecommerce.shoestore.cartitem.CartItem;
 import ecommerce.shoestore.cartitem.CartItemRepository;
 import ecommerce.shoestore.promotion.CustomerPromotionService;
 import ecommerce.shoestore.promotion.Voucher;
+import ecommerce.shoestore.order.OrderStatus;
 import ecommerce.shoestore.promotion.dto.VoucherValidationResult;
 import ecommerce.shoestore.shoesvariant.ShoesVariant;
 import ecommerce.shoestore.shoesvariant.ShoesVariantRepository;
@@ -84,7 +85,7 @@ public class OrderService {
         // Use payment method value directly from form (COD or TRANSFER)
         order.setPaymentMethod(paymentMethod);
         order.setNote(note);
-        order.setStatus("PENDING");
+        order.setStatus(OrderStatus.PENDING);
         
         order = orderRepository.save(order);
         
@@ -170,7 +171,7 @@ public class OrderService {
         // Use payment method value directly from form (COD or TRANSFER)
         order.setPaymentMethod(paymentMethod);
         order.setNote(note);
-        order.setStatus("PENDING");
+        order.setStatus(OrderStatus.PENDING);
         
         order = orderRepository.save(order);
         
@@ -256,7 +257,7 @@ public class OrderService {
         order.setTotalAmount(totalAmount);
         order.setPaymentMethod(paymentMethod);
         order.setNote(note);
-        order.setStatus("PENDING");
+        order.setStatus(OrderStatus.PENDING);
         
         order = orderRepository.save(order);
         
@@ -289,4 +290,19 @@ public class OrderService {
         
         return order;
     }
+    //Thêm hàm cập nhật trạng thái đơn hàng
+    public void updateOrderStatus(Long orderId, OrderStatus newStatus) { 
+    Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng ID: " + orderId));
+    
+    if (order.getStatus() == OrderStatus.CANCELLED) {
+        throw new RuntimeException("Đơn hàng đã bị huỷ, không thể cập nhật!");
+    }
+    if (order.getStatus() == OrderStatus.COMPLETED) {
+        throw new RuntimeException("Đã giao thành công!");
+    }
+    
+    order.setStatus(newStatus);
+    orderRepository.save(order);
+}
 }

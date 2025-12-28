@@ -107,6 +107,7 @@ public class OrderHistoryController {
     @GetMapping("/admin/all")
     public String showAllOrdersForAdmin(@RequestParam(defaultValue = "0") int page,
                                        @RequestParam(defaultValue = "20") int size,
+                                       @RequestParam(required = false) String status,
                                        HttpSession session, Model model) {
         
         UserRole role = (UserRole) session.getAttribute("ROLE");
@@ -120,7 +121,7 @@ public class OrderHistoryController {
         model.addAttribute("role", role);
         
         try {
-            Page<OrderHistoryDto> allOrders = orderHistoryService.getAllOrders(page, size);
+            Page<OrderHistoryDto> allOrders = orderHistoryService.getAllOrders(status, page, size);
             
             model.addAttribute("orders", allOrders.getContent());
             model.addAttribute("currentPage", page);

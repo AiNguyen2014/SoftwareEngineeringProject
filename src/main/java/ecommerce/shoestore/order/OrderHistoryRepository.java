@@ -3,6 +3,8 @@ package ecommerce.shoestore.order;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.util.List;
 
@@ -21,4 +23,9 @@ public interface OrderHistoryRepository extends JpaRepository<Order, Long> {
     // Tìm đơn hàng trong khoảng thời gian
     List<Order> findByCreateAtBetweenOrderByCreateAtDesc(java.time.LocalDateTime startDate, 
                                                         java.time.LocalDateTime endDate);
+    // Tìm theo trạng thái và phân trang
+    @Query(value = "SELECT * FROM \"order\" WHERE status = CAST(:#{#status.name()} AS order_status)", 
+           countQuery = "SELECT count(*) FROM \"order\" WHERE status = CAST(:#{#status.name()} AS order_status)",
+           nativeQuery = true)
+    Page<Order> findByStatus(@Param("status") OrderStatus status, Pageable pageable);
 }
