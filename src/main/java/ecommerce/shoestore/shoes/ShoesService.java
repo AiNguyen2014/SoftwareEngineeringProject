@@ -1,8 +1,6 @@
 package ecommerce.shoestore.shoes;
 
 import ecommerce.shoestore.common.NotFoundException;
-import ecommerce.shoestore.promotion.CustomerPromotionService;
-import ecommerce.shoestore.promotion.PromotionCampaign;
 import ecommerce.shoestore.shoes.dto.ShoesDetailDto;
 import ecommerce.shoestore.shoes.dto.ShoesListDto;
 import ecommerce.shoestore.shoes.dto.ShoesSummaryDto;
@@ -28,7 +26,6 @@ import java.util.*;
 public class ShoesService {
 
     private final ShoesRepository shoesRepository;
-    private final CustomerPromotionService customerPromotionService;
 
     /**
      * Lấy danh sách giày có phân trang
@@ -167,11 +164,6 @@ public class ShoesService {
 
         // Lấy sản phẩm liên quan
         List<ShoesSummaryDto> relatedProducts = getRelatedProducts(shoes);
-        
-        // Lấy các campaign khuyến mãi đang áp dụng cho sản phẩm này
-        Long categoryId = shoes.getCategory() != null ? shoes.getCategory().getCategoryId() : null;
-        List<PromotionCampaign> activeCampaigns = customerPromotionService.getActiveCampaignsForProduct(
-                shoes.getShoeId(), categoryId);
 
         return ShoesDetailDto.builder()
                 .shoeId(shoes.getShoeId())
@@ -189,7 +181,6 @@ public class ShoesService {
                 .variants(variants)
                 .totalStock(totalStock)
                 .relatedProducts(relatedProducts)
-                .activeCampaigns(activeCampaigns)
                 .build();
     }
 
