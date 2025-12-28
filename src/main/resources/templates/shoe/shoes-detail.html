@@ -61,8 +61,8 @@
                 </div>
                 
                 <!-- Khuyến mãi đang áp dụng -->
-                <div class="promo-box" th:if="${product.activeCampaigns != null and !product.activeCampaigns.isEmpty()}">
-                    <div class="promo-item" th:each="campaign : ${product.activeCampaigns}">
+                <div class="promo-box" th:if="${activeCampaigns != null and !activeCampaigns.isEmpty()}">
+                    <div class="promo-item" th:each="campaign : ${activeCampaigns}">
                         <span class="promo-tag" th:if="${campaign.discountType.name() == 'PERCENT'}"
                               th:text="'-' + ${campaign.discountValue} + '%'">-10%</span>
                         <span class="promo-tag fixed" th:if="${campaign.discountType.name() == 'FIXED_AMOUNT'}"
