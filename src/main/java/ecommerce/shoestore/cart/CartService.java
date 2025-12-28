@@ -108,14 +108,14 @@ public class CartService {
         CartItem item = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new RuntimeException("Item không tồn tại"));
 
-        if (!item.getCart().equals(cart)) {
+        if (!item.getCart().getCartId().equals(cart.getCartId())) {
             throw new RuntimeException("Item không thuộc cart này");
         }
 
         int newQty = item.getQuantity() - 1;
 
         if (newQty <= 0) {
-            cartItemRepository.delete(item);
+            cart.getItems().remove(item);
         } else {
             item.setQuantity(newQty);
         }

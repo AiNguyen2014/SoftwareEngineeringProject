@@ -20,23 +20,23 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class OrderService {
-    
+
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
     private final ShoesVariantRepository shoesVariantRepository;
     private final CustomerPromotionService customerPromotionService;
-    
+
     private static final BigDecimal SHIPPING_FEE = new BigDecimal("30000");
-    
+
     @Transactional
     public Order createOrderFromCart(Long userId, Long addressId, String recipientEmail,
-                                     String paymentMethod, String note, Cart cart, String voucherCode) {
-        
+            String paymentMethod, String note, Cart cart, String voucherCode) {
+
         System.out.println("=== Creating order from cart ===");
         System.out.println("VoucherCode received: [" + voucherCode + "]");
-        
+
         // Tính subTotal từ cart
         BigDecimal subTotal = BigDecimal.ZERO;
         for (CartItem item : cart.getItems()) {
@@ -44,19 +44,19 @@ public class OrderService {
                     .multiply(BigDecimal.valueOf(item.getQuantity()));
             subTotal = subTotal.add(itemTotal);
         }
-        
+
         System.out.println("SubTotal calculated: " + subTotal);
-        
+
         // Validate và tính discountAmount từ voucher
         BigDecimal discountAmount = BigDecimal.ZERO;
         Voucher appliedVoucher = null;
-        
+
         // Chỉ validate voucher nếu có code thực sự (không null, không rỗng, không chỉ có khoảng trắng)
         if (voucherCode != null && !voucherCode.trim().isEmpty()) {
             System.out.println("Validating voucher: " + voucherCode.trim());
             VoucherValidationResult validation = customerPromotionService.validateVoucher(
                     voucherCode.trim(), userId, subTotal);
-            
+
             if (validation.isValid()) {
                 appliedVoucher = validation.getVoucher();
                 discountAmount = validation.getDiscountAmount();
@@ -68,10 +68,10 @@ public class OrderService {
         } else {
             System.out.println("No voucher code provided, skipping validation");
         }
-        
+
         // Tính totalAmount
         BigDecimal totalAmount = subTotal.add(SHIPPING_FEE).subtract(discountAmount);
-        
+
         // Tạo Order
         Order order = new Order();
         order.setUserId(userId);
@@ -85,13 +85,13 @@ public class OrderService {
         order.setPaymentMethod(paymentMethod);
         order.setNote(note);
         order.setStatus("PENDING");
-        
+
         order = orderRepository.save(order);
-        
+
         // Tạo OrderItems
         for (CartItem item : cart.getItems()) {
             ShoesVariant variant = item.getVariant();
-            
+
             OrderItem orderItem = new OrderItem();
             orderItem.setOrderId(order.getOrderId());
             orderItem.setShoeId(variant.getShoes().getShoeId());
@@ -104,45 +104,45 @@ public class OrderService {
                     .multiply(BigDecimal.valueOf(item.getQuantity())));
             orderItemRepository.save(orderItem);
         }
-        
+
         // Áp dụng voucher vào order nếu có
         if (appliedVoucher != null) {
             customerPromotionService.applyVoucherToOrder(order, appliedVoucher, userId);
         }
-        
+
         // Xóa cart
         cartRepository.delete(cart);
-        
+
         return order;
     }
-    
+
     @Transactional
     public Order createOrderBuyNow(Long userId, Long addressId, String recipientEmail,
-                                   String paymentMethod, String note,
-                                   Long variantId, Integer quantity, String voucherCode) {
-        
+            String paymentMethod, String note,
+            Long variantId, Integer quantity, String voucherCode) {
+
         System.out.println("=== Creating order from BUY NOW ===");
         System.out.println("VoucherCode received: [" + voucherCode + "]");
-        
+
         ShoesVariant variant = shoesVariantRepository.findById(variantId)
                 .orElseThrow(() -> new RuntimeException("Variant not found"));
-        
+
         // Tính subTotal
         BigDecimal subTotal = variant.getShoes().getBasePrice()
                 .multiply(BigDecimal.valueOf(quantity));
-        
+
         System.out.println("SubTotal calculated: " + subTotal);
-        
+
         // Validate và tính discountAmount từ voucher
         BigDecimal discountAmount = BigDecimal.ZERO;
         Voucher appliedVoucher = null;
-        
+
         // Chỉ validate voucher nếu có code thực sự
         if (voucherCode != null && !voucherCode.trim().isEmpty()) {
             System.out.println("Validating voucher: " + voucherCode.trim());
             VoucherValidationResult validation = customerPromotionService.validateVoucher(
                     voucherCode.trim(), userId, subTotal);
-            
+
             if (validation.isValid()) {
                 appliedVoucher = validation.getVoucher();
                 discountAmount = validation.getDiscountAmount();
@@ -154,10 +154,10 @@ public class OrderService {
         } else {
             System.out.println("No voucher code provided, skipping validation");
         }
-        
+
         // Tính totalAmount
         BigDecimal totalAmount = subTotal.add(SHIPPING_FEE).subtract(discountAmount);
-        
+
         // Tạo Order
         Order order = new Order();
         order.setUserId(userId);
@@ -171,9 +171,9 @@ public class OrderService {
         order.setPaymentMethod(paymentMethod);
         order.setNote(note);
         order.setStatus("PENDING");
-        
+
         order = orderRepository.save(order);
-        
+
         // Tạo OrderItem
         OrderItem orderItem = new OrderItem();
         orderItem.setOrderId(order.getOrderId());
@@ -185,32 +185,32 @@ public class OrderService {
         orderItem.setShopDiscount(BigDecimal.ZERO);
         orderItem.setItemTotal(subTotal);
         orderItemRepository.save(orderItem);
-        
+
         // Áp dụng voucher vào order nếu có
         if (appliedVoucher != null) {
             customerPromotionService.applyVoucherToOrder(order, appliedVoucher, userId);
         }
-        
+
         return order;
     }
-    
+
     public Order getOrderById(Long orderId) {
         return orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
     }
-    
+
     public List<OrderItem> getOrderItems(Long orderId) {
         return orderItemRepository.findByOrderId(orderId);
     }
-    
+
     @Transactional
     public Order createOrderFromSelectedItems(Long userId, Long addressId, String recipientEmail,
-                                              String paymentMethod, String note, 
-                                              List<CartItem> selectedItems, String voucherCode) {
-        
+            String paymentMethod, String note,
+            List<CartItem> selectedItems, String voucherCode) {
+
         System.out.println("=== Creating order from selected items ===");
         System.out.println("VoucherCode received: [" + voucherCode + "]");
-        
+
         // Tính subTotal từ items được chọn
         BigDecimal subTotal = BigDecimal.ZERO;
         for (CartItem item : selectedItems) {
@@ -218,19 +218,19 @@ public class OrderService {
                     .multiply(BigDecimal.valueOf(item.getQuantity()));
             subTotal = subTotal.add(itemTotal);
         }
-        
+
         System.out.println("SubTotal calculated: " + subTotal);
-        
+
         // Validate và tính discountAmount từ voucher
         BigDecimal discountAmount = BigDecimal.ZERO;
         Voucher appliedVoucher = null;
-        
+
         // Chỉ validate voucher nếu có code thực sự
         if (voucherCode != null && !voucherCode.trim().isEmpty()) {
             System.out.println("Validating voucher: " + voucherCode.trim());
             VoucherValidationResult validation = customerPromotionService.validateVoucher(
                     voucherCode.trim(), userId, subTotal);
-            
+
             if (validation.isValid()) {
                 appliedVoucher = validation.getVoucher();
                 discountAmount = validation.getDiscountAmount();
@@ -242,9 +242,9 @@ public class OrderService {
         } else {
             System.out.println("No voucher code provided, skipping validation");
         }
-        
+
         BigDecimal totalAmount = subTotal.add(SHIPPING_FEE).subtract(discountAmount);
-        
+
         // Tạo Order
         Order order = new Order();
         order.setUserId(userId);
@@ -257,13 +257,13 @@ public class OrderService {
         order.setPaymentMethod(paymentMethod);
         order.setNote(note);
         order.setStatus("PENDING");
-        
+
         order = orderRepository.save(order);
-        
+
         // Tạo OrderItems CHỈ cho items được chọn
         for (CartItem item : selectedItems) {
             ShoesVariant variant = item.getVariant();
-            
+
             OrderItem orderItem = new OrderItem();
             orderItem.setOrderId(order.getOrderId());
             orderItem.setShoeId(variant.getShoes().getShoeId());
@@ -276,17 +276,23 @@ public class OrderService {
                     .multiply(BigDecimal.valueOf(item.getQuantity())));
             orderItemRepository.save(orderItem);
         }
-        
         // Áp dụng voucher vào order nếu có
         if (appliedVoucher != null) {
             customerPromotionService.applyVoucherToOrder(order, appliedVoucher, userId);
         }
-        
-        // Xóa CHỈ các items đã đặt hàng khỏi giỏ
-        for (CartItem item : selectedItems) {
-            cartItemRepository.delete(item);
-        }
-        
+
+        // === XÓA CART ITEMS ĐÃ ĐẶT HÀNG ===
+        List<Long> cartItemIdsToRemove = selectedItems.stream()
+                .map(CartItem::getCartItemId)
+                .toList();
+
+        System.out.println("Deleting selected cart items: " + cartItemIdsToRemove);
+        // Use batch delete for immediate removal and better consistency
+        cartItemRepository.deleteAllByIdInBatch(cartItemIdsToRemove);
+        // Ensure delete is flushed before returning
+        cartItemRepository.flush();
+        System.out.println("Deleted selected cart items successfully");
+
         return order;
     }
 }

@@ -108,10 +108,14 @@
                                 <input type="hidden" name="cartItemId"
                                        th:value="${item.cartItemId}">
 
-                                <button type="submit" name="action" value="decrease"
-                                        class="qty-btn-cart btn-decrease"
-                                        th:attr="data-qty=${item.quantity}">-
+                                <button type="submit"
+                                        name="action"
+                                        value="decrease"
+                                        class="qty-btn-cart btn-decrease"></button>
+                                       
+                                        -
                                 </button>
+
 
                                 <input type="text" class="qty-input-cart"
                                        th:value="${item.quantity}" readonly>
@@ -125,17 +129,6 @@
                         <div class="cart-item-total">
                             <span th:text="${#numbers.formatDecimal(item.subtotal, 0, 'POINT', 0, 'COMMA')} + '₫'">
                             </span>
-                        </div>
-
-                        <!-- REMOVE -->
-                        <div class="cart-item-remove">
-                            <form th:action="@{/cart/remove}" method="post">
-                                <input type="hidden" name="cartItemId"
-                                       th:value="${item.cartItemId}">
-                                <button type="submit" class="btn-remove">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            </form>
                         </div>
 
                     </div>
@@ -182,102 +175,86 @@
 </main>
 
 <script>
+    /* ================= CONFIRM DELETE WHEN qty = 1 ================= */
+    document.querySelectorAll(".qty-form").forEach(form => {
+    form.addEventListener("submit", function (e) {
+
+        const submitBtn = e.submitter; // nút đã bấm
+        if (!submitBtn || !submitBtn.classList.contains("btn-decrease")) {
+            return; // không phải nút "-"
+        }
+
+        const qtyInput = form.querySelector(".qty-input-cart");
+        const qty = parseInt(qtyInput.value);
+
+        // CHỈ hỏi khi qty = 1
+        if (qty === 1) {
+            const ok = confirm("Sản phẩm sẽ bị xóa khỏi giỏ hàng. Bạn có chắc không?");
+            if (!ok) {
+                e.preventDefault(); 
+            }
+        }
+    });
+});
 document.addEventListener("DOMContentLoaded", function () {
 
+    /* ================= SUMMARY ================= */
     const SHIPPING_FEE = 30000;
 
-    // ============ FUNCTION: Format number with thousand separator ============
     function formatCurrency(value) {
-        return Math.round(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + "₫";
+        return Math.round(value)
+            .toString()
+            .replace(/\B(?=(\d{3})+(?!\d))/g, ".") + "₫";
     }
 
-    // ============ FUNCTION: Calculate and update summary ============
     function updateSummary() {
-        const checkboxes = document.querySelectorAll(".cart-item-checkbox");
         let subtotal = 0;
         let selectedCount = 0;
 
-        checkboxes.forEach(checkbox => {
-            if (checkbox.checked) {
-                const row = checkbox.closest(".cart-item-row");
+        document.querySelectorAll(".cart-item-checkbox").forEach(cb => {
+            if (cb.checked) {
+                const row = cb.closest(".cart-item-row");
                 const totalText = row.querySelector(".cart-item-total span").textContent;
-                // Remove '₫' and '.' to parse the number
-                const itemTotal = parseFloat(totalText.replace(/[₫.]/g, ""));
-                subtotal += itemTotal;
+                subtotal += parseFloat(totalText.replace(/[₫.]/g, ""));
                 selectedCount++;
             }
         });
 
         const shipping = selectedCount > 0 ? SHIPPING_FEE : 0;
-        const total = subtotal + shipping;
 
-        // Update the summary display
         document.getElementById("summary-subtotal").textContent = formatCurrency(subtotal);
         document.getElementById("summary-shipping").textContent = formatCurrency(shipping);
-        document.getElementById("summary-total").textContent = formatCurrency(total);
+        document.getElementById("summary-total").textContent = formatCurrency(subtotal + shipping);
     }
 
-    // ============ EVENT: Listen to checkbox changes ============
-    document.querySelectorAll(".cart-item-checkbox").forEach(checkbox => {
-        checkbox.addEventListener("change", updateSummary);
-    });
+    document.querySelectorAll(".cart-item-checkbox")
+        .forEach(cb => cb.addEventListener("change", updateSummary));
 
-    // ============ EVENT: Handle checkout form submission ============
-    document.getElementById("checkout-form").addEventListener("submit", function(e) {
-        const checkboxes = document.querySelectorAll(".cart-item-checkbox:checked");
+    document.getElementById("checkout-form").addEventListener("submit", function (e) {
+        const checkedBoxes = document.querySelectorAll(".cart-item-checkbox:checked");
         
-        console.log("=== CHECKOUT FORM SUBMIT ===");
-        console.log("Number of checked items:", checkboxes.length);
-        
-        if (checkboxes.length === 0) {
+        if (checkedBoxes.length === 0) {
             e.preventDefault();
             alert("Vui lòng chọn ít nhất một sản phẩm để đặt hàng!");
-            return false;
+            return;
         }
-
-        // Collect selected cart item IDs
-        const selectedIds = Array.from(checkboxes).map(cb => {
-            console.log("Selected checkbox value:", cb.value);
-            return cb.value;
-        }).join(",");
         
-        console.log("Selected IDs string:", selectedIds);
+        // Lấy danh sách cartItemIds từ các checkbox đã chọn
+        const selectedIds = Array.from(checkedBoxes)
+            .map(cb => cb.value)
+            .join(",");
+        
+        // Điền vào hidden input
         document.getElementById("selected-cart-item-ids").value = selectedIds;
-        console.log("Hidden input value set to:", document.getElementById("selected-cart-item-ids").value);
+        
+        console.log("Selected cart item IDs:", selectedIds);
     });
 
-    // ============ EVENT: Handle decrease button (delete confirmation) ============
-    document.querySelectorAll(".btn-decrease").forEach(btn => {
-        btn.addEventListener("click", function (e) {
-
-            const qty = parseInt(btn.dataset.qty);
-
-            // Nếu còn 1 sản phẩm mà bấm "-"
-            if (qty === 1) {
-                e.preventDefault(); // chặn submit form update
-
-                const confirmDelete = confirm(
-                    "Bạn có muốn xóa sản phẩm khỏi giỏ hàng không?"
-                );
-
-                if (confirmDelete) {
-                    // submit form remove cùng dòng
-                    const row = btn.closest(".cart-item-row");
-                    const removeForm = row.querySelector(".cart-item-remove form");
-                    removeForm.submit();
-                }
-                // Cancel → không làm gì
-            }
-        });
-    });
-
-    // Initialize summary on page load
     updateSummary();
-
 });
 </script>
 
-<div th:replace="~{fragments :: footer}"></div>
+
 
 </body>
 </html>
