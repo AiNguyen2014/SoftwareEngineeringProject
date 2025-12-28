@@ -105,7 +105,7 @@ public class OrderService {
         // Use payment method value directly from form (COD or TRANSFER)
         order.setPaymentMethod(paymentMethod);
         order.setNote(note);
-        order.setStatus("PENDING");
+        order.setStatus(OrderStatus.PENDING);
 
         // Set payment status based on payment method
         if ("VNPAY".equals(paymentMethod)) {
@@ -214,7 +214,7 @@ public class OrderService {
         order.setPaymentMethod(paymentMethod);
         order.setOrderCode(orderCode);
         order.setNote(note);
-        order.setStatus("PENDING");
+        order.setStatus(OrderStatus.PENDING);
 
         // Set payment status based on payment method
         if ("VNPAY".equals(paymentMethod)) {
@@ -307,7 +307,7 @@ public class OrderService {
         order.setTotalAmount(totalAmount);
         order.setPaymentMethod(paymentMethod);
         order.setNote(note);
-        order.setStatus("PENDING");
+        order.setStatus(OrderStatus.PENDING);
 
         order = orderRepository.save(order);
 

@@ -1,9 +1,6 @@
 package ecommerce.shoestore.payment;
 
-import ecommerce.shoestore.order.Order;
-import ecommerce.shoestore.order.OrderItem;
-import ecommerce.shoestore.order.OrderRepository;
-import ecommerce.shoestore.order.OrderService;
+import ecommerce.shoestore.order.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -160,7 +157,7 @@ public class PaymentController {
                 order.setPaymentStatus("PAID");
                 order.setTransactionId(vnpTransactionNo);
                 order.setPaidAt(vnpPayDate);
-                order.setStatus("PENDING"); // Chờ xác nhận từ cửa hàng
+                order.setStatus(OrderStatus.PENDING); // Chờ xác nhận từ cửa hàng
                 
                 paymentRepository.save(payment);
                 orderRepository.save(order);
