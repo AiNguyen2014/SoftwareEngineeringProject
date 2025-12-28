@@ -339,6 +339,7 @@
             
             <form id="shippingForm" action="/order/shipping" method="POST">
                 <input type="hidden" name="type" th:value="${type}">
+                <input type="hidden" name="cartItemIds" th:value="${cartItemIds}">
                 <input type="hidden" name="variantId" th:value="${variantId}">
                 <input type="hidden" name="quantity" th:value="${quantity}">
                 

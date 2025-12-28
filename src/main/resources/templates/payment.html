@@ -583,6 +583,13 @@
             </div>
             
             <form action="/order/create" method="POST" id="paymentForm">
+                <!-- Hidden inputs để gửi thông tin giao hàng -->
+                <input type="hidden" name="recipientName" th:value="${recipientName ?: ''}">
+                <input type="hidden" name="recipientPhone" th:value="${recipientPhone ?: ''}">
+                <input type="hidden" name="recipientEmail" th:value="${recipientEmail ?: ''}">
+                <input type="hidden" name="recipientAddress" th:value="${recipientAddress ?: ''}">
+                <input type="hidden" name="note" th:value="${note ?: ''}">
+                
                 <!-- Thông tin giao hàng (chỉ hiển thị) -->
                 <div class="form-section">
                     <h3>Thông tin giao hàng</h3>
