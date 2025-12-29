@@ -116,6 +116,28 @@ public class OrderService {
 
         order = orderRepository.save(order);
         
+        // Create PaymentTransaction and Payment for VNPAY
+        if ("VNPAY".equals(paymentMethod)) {
+            PaymentTransaction transaction = new PaymentTransaction();
+            transaction.setOrderId(order.getOrderId());
+            transaction.setAmount(totalAmount);
+            transaction.setPaymentMethod("VNPAY");
+            transaction.setStatus("PENDING");
+            transaction.setVnpTxnRef(order.getOrderId().toString());
+            paymentTransactionRepository.save(transaction);
+            System.out.println("Created PaymentTransaction for Order ID: " + order.getOrderId());
+            
+            // Create Payment record
+            Payment payment = new Payment();
+            payment.setOrderId(order.getOrderId());
+            payment.setAmount(totalAmount);
+            payment.setProvider("VNPAY");
+            payment.setCurrency("VND");
+            payment.setStatus("PENDING");
+            paymentRepository.save(payment);
+            System.out.println("Created Payment for Order ID: " + order.getOrderId());
+        }
+        
         // Tạo OrderItems
         for (CartItem item : cart.getItems()) {
             ShoesVariant variant = item.getVariant();
@@ -225,6 +247,28 @@ public class OrderService {
 
         order = orderRepository.save(order);
         
+        // Create PaymentTransaction and Payment for VNPAY
+        if ("VNPAY".equals(paymentMethod)) {
+            PaymentTransaction transaction = new PaymentTransaction();
+            transaction.setOrderId(order.getOrderId());
+            transaction.setAmount(totalAmount);
+            transaction.setPaymentMethod("VNPAY");
+            transaction.setStatus("PENDING");
+            transaction.setVnpTxnRef(order.getOrderId().toString());
+            paymentTransactionRepository.save(transaction);
+            System.out.println("Created PaymentTransaction for Order ID: " + order.getOrderId());
+            
+            // Create Payment record
+            Payment payment = new Payment();
+            payment.setOrderId(order.getOrderId());
+            payment.setAmount(totalAmount);
+            payment.setProvider("VNPAY");
+            payment.setCurrency("VND");
+            payment.setStatus("PENDING");
+            paymentRepository.save(payment);
+            System.out.println("Created Payment for Order ID: " + order.getOrderId());
+        }
+        
         // Tạo OrderItem
         OrderItem orderItem = new OrderItem();
         orderItem.setOrderId(order.getOrderId());
@@ -310,6 +354,28 @@ public class OrderService {
         order.setStatus(OrderStatus.PENDING);
 
         order = orderRepository.save(order);
+        
+        // Create PaymentTransaction and Payment for VNPAY
+        if ("VNPAY".equals(paymentMethod)) {
+            PaymentTransaction transaction = new PaymentTransaction();
+            transaction.setOrderId(order.getOrderId());
+            transaction.setAmount(totalAmount);
+            transaction.setPaymentMethod("VNPAY");
+            transaction.setStatus("PENDING");
+            transaction.setVnpTxnRef(order.getOrderId().toString());
+            paymentTransactionRepository.save(transaction);
+            System.out.println("Created PaymentTransaction for Order ID: " + order.getOrderId());
+            
+            // Create Payment record
+            Payment payment = new Payment();
+            payment.setOrderId(order.getOrderId());
+            payment.setAmount(totalAmount);
+            payment.setProvider("VNPAY");
+            payment.setCurrency("VND");
+            payment.setStatus("PENDING");
+            paymentRepository.save(payment);
+            System.out.println("Created Payment for Order ID: " + order.getOrderId());
+        }
 
         // Tạo OrderItems CHỈ cho items được chọn
         for (CartItem item : selectedItems) {
