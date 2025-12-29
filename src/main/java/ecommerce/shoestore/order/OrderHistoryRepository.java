@@ -28,4 +28,9 @@ public interface OrderHistoryRepository extends JpaRepository<Order, Long> {
            countQuery = "SELECT count(*) FROM \"order\" WHERE status = CAST(:#{#status.name()} AS order_status)",
            nativeQuery = true)
     Page<Order> findByStatus(@Param("status") OrderStatus status, Pageable pageable);
+    
+    // Đếm số đơn hàng theo trạng thái
+    @Query(value = "SELECT count(*) FROM \"order\" WHERE status = CAST(:#{#status.name()} AS order_status)", 
+           nativeQuery = true)
+    long countByStatus(@Param("status") OrderStatus status);
 }

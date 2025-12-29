@@ -21,10 +21,6 @@ public class OrderHistoryController {
     private final OrderHistoryService orderHistoryService;
     private final ReviewRepository reviewRepository;
 
-    /**
-     * Hiển thị lịch sử đơn hàng của customer
-     */
-    // Đừng quên Inject ReviewRepository vào Constructor của Controller này
     @GetMapping("/history")
     public String showOrderHistory(@RequestParam(defaultValue = "0") int page,
                                    @RequestParam(defaultValue = "10") int size,
@@ -42,16 +38,12 @@ public class OrderHistoryController {
         try {
             Page<OrderHistoryDto> orderHistory = orderHistoryService.getCustomerOrderHistory(userId, page, size);
 
-            // --- PHẦN LOGIC MỚI THÊM VÀO ---
-            // Lấy danh sách ID của các đơn hàng trong trang hiện tại đã được đánh giá
             List<Long> reviewedOrderIds = orderHistory.getContent().stream()
-                    .map(OrderHistoryDto::getOrderId) // Giả định OrderHistoryDto có getOrderId()
+                    .map(OrderHistoryDto::getOrderId)
                     .filter(id -> reviewRepository.existsByOrderItem_OrderId(id))
                     .collect(java.util.stream.Collectors.toList());
 
             model.addAttribute("reviewedOrderIds", reviewedOrderIds);
-            // ------------------------------
-
             model.addAttribute("orders", orderHistory.getContent());
             model.addAttribute("currentPage", page);
             model.addAttribute("totalPages", orderHistory.getTotalPages());
@@ -64,7 +56,7 @@ public class OrderHistoryController {
 
         } catch (Exception e) {
             model.addAttribute("orders", java.util.List.of());
-            model.addAttribute("reviewedOrderIds", java.util.List.of()); // Thêm list trống khi lỗi
+            model.addAttribute("reviewedOrderIds", java.util.List.of());
             model.addAttribute("hasOrders", false);
             model.addAttribute("currentPage", 0);
             model.addAttribute("totalPages", 0);
@@ -74,9 +66,6 @@ public class OrderHistoryController {
         }
     }
     
-    /**
-     * Xem chi tiết tracking log của một đơn hàng
-     */
     @GetMapping("/tracking/{orderId}")
     public String showOrderTracking(@PathVariable Long orderId,
                                    HttpSession session, Model model) {
@@ -91,10 +80,6 @@ public class OrderHistoryController {
         try {
             OrderHistoryDto order = orderHistoryService.getOrderWithTrackingLogs(orderId);
             
-            // Kiểm tra quyền truy cập: customer chỉ xem được đơn hàng của mình
-            // Tạm thời bỏ qua check email, chỉ check userId
-            
-            // Nạp thông tin Header
             model.addAttribute("isLoggedIn", true);
             model.addAttribute("fullname", session.getAttribute("FULLNAME"));
             model.addAttribute("role", role);
@@ -108,9 +93,6 @@ public class OrderHistoryController {
         }
     }
     
-    /**
-     * Admin: Xem tất cả đơn hàng
-     */
     @GetMapping("/admin/all")
     public String showAllOrdersForAdmin(@RequestParam(defaultValue = "0") int page,
                                        @RequestParam(defaultValue = "20") int size,
@@ -122,7 +104,6 @@ public class OrderHistoryController {
             return "redirect:/";
         }
         
-        // Nạp thông tin Header (giống UserController)
         model.addAttribute("isLoggedIn", true);
         model.addAttribute("fullname", session.getAttribute("FULLNAME"));
         model.addAttribute("role", role);
@@ -140,9 +121,7 @@ public class OrderHistoryController {
             return "order/admin-order-list";
             
         } catch (Exception e) {
-            // Nếu lỗi SQL/JDBC, không hiển thị error, chỉ hiển thị empty state
             if (e.getMessage().contains("JDBC") || e.getMessage().contains("SQL")) {
-                // Set empty data thay vì error
                 model.addAttribute("orders", java.util.Collections.emptyList());
                 model.addAttribute("currentPage", 0);
                 model.addAttribute("totalPages", 0);
@@ -156,9 +135,6 @@ public class OrderHistoryController {
         }
     }
     
-    /**
-     * Admin: Cập nhật trạng thái đơn hàng
-     */
     @PostMapping("/admin/update-status")
     public String updateOrderStatus(@RequestParam Long orderId,
                                    @RequestParam OrderStatus newStatus,
@@ -173,10 +149,9 @@ public class OrderHistoryController {
         try {
             String changedBy = (String) session.getAttribute("FULLNAME");
             
-            // Lấy trạng thái cũ từ database
             OrderHistoryDto currentOrder = orderHistoryService.getOrderWithTrackingLogs(orderId);
-            String oldStatus = currentOrder.getStatus().name(); // Convert to String
-            String newStatusString = newStatus.name(); // Convert to String
+            String oldStatus = currentOrder.getStatus().name();
+            String newStatusString = newStatus.name();
             
             orderHistoryService.addOrderStatusChange(orderId, oldStatus, newStatusString, changedBy, comment);
             

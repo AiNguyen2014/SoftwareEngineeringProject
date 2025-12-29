@@ -9,6 +9,15 @@
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <link rel="stylesheet" th:href="@{/css/order-history.css}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <style>
+        /* Force status badge text colors */
+        .badge.bg-warning { color: #000 !important; background-color: #ffc107 !important; }
+        .badge.bg-info { color: #000 !important; background-color: #17a2b8 !important; }
+        .badge.bg-primary { color: #fff !important; }
+        .badge.bg-success { color: #fff !important; }
+        .badge.bg-danger { color: #fff !important; }
+        .badge.bg-secondary { color: #fff !important; }
+    </style>
 </head>
 <body>
     <!-- Sử dụng Fragment Header -->
@@ -73,6 +82,7 @@
                                     <div class="col-auto">
                                         <span class="badge rounded-pill" 
                                               th:classappend="'bg-' + ${order.statusColorClass}"
+                                              th:style="'color: ' + (${order.statusColorClass == 'warning' || order.statusColorClass == 'info'} ? '#000' : '#fff') + ' !important; background-color: ' + (${order.statusColorClass == 'warning'} ? '#ffc107' : (${order.statusColorClass == 'info'} ? '#17a2b8' : '')) + ' !important;'"
                                               th:text="${order.statusDisplay}">
                                             Đang xử lý
                                         </span>

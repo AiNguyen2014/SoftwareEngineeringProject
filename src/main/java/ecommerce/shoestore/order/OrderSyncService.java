@@ -17,41 +17,45 @@ public class OrderSyncService {
     @Autowired
     private OrderTrackingLogRepository trackingLogRepository;
 
-    /**
-     * Sync dữ liệu từ Order sang OrderTrackingLog
-     */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void syncOrdersToTrackingLog() {
         try {
-            // Lấy tất cả orders
             List<Order> allOrders = orderRepository.findAll();
-            System.out.println("DEBUG Sync: Found " + allOrders.size() + " orders to sync");
             
             for (Order order : allOrders) {
-                // Kiểm tra xem order này đã có tracking log chưa
                 List<OrderTrackingLog> existingLogs = trackingLogRepository.findByOrderIdOrderByChangeAtDesc(order.getOrderId());
                 
                 if (existingLogs.isEmpty()) {
-                    // Tạo tracking log từ order
-                    OrderTrackingLog trackingLog = OrderTrackingLog.builder()
-                            .orderId(order.getOrderId())
-                            .oldStatus("Không có") // Cột trống thì để "Không có"
-                            .newStatus(order.getStatus() != null ? order.getStatus().name() : "PENDING")
-                            .changedAt(order.getCreateAt() != null ? order.getCreateAt() : LocalDateTime.now())
-                            .changedBy("System")
-                            .comment(order.getNote() != null ? order.getNote() : "Không có")
-                            .build();
-                    
-                    trackingLogRepository.save(trackingLog);
-                    System.out.println("DEBUG Sync: Created tracking log for order: " + order.getOrderId());
-                } else {
-                    System.out.println("DEBUG Sync: Order " + order.getOrderId() + " already has " + existingLogs.size() + " tracking logs");
+                    createDefaultTrackingLog(order);
                 }
             }
-            System.out.println("DEBUG Sync: Completed sync operation");
         } catch (Exception e) {
-            System.err.println("ERROR Sync: Failed to sync orders: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+    
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void syncSingleOrderToTrackingLog(Order order) {
+        try {
+            List<OrderTrackingLog> existingLogs = trackingLogRepository.findByOrderIdOrderByChangeAtDesc(order.getOrderId());
+            if (existingLogs.isEmpty()) {
+                createDefaultTrackingLog(order);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    private void createDefaultTrackingLog(Order order) {
+        OrderTrackingLog trackingLog = OrderTrackingLog.builder()
+                .orderId(order.getOrderId())
+                .oldStatus("Không có")
+                .newStatus(order.getStatus() != null ? order.getStatus().name() : "PENDING")
+                .changedAt(order.getCreateAt() != null ? order.getCreateAt() : LocalDateTime.now())
+                .changedBy("System")
+                .comment(order.getNote() != null ? order.getNote() : "Không có")
+                .build();
+        
+        trackingLogRepository.save(trackingLog);
     }
 }

@@ -19,37 +19,44 @@ public class AdminOrderController {
 
     private final OrderHistoryService orderHistoryService;
 
-    // Hiển thị danh sách đơn hàng
     @GetMapping
     public String showOrderList(Model model, 
                                 @RequestParam(defaultValue = "0") int page,
                                 @RequestParam(defaultValue = "10") int size,
                                 @RequestParam(required = false) String status) {
-        // 1. Lấy dữ liệu phân trang từ Service
-        Page<OrderHistoryDto> orderPage = orderHistoryService.getAllOrders(status,page, size);
+        Page<OrderHistoryDto> orderPage = orderHistoryService.getAllOrders(status, page, size);
         
-        // 2. Đưa dữ liệu ra HTML
-        model.addAttribute("orders", orderPage.getContent()); // Danh sách đơn
+        if (page > orderPage.getTotalPages() && orderPage.getTotalPages() > 0) {
+            StringBuilder redirectUrl = new StringBuilder("redirect:/admin/orders?page=" + (orderPage.getTotalPages() - 1));
+            if (status != null && !status.trim().isEmpty()) {
+                redirectUrl.append("&status=").append(status);
+            }
+            return redirectUrl.toString();
+        }
+        
+        model.addAttribute("orders", orderPage.getContent());
         model.addAttribute("totalPages", orderPage.getTotalPages());
         model.addAttribute("currentPage", page);
-        model.addAttribute("totalElements", orderPage.getTotalElements()); // Tổng số đơn
+        model.addAttribute("totalElements", orderPage.getTotalElements());
         model.addAttribute("currentStatus", status != null ? status : "ALL");
         model.addAttribute("activeMenu", "orders");
         
-        // Trả về file HTML mới (đẹp hơn)
+        long pendingCount = orderHistoryService.countOrdersByStatus("PENDING");
+        long completedCount = orderHistoryService.countOrdersByStatus("COMPLETED");
+        long cancelledCount = orderHistoryService.countOrdersByStatus("CANCELLED");
+        
+        model.addAttribute("pendingCount", pendingCount);
+        model.addAttribute("completedCount", completedCount);
+        model.addAttribute("cancelledCount", cancelledCount);
+        
         return "order/admin-order-list";
     }
 
-    // API Cập nhật trạng thái (Giữ nguyên logic cũ)
     @PostMapping("/update-status")
     public String updateStatus(@RequestParam("orderId") Long orderId, 
-                               @RequestParam("newStatus") String newStatusStr) { // Nhận String từ form
-        try {
-            // Logic cập nhật (bạn có thể tùy chỉnh người thay đổi là Admin đang login)
-            orderHistoryService.addOrderStatusChange(orderId, "UNKNOWN", newStatusStr, "Admin", "Cập nhật bởi Admin");
-        } catch (Exception e) {
-            System.err.println("Lỗi cập nhật trạng thái: " + e.getMessage());
-        }
+                               @RequestParam("newStatus") String newStatusStr) {
+        String currentStatus = orderHistoryService.getCurrentOrderStatus(orderId);
+        orderHistoryService.addOrderStatusChange(orderId, currentStatus, newStatusStr, "Chủ cửa hàng", "Cập nhật bởi chủ cửa hàng");
         return "redirect:/admin/orders";
     }
 }

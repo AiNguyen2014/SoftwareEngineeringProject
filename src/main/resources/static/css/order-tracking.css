@@ -146,12 +146,12 @@
 }
 
 /* Status Colors */
-.bg-warning { background-color: #ffc107 !important; }
-.bg-info { background-color: #17a2b8 !important; }
-.bg-primary { background-color: var(--primary-blue) !important; }
-.bg-success { background-color: #28a745 !important; }
-.bg-danger { background-color: #dc3545 !important; }
-.bg-secondary { background-color: #6c757d !important; }
+.bg-warning { background-color: #ffc107 !important; color: #000 !important; }
+.bg-info { background-color: #17a2b8 !important; color: #000 !important; }
+.bg-primary { background-color: var(--primary-blue) !important; color: #fff !important; }
+.bg-success { background-color: #28a745 !important; color: #fff !important; }
+.bg-danger { background-color: #dc3545 !important; color: #fff !important; }
+.bg-secondary { background-color: #6c757d !important; color: #fff !important; }
 
 /* Responsive Design */
 @media (max-width: 992px) {

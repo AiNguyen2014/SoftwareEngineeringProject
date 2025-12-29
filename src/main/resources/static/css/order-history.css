@@ -73,6 +73,14 @@
     padding: 0.5rem 0.75rem;
 }
 
+/* Bootstrap Badge Text Color Overrides */
+.badge.bg-warning { color: #000 !important; }
+.badge.bg-info { color: #000 !important; }
+.badge.bg-primary { color: #fff !important; }
+.badge.bg-success { color: #fff !important; }
+.badge.bg-danger { color: #fff !important; }
+.badge.bg-secondary { color: #fff !important; }
+
 /* Empty State */
 .empty-state {
     padding: 4rem 2rem;
