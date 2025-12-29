@@ -40,17 +40,21 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
-                .securityContext(context -> context
-                    .requireExplicitSave(false)  // Tự động lưu SecurityContext vào session
-                )
-                .authorizeHttpRequests(auth -> auth
+            .csrf(csrf -> csrf.disable())
+            .securityContext(context -> context
+                .requireExplicitSave(false)  // Tự động lưu SecurityContext vào session
+            )
+            .sessionManagement(session
+                    -> session.sessionFixation().none()
+            )
+            .authorizeHttpRequests(auth -> auth
                 // PUBLIC
                 .requestMatchers(
                         "/", "/index", "/shoes", "/product/**",
                         "/auth/**", "/user/**", "/cart/**", "/order/**", "/vouchers/**",
                         "/css/**", "/js/**", "/images/**",
-                        "/error", "/api/search-suggestions", "/search/**", "/products"
+                        "/error", "/api/search-suggestions", "/search/**", "/products",
+                        "/order/history", "/order/tracking/**" // Keep order pages access
                 ).permitAll()
                 // ADMIN
                 .requestMatchers("/admin/**").hasRole("ADMIN")
