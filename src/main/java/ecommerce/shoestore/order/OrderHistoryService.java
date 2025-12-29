@@ -134,6 +134,37 @@ public class OrderHistoryService {
         return orders.map(this::convertToHistoryDto);
     }
     
+    // Thêm method tìm kiếm theo mã đơn hàng hoặc tên khách hàng
+    public Page<OrderHistoryDto> searchOrders(String searchType, String keyword, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Order> orders;
+        
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return getAllOrders(null, page, size);
+        }
+        
+        String searchKeyword = keyword.trim();
+        
+        if ("orderId".equals(searchType)) {
+            // Tìm kiếm theo mã đơn hàng
+            try {
+                Long orderIdLong = Long.parseLong(searchKeyword);
+                orders = orderRepository.findByOrderId(orderIdLong, pageable);
+            } catch (NumberFormatException e) {
+                // Nếu không phải số, tìm kiếm tương đối
+                orders = orderRepository.findByOrderIdContaining(searchKeyword, pageable);
+            }
+        } else if ("customerName".equals(searchType)) {
+            // Tìm kiếm theo tên khách hàng
+            orders = orderRepository.findByCustomerNameContaining(searchKeyword, pageable);
+        } else {
+            // Mặc định tìm trong cả hai
+            orders = orderRepository.findByOrderIdOrCustomerNameContaining(searchKeyword, pageable);
+        }
+        
+        return orders.map(this::convertToHistoryDto);
+    }
+    
     private OrderHistoryDto convertFromTrackingLogToHistoryDto(OrderTrackingLog trackingLog, Order order) {
         OrderStatus orderStatus = OrderStatus.PENDING;
         

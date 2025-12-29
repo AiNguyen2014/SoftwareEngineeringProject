@@ -91,7 +91,27 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h5 class="mb-0 fw-bold text-secondary">📦 Danh sách chi tiết</h5>
                     <div class="d-flex gap-2">
-                        <!-- Bộ lọc trạng thái (MỚI THÊM) -->
+                        <!-- Form tìm kiếm -->
+                        <form method="get" action="/admin/orders" class="d-flex gap-2">
+                            <input type="hidden" name="page" value="0">
+                            <select class="form-select" name="searchType" style="width: 150px;">
+                                <option value="orderId" th:selected="${searchType == 'orderId'}">Mã đơn hàng</option>
+                                <option value="customerName" th:selected="${searchType == 'customerName'}">Tên khách hàng</option>
+                            </select>
+                            <div class="input-group" style="width: 250px;">
+                                <input type="text" class="form-control" name="searchKeyword" 
+                                       th:value="${searchKeyword}" 
+                                       placeholder="Nhập từ khóa tìm kiếm...">
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                            <a th:href="@{/admin/orders}" class="btn btn-outline-secondary" title="Xóa bộ lọc">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                            </a>
+                        </form>
+                        
+                        <!-- Bộ lọc trạng thái -->
                         <div class="dropdown">
                             <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
                                 <i class="bi bi-funnel"></i> 
@@ -113,6 +133,17 @@
                             </ul>
                         </div>
                     </div>
+                </div>
+
+                <!-- Hiển thị thông tin tìm kiếm -->
+                <div th:if="${searchKeyword != null && searchKeyword != ''}" class="alert alert-info mb-3">
+                    <i class="bi bi-info-circle"></i>
+                    Đang tìm kiếm "<strong th:text="${searchKeyword}"></strong>" trong 
+                    <strong th:text="${searchType == 'orderId' ? 'Mã đơn hàng' : 'Tên khách hàng'}"></strong>
+                    - Tìm thấy <strong th:text="${totalElements}"></strong> kết quả
+                    <a th:href="@{/admin/orders}" class="btn btn-sm btn-outline-secondary ms-2">
+                        <i class="bi bi-x"></i> Xóa bộ lọc
+                    </a>
                 </div>
 
                 <!-- Bảng dữ liệu -->
@@ -256,12 +287,12 @@
                     <nav>
                         <ul class="pagination justify-content-center pagination-lg">
                             <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                                <a class="page-link" th:href="@{/admin/orders(page=${currentPage - 1}, status=${currentStatus})}" style="font-size: 1.1rem; padding: 0.75rem 1rem;">Trước</a>
+                                <a class="page-link" th:href="@{/admin/orders(page=${currentPage - 1}, status=${currentStatus}, searchType=${searchType}, searchKeyword=${searchKeyword})}" style="font-size: 1.1rem; padding: 0.75rem 1rem;">Trước</a>
                             </li>
                             
                             <!-- Show first page -->
                             <li class="page-item" th:classappend="${currentPage == 0} ? 'active'">
-                                <a class="page-link" th:href="@{/admin/orders(page=0, status=${currentStatus})}" style="font-size: 1.1rem; padding: 0.75rem 1rem;">1</a>
+                                <a class="page-link" th:href="@{/admin/orders(page=0, status=${currentStatus}, searchType=${searchType}, searchKeyword=${searchKeyword})}" style="font-size: 1.1rem; padding: 0.75rem 1rem;">1</a>
                             </li>
                             
                             <!-- Show dots if needed -->
@@ -282,12 +313,12 @@
                             
                             <!-- Show last page -->
                             <li th:if="${totalPages > 1}" class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'active'">
-                                <a class="page-link" th:href="@{/admin/orders(page=${totalPages - 1}, status=${currentStatus})}" 
+                                <a class="page-link" th:href="@{/admin/orders(page=${totalPages - 1}, status=${currentStatus}, searchType=${searchType}, searchKeyword=${searchKeyword})}" 
                                    th:text="${totalPages}" style="font-size: 1.1rem; padding: 0.75rem 1rem;">5</a>
                             </li>
                             
                             <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
-                                <a class="page-link" th:href="@{/admin/orders(page=${currentPage + 1}, status=${currentStatus})}" style="font-size: 1.1rem; padding: 0.75rem 1rem;">Sau</a>
+                                <a class="page-link" th:href="@{/admin/orders(page=${currentPage + 1}, status=${currentStatus}, searchType=${searchType}, searchKeyword=${searchKeyword})}" style="font-size: 1.1rem; padding: 0.75rem 1rem;">Sau</a>
                             </li>
                         </ul>
                     </nav>
@@ -301,9 +332,15 @@
                     
                     if (pageNumber && pageNumber >= 1 && pageNumber <= totalPages) {
                         const status = '[[${currentStatus}]]';
+                        const searchType = '[[${searchType}]]';
+                        const searchKeyword = '[[${searchKeyword}]]';
+                        
                         let url = '/admin/orders?page=' + (pageNumber - 1);
                         if (status && status !== 'ALL') {
                             url += '&status=' + status;
+                        }
+                        if (searchType && searchKeyword) {
+                            url += '&searchType=' + encodeURIComponent(searchType) + '&searchKeyword=' + encodeURIComponent(searchKeyword);
                         }
                         window.location.href = url;
                     } else {

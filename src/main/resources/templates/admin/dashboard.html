@@ -61,36 +61,6 @@
         .stat-card.promotions .stat-icon { background: #fff3e0; color: #f57c00; }
         .stat-card.users .stat-icon { background: #fce4ec; color: #c2185b; }
         
-        /* Charts Section */
-        .charts-section {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        @media (max-width: 1024px) {
-            .charts-section {
-                grid-template-columns: 1fr;
-            }
-        }
-        .chart-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-        .chart-card h3 {
-            font-size: 1rem;
-            color: var(--text-primary, #2d3748);
-            margin: 0 0 1rem 0;
-            padding-bottom: 0.75rem;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        .chart-container {
-            position: relative;
-            height: 280px;
-        }
-        
         /* Recent Activity */
         .activity-section {
             display: grid;
@@ -247,23 +217,6 @@
         </div>
     </div>
 
-    <!-- Biểu đồ -->
-    <div class="charts-section">
-        <div class="chart-card">
-            <h3>Doanh thu 7 ngày gần đây</h3>
-            <div class="chart-container">
-                <canvas id="revenueChart"></canvas>
-            </div>
-        </div>
-        
-        <div class="chart-card">
-            <h3>Phân loại đơn hàng</h3>
-            <div class="chart-container">
-                <canvas id="ordersChart"></canvas>
-            </div>
-        </div>
-    </div>
-
     <!-- Hoạt động gần đây & Thao tác nhanh -->
     <div class="activity-section">
         <div class="activity-card">
@@ -338,80 +291,5 @@
             </div>
         </div>
     </div>
-
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script th:inline="javascript">
-        document.addEventListener('DOMContentLoaded', function() {
-            // Doanh thu 7 ngày
-            const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-            new Chart(revenueCtx, {
-                type: 'line',
-                data: {
-                    labels: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'],
-                    datasets: [{
-                        label: 'Doanh thu (VND)',
-                        data: [1200000, 1900000, 1500000, 2500000, 2200000, 3000000, 2800000],
-                        borderColor: '#4299e1',
-                        backgroundColor: 'rgba(66, 153, 225, 0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#4299e1',
-                        pointRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return (value / 1000000).toFixed(1) + 'M';
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-
-            // Phân loại đơn hàng
-            const ordersCtx = document.getElementById('ordersChart').getContext('2d');
-            new Chart(ordersCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Chờ xử lý', 'Đang giao', 'Hoàn thành', 'Đã hủy'],
-                    datasets: [{
-                        data: [12, 8, 25, 3],
-                        backgroundColor: [
-                            '#ed8936',
-                            '#4299e1',
-                            '#48bb78',
-                            '#e53e3e'
-                        ],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                padding: 15,
-                                usePointStyle: true
-                            }
-                        }
-                    }
-                }
-            });
-        });
-    </script>
 
 </div>
