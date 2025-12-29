@@ -40,4 +40,32 @@ public interface OrderHistoryRepository extends JpaRepository<Order, Long> {
     @Query(value = "SELECT count(*) FROM \"order\" WHERE status = CAST(:#{#status.name()} AS order_status)", 
            nativeQuery = true)
     long countByStatus(@Param("status") OrderStatus status);
+    
+    // Tìm kiếm theo mã đơn hàng chính xác
+    @Query(value = "SELECT * FROM \"order\" WHERE \"orderId\" = :orderId", 
+           countQuery = "SELECT count(*) FROM \"order\" WHERE \"orderId\" = :orderId",
+           nativeQuery = true)
+    Page<Order> findByOrderId(@Param("orderId") Long orderId, Pageable pageable);
+    
+    // Tìm kiếm theo mã đơn hàng chứa từ khóa
+    @Query(value = "SELECT * FROM \"order\" WHERE CAST(\"orderId\" AS TEXT) LIKE %:keyword%", 
+           countQuery = "SELECT count(*) FROM \"order\" WHERE CAST(\"orderId\" AS TEXT) LIKE %:keyword%",
+           nativeQuery = true)
+    Page<Order> findByOrderIdContaining(@Param("keyword") String keyword, Pageable pageable);
+    
+    // Tìm kiếm theo tên khách hàng (trong recipientName)
+    @Query(value = "SELECT * FROM \"order\" WHERE LOWER(\"recipientName\") LIKE LOWER(CONCAT('%', :keyword, '%'))", 
+           countQuery = "SELECT count(*) FROM \"order\" WHERE LOWER(\"recipientName\") LIKE LOWER(CONCAT('%', :keyword, '%'))",
+           nativeQuery = true)
+    Page<Order> findByCustomerNameContaining(@Param("keyword") String keyword, Pageable pageable);
+    
+    // Tìm kiếm trong cả mã đơn hàng và tên khách hàng
+    @Query(value = "SELECT * FROM \"order\" WHERE " +
+           "CAST(\"orderId\" AS TEXT) LIKE %:keyword% OR " +
+           "LOWER(\"recipientName\") LIKE LOWER(CONCAT('%', :keyword, '%'))", 
+           countQuery = "SELECT count(*) FROM \"order\" WHERE " +
+           "CAST(\"orderId\" AS TEXT) LIKE %:keyword% OR " +
+           "LOWER(\"recipientName\") LIKE LOWER(CONCAT('%', :keyword, '%'))",
+           nativeQuery = true)
+    Page<Order> findByOrderIdOrCustomerNameContaining(@Param("keyword") String keyword, Pageable pageable);
 }
