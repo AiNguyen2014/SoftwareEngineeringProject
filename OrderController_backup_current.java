@@ -4,12 +4,8 @@ import ecommerce.shoestore.auth.user.User;
 import ecommerce.shoestore.auth.user.UserRepository;
 import ecommerce.shoestore.cart.Cart;
 import ecommerce.shoestore.cart.CartRepository;
-import ecommerce.shoestore.cart.CartService;
-import ecommerce.shoestore.cartitem.CartItem;
-import ecommerce.shoestore.promotion.CustomerPromotionService;
 import ecommerce.shoestore.promotion.Voucher;
 import ecommerce.shoestore.promotion.VoucherRepository;
-import ecommerce.shoestore.promotion.dto.VoucherValidationResult;
 import ecommerce.shoestore.shoesvariant.ShoesVariant;
 import ecommerce.shoestore.shoesvariant.ShoesVariantRepository;
 import jakarta.servlet.http.HttpSession;
@@ -22,8 +18,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @Controller
@@ -32,22 +26,17 @@ import java.util.List;
 public class OrderController {
     
     private final OrderService orderService;
-    private final OrderAddressService orderAddressService;
     private final UserRepository userRepository;
     private final CartRepository cartRepository;
     private final ShoesVariantRepository shoesVariantRepository;
-    private final CustomerPromotionService customerPromotionService;
-    private final CartService cartService;
+    private final VoucherRepository voucherRepository;
     
     /**
      * Hiển thị trang checkout
      * GET /order/checkout?type=CART hoặc /order/checkout?type=BUY_NOW&variantId=1&quantity=2
-     */
-    @Transactional
-    @GetMapping("/checkout")
+     */    @Transactional    @GetMapping("/checkout")
     public String showCheckoutPage(
             @RequestParam String type,
-            @RequestParam(required = false) String cartItemIds,
             @RequestParam(required = false) Long variantId,
             @RequestParam(required = false) Integer quantity,
             HttpSession session,
@@ -99,13 +88,8 @@ public class OrderController {
         model.addAttribute("user", user);
         model.addAttribute("type", type);
         
-        // Lấy danh sách địa chỉ đã lưu từ database
-        List<OrderAddress> savedAddresses = orderAddressService.getUserAddresses(userId);
-        model.addAttribute("savedAddresses", savedAddresses);
-        
         if ("CART".equals(type)) {
             System.out.println("Processing CART checkout");
-            System.out.println("Received cartItemIds parameter: " + cartItemIds);
             // Đặt hàng từ giỏ
             Cart cart = cartRepository.findCartWithItems(user).orElse(null);
             
@@ -116,66 +100,19 @@ public class OrderController {
             }
             
             System.out.println("Cart has " + cart.getItems().size() + " items");
-            for (CartItem item : cart.getItems()) {
-                System.out.println("  - CartItem ID: " + item.getCartItemId() + 
-                                 ", Shoe: " + item.getVariant().getShoes().getName() +
-                                 ", Price: " + item.getUnitPrice() +
-                                 ", Qty: " + item.getQuantity());
-            }
             
-            // Lọc các items được chọn
-            List<CartItem> selectedItems;
-            if (cartItemIds != null && !cartItemIds.isEmpty()) {
-                System.out.println("CartItemIds is not empty: " + cartItemIds);
-                List<Long> selectedIds = Arrays.stream(cartItemIds.split(","))
-                    .map(Long::parseLong)
-                    .toList();
-                
-                System.out.println("Parsed selected IDs: " + selectedIds);
-                
-                selectedItems = cart.getItems().stream()
-                    .filter(item -> selectedIds.contains(item.getCartItemId()))
-                    .toList();
-                
-                System.out.println("Filtered to " + selectedItems.size() + " selected items");
-            } else {
-                System.out.println("WARNING: No cartItemIds provided, using ALL items");
-                selectedItems = new ArrayList<>(cart.getItems());
-            }
-            
-            if (selectedItems.isEmpty()) {
-                System.out.println("ERROR: No items selected after filtering");
-                redirectAttributes.addFlashAttribute("error", "Vui lòng chọn sản phẩm!");
-                return "redirect:/cart";
-            }
-            
-            // Force load images để tránh LazyInitializationException
-            selectedItems.forEach(item -> {
-                if (item.getVariant() != null && item.getVariant().getShoes() != null) {
-                    item.getVariant().getShoes().getImages().size(); // Touch collection
-                }
-            });
-            
-            // Tính tổng tiền CHỈ cho items được chọn
-            BigDecimal subtotal = selectedItems.stream()
-                    .map(item -> {
-                        BigDecimal itemTotal = item.getUnitPrice()
-                                .multiply(BigDecimal.valueOf(item.getQuantity()));
-                        System.out.println("  Item " + item.getCartItemId() + " total: " + itemTotal);
-                        return itemTotal;
-                    })
+            // Tính tổng tiền - sử dụng unitPrice đã lưu trong CartItem
+            BigDecimal subtotal = cart.getItems().stream()
+                    .map(item -> item.getUnitPrice()
+                            .multiply(BigDecimal.valueOf(item.getQuantity())))
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
             
-            System.out.println("Final subtotal calculated: " + subtotal);
+            System.out.println("Subtotal calculated: " + subtotal);
             
-            model.addAttribute("cartItems", selectedItems);
+            model.addAttribute("cartItems", cart.getItems());
             model.addAttribute("subtotal", subtotal);
             model.addAttribute("shipping", new BigDecimal("30000"));
             model.addAttribute("total", subtotal.add(new BigDecimal("30000")));
-            
-            // Lưu cartItemIds vào session để dùng khi tạo order
-            session.setAttribute("SELECTED_CART_ITEM_IDS", cartItemIds);
-            System.out.println("Saved SELECTED_CART_ITEM_IDS to session: " + cartItemIds);
             
         } else if ("BUY_NOW".equals(type)) {
             System.out.println("Processing BUY_NOW checkout");
@@ -199,11 +136,6 @@ public class OrderController {
                     .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại"));
             
             System.out.println("Variant found: " + variant.getShoes().getName() + " - Size: " + variant.getSize());
-            
-            // Force load images để tránh LazyInitializationException
-            if (variant.getShoes() != null) {
-                variant.getShoes().getImages().size();
-            }
             
             BigDecimal subtotal = variant.getShoes().getBasePrice()
                     .multiply(BigDecimal.valueOf(quantity));
@@ -232,17 +164,11 @@ public class OrderController {
             @RequestParam String type,
             @RequestParam(required = false) Long variantId,
             @RequestParam(required = false) Integer quantity,
-            @RequestParam(required = false) Long savedAddressId,
-            @RequestParam(required = false) String recipientName,
-            @RequestParam(required = false) String recipientPhone,
+            @RequestParam String recipientName,
+            @RequestParam String recipientPhone,
             @RequestParam(required = false) String recipientEmail,
-            @RequestParam(required = false) String province,
-            @RequestParam(required = false) String district,
-            @RequestParam(required = false) String commune,
-            @RequestParam(required = false) String streetDetail,
+            @RequestParam String recipientAddress,
             @RequestParam(required = false) String note,
-            @RequestParam(required = false) boolean saveAddress,
-            @RequestParam(required = false) boolean setAsDefault,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
         
@@ -251,40 +177,12 @@ public class OrderController {
             return "redirect:/auth/login";
         }
         
-        Long addressId;
-        
-        // Nếu chọn địa chỉ có sẵn
-        if (savedAddressId != null) {
-            addressId = savedAddressId;
-        } 
-        // Nếu nhập địa chỉ mới
-        else if (recipientName != null && !recipientName.isBlank()) {
-            OrderAddress newAddress = new OrderAddress();
-            newAddress.setUserId(userId);
-            newAddress.setRecipientName(recipientName);
-            newAddress.setRecipientPhone(recipientPhone);
-            newAddress.setProvince(province);
-            newAddress.setDistrict(district);
-            newAddress.setCommune(commune);
-            newAddress.setStreetDetail(streetDetail);
-            // Luôn set default nếu user chọn
-            newAddress.setIsDefault(setAsDefault);
-            
-            // Luôn lưu địa chỉ vào database để có thể hiển thị trong order confirmation
-            // Chỉ khác là có set làm default hay không
-            newAddress = orderAddressService.saveAddress(newAddress);
-            
-            addressId = newAddress.getAddressId();
-        } else {
-            redirectAttributes.addFlashAttribute("error", "Vui lòng chọn hoặc nhập địa chỉ giao hàng");
-            return "redirect:/order/checkout?type=" + type + 
-                   (variantId != null ? "&variantId=" + variantId + "&quantity=" + quantity : "");
-        }
-        
         // Lưu thông tin vào session
         session.setAttribute("SHIPPING_TYPE", type);
-        session.setAttribute("SHIPPING_ADDRESS_ID", addressId);
+        session.setAttribute("SHIPPING_RECIPIENT_NAME", recipientName);
+        session.setAttribute("SHIPPING_RECIPIENT_PHONE", recipientPhone);
         session.setAttribute("SHIPPING_RECIPIENT_EMAIL", recipientEmail);
+        session.setAttribute("SHIPPING_RECIPIENT_ADDRESS", recipientAddress);
         session.setAttribute("SHIPPING_NOTE", note);
         
         if ("BUY_NOW".equals(type)) {
@@ -295,110 +193,11 @@ public class OrderController {
         // Redirect sang trang thanh toán
         return "redirect:/order/payment";
     }
-    
-    /**
-     * API endpoint để thêm địa chỉ mới (AJAX)
-     */
-    @PostMapping("/address/add")
-    @ResponseBody
-    public OrderAddress addAddress(
-            @RequestParam String recipientName,
-            @RequestParam String recipientPhone,
-            @RequestParam String province,
-            @RequestParam String district,
-            @RequestParam String commune,
-            @RequestParam String streetDetail,
-            @RequestParam(required = false) boolean setAsDefault,
-            HttpSession session) {
-        
-        Long userId = (Long) session.getAttribute("USER_ID");
-        if (userId == null) {
-            throw new RuntimeException("User not logged in");
-        }
-        
-        OrderAddress address = new OrderAddress();
-        address.setUserId(userId);
-        address.setRecipientName(recipientName);
-        address.setRecipientPhone(recipientPhone);
-        address.setProvince(province);
-        address.setDistrict(district);
-        address.setCommune(commune);
-        address.setStreetDetail(streetDetail);
-        address.setIsDefault(setAsDefault);
-        
-        return orderAddressService.saveAddress(address);
-    }
-    
-    /**
-     * API endpoint để xóa địa chỉ (AJAX)
-     */
-    @DeleteMapping("/address/{addressId}")
-    @ResponseBody
-    public void deleteAddress(
-            @PathVariable Long addressId,
-            HttpSession session) {
-        
-        Long userId = (Long) session.getAttribute("USER_ID");
-        if (userId == null) {
-            throw new RuntimeException("User not logged in");
-        }
-        
-        orderAddressService.deleteAddress(addressId, userId);
-    }
-    
-    /**
-     * API endpoint để đặt địa chỉ mặc định (AJAX)
-     */
-    @PostMapping("/address/{addressId}/set-default")
-    @ResponseBody
-    public void setDefaultAddress(
-            @PathVariable Long addressId,
-            HttpSession session) {
-        
-        Long userId = (Long) session.getAttribute("USER_ID");
-        if (userId == null) {
-            throw new RuntimeException("User not logged in");
-        }
-        
-        orderAddressService.setDefaultAddress(addressId, userId);
-    }
-    
-    /**
-     * API endpoint để validate voucher (AJAX)
-     */
-    @PostMapping("/voucher/validate")
-    @ResponseBody
-    public java.util.Map<String, Object> validateVoucher(
-            @RequestParam String voucherCode,
-            @RequestParam BigDecimal orderSubTotal,
-            HttpSession session) {
-        
-        Long userId = (Long) session.getAttribute("USER_ID");
-        if (userId == null) {
-            throw new RuntimeException("User not logged in");
-        }
-        
-        VoucherValidationResult result = customerPromotionService.validateVoucher(
-                voucherCode, userId, orderSubTotal);
-        
-        java.util.Map<String, Object> response = new java.util.HashMap<>();
-        response.put("valid", result.isValid());
-        
-        if (result.isValid()) {
-            response.put("discountAmount", result.getDiscountAmount());
-            response.put("message", String.format("Áp dụng thành công! Giảm %,.0fđ", result.getDiscountAmount()));
-        } else {
-            response.put("message", result.getErrorMessage());
-        }
-        
-        return response;
-    }
 
     /**
      * Hiển thị trang thanh toán và voucher
      * GET /order/payment
      */
-    @Transactional
     @GetMapping("/payment")
     public String showPaymentPage(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
         
@@ -417,24 +216,10 @@ public class OrderController {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy thông tin người dùng"));
         
-        // Lấy thông tin địa chỉ từ database
-        Long addressId = (Long) session.getAttribute("SHIPPING_ADDRESS_ID");
-        OrderAddress orderAddress = null;
-        if (addressId != null) {
-            orderAddress = orderAddressService.getAddressById(addressId);
-        }
-        
-        System.out.println("=== PAYMENT PAGE DEBUG ===");
-        System.out.println("Address ID: " + addressId);
-        if (orderAddress != null) {
-            System.out.println("Recipient Name: " + orderAddress.getRecipientName());
-            System.out.println("Recipient Phone: " + orderAddress.getRecipientPhone());
-            System.out.println("Full Address: " + orderAddress.getFullAddress());
-        } else {
-            System.out.println("OrderAddress is NULL");
-        }
-        
-        model.addAttribute("orderAddress", orderAddress);
+        // Lấy thông tin shipping từ session
+        model.addAttribute("recipientName", session.getAttribute("SHIPPING_RECIPIENT_NAME"));
+        model.addAttribute("recipientPhone", session.getAttribute("SHIPPING_RECIPIENT_PHONE"));
+        model.addAttribute("recipientAddress", session.getAttribute("SHIPPING_RECIPIENT_ADDRESS"));
         model.addAttribute("type", type);
         
         // Tính tổng tiền
@@ -448,46 +233,17 @@ public class OrderController {
                 return "redirect:/cart";
             }
             
-            // Lấy danh sách selected items từ session
-            String cartItemIds = (String) session.getAttribute("SELECTED_CART_ITEM_IDS");
-            List<CartItem> selectedItems;
-            
-            if (cartItemIds != null && !cartItemIds.isEmpty()) {
-                List<Long> selectedIds = Arrays.stream(cartItemIds.split(","))
-                    .map(Long::parseLong)
-                    .toList();
-                
-                selectedItems = cart.getItems().stream()
-                    .filter(item -> selectedIds.contains(item.getCartItemId()))
-                    .toList();
-            } else {
-                // Fallback: lấy tất cả nếu không có selected IDs
-                selectedItems = new ArrayList<>(cart.getItems());
-            }
-            
-            // Force load images để tránh LazyInitializationException
-            selectedItems.forEach(item -> {
-                if (item.getVariant() != null && item.getVariant().getShoes() != null) {
-                    item.getVariant().getShoes().getImages().size();
-                }
-            });
-            
-            subtotal = selectedItems.stream()
+            subtotal = cart.getItems().stream()
                     .map(item -> item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
             
-            model.addAttribute("cartItems", selectedItems);
+            model.addAttribute("cartItems", cart.getItems());
         } else {
             Long variantId = (Long) session.getAttribute("SHIPPING_VARIANT_ID");
             Integer quantity = (Integer) session.getAttribute("SHIPPING_QUANTITY");
             
             ShoesVariant variant = shoesVariantRepository.findByIdWithShoes(variantId)
                     .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại"));
-            
-            // Force load images
-            if (variant.getShoes() != null) {
-                variant.getShoes().getImages().size();
-            }
             
             subtotal = variant.getShoes().getBasePrice().multiply(BigDecimal.valueOf(quantity));
             
@@ -499,12 +255,17 @@ public class OrderController {
         model.addAttribute("shipping", shipping);
         model.addAttribute("total", subtotal.add(shipping));
         
-        // Lấy danh sách voucher để hiển thị (bao gồm cả voucher không đủ điều kiện - màu xám)
-        var vouchersForDisplay = customerPromotionService.getVouchersForDisplay(userId, subtotal);
+        // Lấy danh sách voucher có thể dùng
+        List<Voucher> availableVouchers = voucherRepository.findAllWithCampaign().stream()
+                .filter(v -> v.getEnabled())
+                .filter(v -> !v.getStartDate().isAfter(LocalDate.now()))
+                .filter(v -> !v.getEndDate().isBefore(LocalDate.now()))
+                .filter(v -> v.getMinOrderValue() == null || subtotal.compareTo(v.getMinOrderValue()) >= 0)
+                .toList();
         
-        model.addAttribute("vouchers", vouchersForDisplay != null ? vouchersForDisplay : List.of());
-        model.addAttribute("recipientEmail", session.getAttribute("SHIPPING_RECIPIENT_EMAIL") != null ? session.getAttribute("SHIPPING_RECIPIENT_EMAIL") : "");
-        model.addAttribute("note", session.getAttribute("SHIPPING_NOTE") != null ? session.getAttribute("SHIPPING_NOTE") : "");
+        model.addAttribute("vouchers", availableVouchers);
+        model.addAttribute("recipientEmail", session.getAttribute("SHIPPING_RECIPIENT_EMAIL"));
+        model.addAttribute("note", session.getAttribute("SHIPPING_NOTE"));
         
         return "payment";
     }
@@ -532,12 +293,14 @@ public class OrderController {
             
             // Lấy thông tin từ session
             String type = (String) session.getAttribute("SHIPPING_TYPE");
-            Long addressId = (Long) session.getAttribute("SHIPPING_ADDRESS_ID");
+            String recipientName = (String) session.getAttribute("SHIPPING_RECIPIENT_NAME");
+            String recipientPhone = (String) session.getAttribute("SHIPPING_RECIPIENT_PHONE");
             String recipientEmail = (String) session.getAttribute("SHIPPING_RECIPIENT_EMAIL");
+            String recipientAddress = (String) session.getAttribute("SHIPPING_RECIPIENT_ADDRESS");
             String note = (String) session.getAttribute("SHIPPING_NOTE");
             
             System.out.println("Type: " + type);
-            System.out.println("AddressId: " + addressId);
+            System.out.println("RecipientName: " + recipientName);
             System.out.println("PaymentMethod: " + paymentMethod);
             System.out.println("VoucherCode: " + voucherCode);
             
@@ -551,31 +314,11 @@ public class OrderController {
                 Cart cart = cartRepository.findCartWithItems(user)
                         .orElseThrow(() -> new RuntimeException("Giỏ hàng trống"));
                 
-                // Lấy danh sách IDs được chọn từ session
-                String cartItemIds = (String) session.getAttribute("SELECTED_CART_ITEM_IDS");
-                
-                // Lọc items được chọn
-                List<CartItem> selectedItems;
-                if (cartItemIds != null && !cartItemIds.isEmpty()) {
-                    List<Long> selectedIds = Arrays.stream(cartItemIds.split(","))
-                        .map(Long::parseLong)
-                        .toList();
-                    
-                    selectedItems = cart.getItems().stream()
-                        .filter(item -> selectedIds.contains(item.getCartItemId()))
-                        .toList();
-                } else {
-                    selectedItems = new ArrayList<>(cart.getItems());
-                }
-                
-                // Tạo order CHỈ với items được chọn
-                order = orderService.createOrderFromSelectedItems(
-                        user.getUserId(), addressId, recipientEmail,
-                        paymentMethod, note, selectedItems, voucherCode
+                order = orderService.createOrderFromCart(
+                        user.getUserId(),
+                        recipientName, recipientPhone, recipientEmail, recipientAddress,
+                        paymentMethod, note, cart
                 );
-                
-                // Xóa session data
-                session.removeAttribute("SELECTED_CART_ITEM_IDS");
                 
             } else if ("BUY_NOW".equals(type)) {
                 // Tạo đơn từ mua ngay
@@ -583,8 +326,10 @@ public class OrderController {
                 Integer quantity = (Integer) session.getAttribute("SHIPPING_QUANTITY");
                 
                 order = orderService.createOrderBuyNow(
-                        user.getUserId(), addressId, recipientEmail,
-                        paymentMethod, note, variantId, quantity, voucherCode
+                        user.getUserId(),
+                        recipientName, recipientPhone, recipientEmail, recipientAddress,
+                        paymentMethod, note,
+                        variantId, quantity
                 );
                 
             } else {
@@ -593,8 +338,10 @@ public class OrderController {
             
             // Xóa session shipping data
             session.removeAttribute("SHIPPING_TYPE");
-            session.removeAttribute("SHIPPING_ADDRESS_ID");
+            session.removeAttribute("SHIPPING_RECIPIENT_NAME");
+            session.removeAttribute("SHIPPING_RECIPIENT_PHONE");
             session.removeAttribute("SHIPPING_RECIPIENT_EMAIL");
+            session.removeAttribute("SHIPPING_RECIPIENT_ADDRESS");
             session.removeAttribute("SHIPPING_NOTE");
             session.removeAttribute("SHIPPING_VARIANT_ID");
             session.removeAttribute("SHIPPING_QUANTITY");
@@ -625,12 +372,6 @@ public class OrderController {
         
         Order order = orderService.getOrderById(orderId);
         List<OrderItem> orderItems = orderService.getOrderItems(orderId);
-        
-        // Lấy thông tin địa chỉ
-        if (order.getOrderAddressId() != null) {
-            OrderAddress address = orderAddressService.getAddressById(order.getOrderAddressId());
-            model.addAttribute("orderAddress", address);
-        }
         
         model.addAttribute("order", order);
         model.addAttribute("orderItems", orderItems);

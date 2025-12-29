@@ -593,21 +593,14 @@
             </div>
             
             <form action="/order/create" method="POST" id="paymentForm">
-                <!-- Hidden inputs để gửi thông tin giao hàng -->
-                <input type="hidden" name="recipientName" th:value="${recipientName ?: ''}">
-                <input type="hidden" name="recipientPhone" th:value="${recipientPhone ?: ''}">
-                <input type="hidden" name="recipientEmail" th:value="${recipientEmail ?: ''}">
-                <input type="hidden" name="recipientAddress" th:value="${recipientAddress ?: ''}">
-                <input type="hidden" name="note" th:value="${note ?: ''}">
-                
                 <!-- Thông tin giao hàng (chỉ hiển thị) -->
                 <div class="form-section">
                     <h3>Thông tin giao hàng</h3>
-                    <div class="shipping-info">
-                        <p><strong>Người nhận:</strong> <span th:text="${recipientName}"></span></p>
-                        <p><strong>Số điện thoại:</strong> <span th:text="${recipientPhone}"></span></p>
+                    <div class="shipping-info" th:if="${orderAddress != null}">
+                        <p><strong>Người nhận:</strong> <span th:text="${orderAddress.recipientName}"></span></p>
+                        <p><strong>Số điện thoại:</strong> <span th:text="${orderAddress.recipientPhone}"></span></p>
                         <p th:if="${recipientEmail}"><strong>Email:</strong> <span th:text="${recipientEmail}"></span></p>
-                        <p><strong>Địa chỉ:</strong> <span th:text="${recipientAddress}"></span></p>
+                        <p><strong>Địa chỉ:</strong> <span th:text="${orderAddress.fullAddress}"></span></p>
                         <p th:if="${note}"><strong>Ghi chú:</strong> <span th:text="${note}"></span></p>
                     </div>
                     <button type="button" class="btn-back" onclick="window.history.back()">
