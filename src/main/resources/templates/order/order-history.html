@@ -154,17 +154,26 @@
                                                             <i class="bi bi-check-circle me-1"></i> Đã đánh giá
                                                         </button>
                                                     </div>
-                                                    <div th:case="'WAITING_CONFIRMATION'">
-                                                        <button class="btn btn-outline-danger btn-sm">
-                                                            <i class="bi bi-x-circle me-1"></i>
-                                                            Hủy đơn
-                                                        </button>
+                                                    <div th:case="'PENDING'">
+                                                        <form th:action="@{/order/cancel}" method="post" onsubmit="return confirm('Đơn chưa xác nhận. Bạn muốn HỦY NGAY đơn này chứ?');">
+                                                            <input type="hidden" name="orderId" th:value="${order.orderId}">
+                                                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                                <i class="bi bi-trash me-1"></i> Hủy ngay
+                                                            </button>
+                                                        </form>
                                                     </div>
                                                     <div th:case="'CONFIRMED'">
-                                                        <button class="btn btn-outline-danger btn-sm">
-                                                            <i class="bi bi-x-circle me-1"></i>
-                                                            Hủy đơn
-                                                        </button>
+                                                        <form th:action="@{/order/cancel}" method="post" onsubmit="return confirm('Đơn đã được shop xác nhận.\nBạn có muốn gửi YÊU CẦU HỦY để shop xem xét không?');">
+                                                            <input type="hidden" name="orderId" th:value="${order.orderId}">
+                                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                                <i class="bi bi-exclamation-circle me-1"></i> Yêu cầu hủy
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                    <div th:case="'REQUEST_CANCELLED'">
+                                                        <span class="badge bg-warning text-dark border border-warning p-2">
+                                                            <i class="bi bi-hourglass-split"></i> Đang chờ Shop duyệt hủy...
+                                                        </span>
                                                     </div>
                                                     <div th:case="'PACKING'">
                                                         <button class="btn btn-outline-danger btn-sm">

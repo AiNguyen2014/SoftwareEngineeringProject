@@ -4,6 +4,7 @@ import ecommerce.shoestore.inventory.dto.InventoryUpdateDto;
 import ecommerce.shoestore.inventory.InventoryTransaction;
 import ecommerce.shoestore.shoes.ShoesRepository;
 import ecommerce.shoestore.shoes.Shoes;
+import ecommerce.shoestore.order.OrderItem;
 import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -99,4 +100,28 @@ public class InventoryService {
         }
         inventoryRepository.save(inventory);
     }
+    @Transactional
+    public void restoreStock(List<OrderItem> items){
+        if (items == null || items.isEmpty()) return;
+        for (OrderItem item : items){
+            Inventory inventory = inventoryRepository.findByShoeId(item.getShoeId()).orElse(null);
+            if (inventory != null){
+                long currentQty = inventory.getQuantity() != null ? inventory.getQuantity() : 0;
+                long newQty = currentQty + item.getQuantity();
+                inventory.setQuantity(newQty);
+                inventory.setType(InventoryTransaction.RETURN);
+                inventory.setNote("Hoàng kho do huỷ đơn hàng");
+                inventory.setUpdateAt(LocalDateTime.now());
+                if (newQty == 0){
+                    inventory.setStatus(InventoryStatus.OUT_OF_STOCK);
+                }else if (newQty <= 5){
+                    inventory.setStatus(InventoryStatus.ALMOST_OUT_OF_STOCK);
+                }else{
+                    inventory.setStatus(InventoryStatus.IN_STOCK);
+                }
+                inventoryRepository.save(inventory);
+            }
+        }
+    }
+
 }

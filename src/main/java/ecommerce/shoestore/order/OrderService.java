@@ -7,6 +7,7 @@ import ecommerce.shoestore.cartitem.CartItemRepository;
 import ecommerce.shoestore.promotion.CustomerPromotionService;
 import ecommerce.shoestore.promotion.Voucher;
 import ecommerce.shoestore.promotion.dto.VoucherValidationResult;
+import ecommerce.shoestore.inventory.InventoryService;
 import ecommerce.shoestore.payment.Payment;
 import ecommerce.shoestore.payment.PaymentRepository;
 import ecommerce.shoestore.payment.PaymentTransaction;
@@ -26,6 +27,7 @@ import java.util.List;
 public class OrderService {
     
     private final OrderRepository orderRepository;
+    private final InventoryService inventoryService;
     private final OrderItemRepository orderItemRepository;
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
@@ -426,5 +428,27 @@ public class OrderService {
 
     order.setStatus(newStatus);
     orderRepository.save(order);
-}
+    }
+    public OrderStatus requestCancelOrder( Long orderId, Long userId){
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng ID: " + orderId));
+        if (!order.getUserId().equals(userId)){
+            throw new RuntimeException("Bạn không có quyền huỷ đơn hàng này");
+        }
+        OrderStatus currentStatus = order.getStatus();
+        if (order.getStatus() == OrderStatus.PENDING) {
+            order.setStatus(OrderStatus.CANCELLED);
+            List<OrderItem> items = orderItemRepository.findByOrderId(order.getOrderId());
+            inventoryService.restoreStock(items); 
+            orderRepository.save(order);
+            return OrderStatus.CANCELLED;
+        }else if(currentStatus == OrderStatus.CONFIRMED){
+            order.setStatus(OrderStatus.REQUEST_CANCELLED);
+            orderRepository.save(order);
+            return OrderStatus.REQUEST_CANCELLED;
+        }else if (currentStatus == OrderStatus.SHIPPING || currentStatus == OrderStatus.COMPLETED || currentStatus == OrderStatus.CANCELLED){
+            throw new RuntimeException("Đơn hàng đang giao hoặc đã hoàn thành, không thể hủy!");
+        }
+        return order.getStatus();
+    }
 }

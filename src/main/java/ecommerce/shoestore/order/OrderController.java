@@ -653,4 +653,26 @@ public class OrderController {
 
         return "order-confirmation";
     }
+    @PostMapping("/cancel")
+    public String requestCancelOrder(@RequestParam("orderId") Long orderId, 
+    HttpSession session, RedirectAttributes redirectAttributes) {
+        Long userId = (Long) session.getAttribute("USER_ID");
+        if (userId == null) {
+            return "redirect:/auth/login";
+        }
+
+        try {
+            OrderStatus newStatus = orderService.requestCancelOrder(orderId, userId);
+            if (newStatus == OrderStatus.CANCELLED){
+                redirectAttributes.addFlashAttribute("successMessage", "✅Huỷ đơn thành công!");
+            }else if (newStatus == OrderStatus.REQUEST_CANCELLED){
+                redirectAttributes.addFlashAttribute("successMessage", "⚠️Yêu cầu huỷ đơn đã được gửi!. Vui lòng chờ xác nhận");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
+        }
+
+        return "redirect:/order/history";
+    }
 }
