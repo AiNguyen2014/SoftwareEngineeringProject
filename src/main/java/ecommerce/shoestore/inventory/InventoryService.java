@@ -3,11 +3,15 @@ import ecommerce.shoestore.inventory.dto.InventoryResponseDto;
 import ecommerce.shoestore.inventory.dto.InventoryUpdateDto;
 import ecommerce.shoestore.inventory.InventoryTransaction;
 import ecommerce.shoestore.shoes.ShoesRepository;
+import ecommerce.shoestore.shoesvariant.ShoesVariantRepository;
 import ecommerce.shoestore.shoes.Shoes;
 import ecommerce.shoestore.order.OrderItem;
 import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,35 +20,37 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class InventoryService {
     private final InventoryRepository inventoryRepository;
-    private final ShoesRepository shoesRepository; //Lấy tên giày
-    //Lấy danh sách hiển thị
-    public List<InventoryResponseDto> getAllInventory(String keyword, InventoryStatus status) {
-        List<Inventory> inventoryList;
+    private final ShoesRepository shoesRepository;
+    private final ShoesVariantRepository shoesVariantRepository;
+
+    public Page<InventoryResponseDto> getAllInventory(String keyword, InventoryStatus status, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
         String statusStr = (status != null) ? status.name() : null;
         String keywordStr = (StringUtils.isNotBlank(keyword)) ? keyword : null;
-
-        if (keywordStr == null && statusStr == null){
-            inventoryList = inventoryRepository.findAll();
+        Page<Inventory> inventoryPage;
+        if (keywordStr == null && statusStr == null) {
+            inventoryPage = inventoryRepository.findAll(pageable); 
         } else {
-            inventoryList = inventoryRepository.searchInventory(keywordStr, statusStr);
+            inventoryPage = inventoryRepository.searchInventory(keywordStr, statusStr, pageable);
         }
-        return inventoryList.stream().map((inv) -> {
+        return inventoryPage.map(inv -> {
             String shoeName = shoesRepository.findById(inv.getShoeId())
                     .map(s -> s.getName())
                     .orElse("Sản phẩm không tồn tại");
-           return InventoryResponseDto.builder()
-           .inventoryId(inv.getInventoryId())
-           .shoeId(inv.getShoeId())
-           .shoeName(shoeName)
-           .quantity(inv.getQuantity())
-           .status(inv.getStatus())
-           .type(inv.getType())
-           .updateAt(inv.getUpdateAt())
-           .note(inv.getNote())
-           .build();
-        }).collect(Collectors.toList());
+                    
+            return InventoryResponseDto.builder()
+                    .inventoryId(inv.getInventoryId())
+                    .shoeId(inv.getShoeId())
+                    .shoeName(shoeName)
+                    .quantity(inv.getQuantity())
+                    .status(inv.getStatus())
+                    .type(inv.getType())
+                    .updateAt(inv.getUpdateAt())
+                    .note(inv.getNote())
+                    .build();
+        });
     }
-
+        
     public void updateNoteOnly(Long inventoryId, String newNote){
         Inventory inventory = inventoryRepository.findById(inventoryId)
             .orElseThrow(() -> new RuntimeException("Không tìm thấy kho ID: " + inventoryId));
@@ -66,15 +72,15 @@ public class InventoryService {
 
     /*Thông báo */
     public List<InventoryResponseDto> getAlertInventory() {
-        List<InventoryResponseDto> all = getAllInventory(null, null);
-        return all.stream().filter(item -> item.getStatus() != InventoryStatus.IN_STOCK)
-        .collect(Collectors.toList());
+        Page<InventoryResponseDto> page = getAllInventory(null, null, 0, 10000);
+        return page.getContent().stream()
+                .filter(item -> item.getStatus() != InventoryStatus.IN_STOCK)
+                .collect(Collectors.toList());
     }
     //Cập nhật tồn kho (Nhập / Xuất)
     @Transactional
     public void updateStock(InventoryUpdateDto dto){
-        Inventory inventory = inventoryRepository.findByShoeId(dto.getShoeId())
-        .orElseThrow(() -> new RuntimeException("Không tìm thấy kho cho giày ID: " + dto.getShoeId()));
+        Inventory inventory = inventoryRepository.findByShoeId(dto.getShoeId()).orElseThrow(() -> new RuntimeException("Không tìm thấy kho cho giày ID: " + dto.getShoeId()));
         long currentQty = inventory.getQuantity() != null ? inventory.getQuantity() : 0;
         long changeAmount = dto.getAmount();
         if (dto.getType() == InventoryTransaction.IMPORT || dto.getType() == InventoryTransaction.RETURN) {
@@ -110,7 +116,7 @@ public class InventoryService {
                 long newQty = currentQty + item.getQuantity();
                 inventory.setQuantity(newQty);
                 inventory.setType(InventoryTransaction.RETURN);
-                inventory.setNote("Hoàng kho do huỷ đơn hàng");
+                inventory.setNote("Hoàn kho do huỷ đơn hàng");
                 inventory.setUpdateAt(LocalDateTime.now());
                 if (newQty == 0){
                     inventory.setStatus(InventoryStatus.OUT_OF_STOCK);

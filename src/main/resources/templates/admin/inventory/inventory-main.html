@@ -113,15 +113,43 @@
                 </div>
                 
                 <!-- Footer -->
-                <div class="inventory-footer">
-                    <div class="footer-info">Hiển thị danh sách sản phẩm</div>
-                </div>
+                <div class="inventory-footer d-flex justify-content-between align-items-center mt-3">
+    
+                    <div class="footer-info text-muted small">
+                        Hiển thị trang <span th:text="${currentPage + 1}"></span> / <span th:text="${totalPages}"></span> 
+                        (Tổng <span th:text="${totalItems}"></span> sản phẩm)
+                    </div>
 
+                    <!-- Thanh Phân Trang -->
+                    <nav th:if="${totalPages > 1}">
+                        <ul class="pagination pagination-sm mb-0">
+                            <!-- Nút Trước -->
+                            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                                <a class="page-link" 
+                                th:href="@{/admin/inventory(keyword=${currentKeyword}, status=${currentStatus}, page=${currentPage - 1})}">
+                                Trước
+                                </a>
+                            </li>
+
+                            <!-- Các trang số -->
+                            <!-- Hiển thị đơn giản: Trang đầu, Trang cuối và trang hiện tại -->
+                            <li class="page-item disabled">
+                                <span class="page-link" th:text="${currentPage + 1}">1</span>
+                            </li>
+
+                            <!-- Nút Sau -->
+                            <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
+                                <a class="page-link" 
+                                th:href="@{/admin/inventory(keyword=${currentKeyword}, status=${currentStatus}, page=${currentPage + 1})}">
+                                Sau
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
             </div>
         </main>
-
     </div>
 </div>
-
 </body>
 </html>

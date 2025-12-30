@@ -2,6 +2,8 @@ package ecommerce.shoestore.inventory;
 import ecommerce.shoestore.inventory.dto.InventoryResponseDto;
 import ecommerce.shoestore.inventory.dto.InventoryUpdateDto;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,15 +22,18 @@ public class InventoryController {
     @GetMapping
     public String showInventoryPage(Model model,
         @RequestParam(name = "keyword", required = false) String keyword,
-        @RequestParam(name = "status", required = false) InventoryStatus status
+        @RequestParam(name = "status", required = false) InventoryStatus status,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
     ) {
-        List<InventoryResponseDto> inventories = inventoryService.getAllInventory(keyword, status);
-        model.addAttribute("inventories", inventories);
+        Page<InventoryResponseDto> pageResult = inventoryService.getAllInventory(keyword, status, page, size);
+        model.addAttribute("inventories", pageResult.getContent()); 
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", pageResult.getTotalPages());
+        model.addAttribute("totalItems", pageResult.getTotalElements());
         model.addAttribute("currentKeyword", keyword);
         model.addAttribute("currentStatus", status);
         model.addAttribute("activeMenu", "inventory");
-        model.addAttribute("pageTitle", "Quản lý tồn kho");
-        model.addAttribute("content", "admin/inventory/inventory-main :: main-content");
 
         List<InventoryResponseDto> notifications = inventoryService.getAlertInventory();
         model.addAttribute("notifications", notifications);
