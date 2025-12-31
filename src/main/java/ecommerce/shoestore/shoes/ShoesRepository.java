@@ -18,34 +18,38 @@ import java.util.List;
 public interface ShoesRepository extends JpaRepository<Shoes, Long> {
 
     /**
-     * Lấy danh sách ID giày có phân trang
+     * Lấy danh sách ID giày có phân trang (chỉ lấy sản phẩm đang hoạt động)
+     * Sắp xếp theo ID giảm dần (sản phẩm mới nhất trước)
      */
-    @Query("SELECT s FROM Shoes s")
+    @Query("SELECT s FROM Shoes s WHERE s.status = true ORDER BY s.shoeId DESC")
     Page<Shoes> findAllPaged(Pageable pageable);
 
     /**
      * Lấy danh sách giày theo IDs kèm images (chỉ fetch images, không fetch variants để tránh lặp)
+     * Chỉ lấy sản phẩm đang hoạt động
      */
     @Query("SELECT DISTINCT s FROM Shoes s "
             + "LEFT JOIN FETCH s.images "
-            + "WHERE s.shoeId IN :ids")
+            + "WHERE s.shoeId IN :ids AND s.status = true")
     List<Shoes> findAllByIdsWithImages(@Param("ids") List<Long> ids);
 
     /**
      * Lấy chi tiết giày theo ID (cho trang chi tiết) - fetch riêng từng collection
+     * Chỉ lấy sản phẩm đang hoạt động
      */
     @Query("SELECT s FROM Shoes s " +
            "LEFT JOIN FETCH s.category " +
            "LEFT JOIN FETCH s.images " +
-           "WHERE s.shoeId = :shoeId")
+           "WHERE s.shoeId = :shoeId AND s.status = true")
     Optional<Shoes> findByIdWithImages(@Param("shoeId") Long shoeId);
 
     /**
      * Lấy chi tiết giày kèm variants
+     * Chỉ lấy sản phẩm đang hoạt động
      */
     @Query("SELECT s FROM Shoes s " +
            "LEFT JOIN FETCH s.variants " +
-           "WHERE s.shoeId = :shoeId")
+           "WHERE s.shoeId = :shoeId AND s.status = true")
     Optional<Shoes> findByIdWithVariants(@Param("shoeId") Long shoeId);
 
     /**

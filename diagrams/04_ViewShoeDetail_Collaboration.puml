@@ -1,129 +1,52 @@
 @startuml ViewShoeDetail_Collaboration
 !theme plain
 
-title Collaboration Diagram: View Product Detail (Optimized)
+title View Shoe Detail
 
-actor "User" as user
-boundary ":shoes-detail.html\n(Thymeleaf)" as view
-control ":ShoesController" as controller
-control ":ShoesService" as service
-entity ":ShoesRepository" as repo
-database ":PostgreSQL" as db
+actor "Registered Customer\nUnregistered Customer" as user
+rectangle ":ShoesListUI" as listUI
+rectangle ":ShoesDetailUI" as detailUI
+rectangle ":ShoesController" as controller
+rectangle ":ShoesService" as service
+rectangle ":ShoesRepository" as repo
+database "Database" as db
 
-' User clicks product
-user -right-> view: 1. Click product card
-note on link
-  From list page or search results
-end note
+user -right-> listUI: 1: Chon san pham(id)
 
-' View submits request
-view -right-> controller: 2. GET /product/{id}
-controller -right-> controller: Path variable: id=5
+listUI -right-> controller: 1.1: GET /product/id
 
-' Controller to Service
-controller -down-> service: 3. getShoesDetail(id=5)
-note on link
-  Fetch complete product info
-end note
+controller -down-> service: 1.1.1: getShoesDetail(id)
 
-' Service to Repository - Main product
-service -down-> repo: 4. findByIdWithDetails(id=5)
-note on link
-  JOIN FETCH images & variants
-  Avoid lazy loading issues
-end note
+service -down-> repo: 1.1.1.1: findByIdWithImages(id)
 
-' Repository to Database
-repo -down-> db: Query #1: SELECT s FROM Shoes s\nLEFT JOIN FETCH images\nLEFT JOIN FETCH variants\nWHERE s.id = 5
+repo -down-> db: SELECT s FROM Shoes s\nLEFT JOIN FETCH s.category\nLEFT JOIN FETCH s.images\nWHERE s.shoeId = id
 
-' DB returns main product
-db -up-> repo: Shoes entity\n+ images (Set)\n+ variants (Set)
+db -up-> repo: Optional<Shoes>
 
-' Service processing
-repo -up-> service: Shoes with all relations loaded
-service -right-> service: 5a. convertToDetailDto()
-note on link
-  Process images & variants
-  Calculate stock in-memory
-  Prepare data for related products
-end note
+repo -up-> service: Shoes with images
 
-' Get related products
-service -down-> repo: 5b. findRelatedProducts\n(categoryId, excludeId)
-note on link
-  Get same category products
-  Exclude current product
-  Limit 5 results
-end note
+service -down-> repo: 1.1.1.2: findByIdWithVariants(id)
 
-' Query related products
-repo -down-> db: Query #2: SELECT s FROM Shoes s\nLEFT JOIN FETCH images\nWHERE category.id = 2\nAND s.id <> 5\nLIMIT 5
+repo -down-> db: SELECT s FROM Shoes s\nLEFT JOIN FETCH s.variants\nWHERE s.shoeId = id
 
-db -up-> repo: 5 Shoes entities\nwith images
+db -up-> repo: Optional<Shoes>
+
+repo -up-> service: Shoes with variants
+
+service -right-> service: 1.1.1.3: convertToDetailDto(shoes)
+
+service -down-> repo: 1.1.1.4: findRelatedProducts(categoryId)
+
+repo -down-> db: SELECT DISTINCT s FROM Shoes s\nLEFT JOIN FETCH s.images\nWHERE s.category.categoryId = catId\nAND s.shoeId != excludeId\nLIMIT 5
+
+db -up-> repo: List<Shoes>
 
 repo -up-> service: Related products list
 
-' Batch load stocks
-service -down-> repo: 5c. getAllStocksByIds\n(relatedIds = [1,3,7,9,11])
-note on link
-  ✅ OPTIMIZATION: Single batch query\nfor all related product stocks
-end note
+service -up-> controller: 1.1.2: ShoesDetailDto
 
-' Batch stock query
-repo -down-> db: Query #3: SELECT shoes_id,\nSUM(stock) FROM shoes_variant\nWHERE shoes_id IN (1,3,7,9,11)\nGROUP BY shoes_id
+controller -down-> detailUI: 1.2: renderDetail(model)
 
-db -up-> repo: Map<Long, Integer>\nstock data for all products
-
-repo -up-> service: Stock map
-
-' Service final processing
-service -right-> service: 5d. Convert related products\nto SummaryDto\nwith Map-based lookups
-note on link
-  ✅ NO additional DB queries
-  In-memory Map.get()
-end note
-
-' Return to Controller
-service -up-> controller: 6. Return ShoesDetailDto
-note on link
-  Main product + 5 related
-  All fields calculated
-  All images loaded
-end note
-
-' Controller to View
-controller -up-> view: 7. model.addAttribute\n("product", detail)
-note on link
-  Add product data to model
-end note
-
-' View renders
-view -up-> user: 8. Render shoes-detail.html
-note on link
-  Display:
-  - Main product images (gallery)
-  - Product info & description
-  - Size & color selectors
-  - Related products carousel
-end note
-
-note over user, db
-    🟢 DESIGN PATTERNS USED:
-    • DTO Pattern: Entity → DTO conversion
-    • Batch Loading: One query for multiple items
-    • Lazy Fetch: JOIN FETCH to load relations
-    • In-Memory Lookup: Map<K,V> instead of DB query
-    
-    🟢 PERFORMANCE:
-    Total Queries: 3 (was 6)
-    Network Roundtrips: 3
-    Response Time: 200-300ms
-    
-    🔴 WHAT WAS AVOIDED:
-    • N+1 queries for related products
-    • Multiple stock queries
-    • Lazy loading triggers
-    • Unnecessary network calls
-end note
+detailUI -up-> user: Hien thi trang chi tiet
 
 @enduml

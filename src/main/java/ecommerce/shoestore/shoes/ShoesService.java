@@ -47,6 +47,18 @@ public class ShoesService {
         List<Shoes> shoesList = new ArrayList<>();
         if (!shoeIds.isEmpty()) {
             shoesList = shoesRepository.findAllByIdsWithImages(shoeIds);
+            
+            // Sắp xếp lại theo thứ tự của shoeIds (vì database không đảm bảo thứ tự)
+            List<Shoes> sortedList = new ArrayList<>();
+            for (Long id : shoeIds) {
+                for (Shoes s : shoesList) {
+                    if (s.getShoeId().equals(id)) {
+                        sortedList.add(s);
+                        break;
+                    }
+                }
+            }
+            shoesList = sortedList;
         }
 
         // Chuyển đổi sang DTO
@@ -120,10 +132,12 @@ public class ShoesService {
      * Chuyển đổi Shoes -> ShoesDetailDto (dùng cho trang chi tiết)
      */
     private ShoesDetailDto convertToDetailDto(Shoes shoes) {
-        // Lấy tên danh mục
+        // Lấy tên danh mục và categoryId
         String categoryName = "General";
+        Long categoryId = null;
         if (shoes.getCategory() != null) {
             categoryName = shoes.getCategory().getName();
+            categoryId = shoes.getCategory().getCategoryId();
         }
 
         // Lấy danh sách URL hình ảnh
@@ -177,6 +191,7 @@ public class ShoesService {
                 .basePrice(shoes.getBasePrice() != null ? shoes.getBasePrice() : BigDecimal.ZERO)
                 .description(shoes.getDescription())
                 .category(categoryName)
+                .categoryId(categoryId)
                 .type(shoes.getType() != null ? shoes.getType().name() : null)
                 .collection(shoes.getCollection())
                 .imageUrls(imageUrls)
