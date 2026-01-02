@@ -1,78 +1,43 @@
 @startuml ViewShoeList_Collaboration
 !theme plain
 
-title Collaboration Diagram: View Product List (Optimized)
+title View Shoe List
 
-actor "User" as user
-boundary ":shoes-list.html\n(Thymeleaf)" as view
-control ":ShoesController" as controller
-control ":ShoesService" as service
-entity ":ShoesRepository" as repo
-entity ":ShoesVariantRepository" as varRepo
-database ":PostgreSQL" as db
+actor "Registered Customer\nUnregistered Customer" as user
+rectangle ":ShoeListUI" as ui
+rectangle ":ShoesController" as controller
+rectangle ":ShoesService" as service
+rectangle ":ShoesRepository" as repo
+database "Database" as db
 
-' User interactions
-user -right-> view: 1. Access /
-user -right-> view: Click page navigation
+user -right-> ui: 1: Truy cap trang chu
 
-' View to Controller
-view -right-> controller: 2. GET / (page, size)
-view -right-> controller: Forward request
+ui -right-> controller: 1.1: GET /(page, size)
 
-' Controller to Service
-controller -down-> service: 3. getShoesList(page, size)
-note on link
-  Convert page to 0-based index
-  Create Pageable object
-end note
+controller -down-> service: 1.1.1: getShoesList(page, size)
 
-' Service to Repository - Main query
-service -down-> repo: 4. findAll(pageable)
-note on link
-  Query products with JOIN FETCH
-  Load images in same query
-end note
+service -down-> repo: 1.1.1.1: findAllPaged(pageable)
 
-' Service to VariantRepo - Batch query
-service -down-> varRepo: 5. getAllStocksByIds(List<Long>)
-note on link
-  ✅ NEW: Batch load all stocks
-  Returns Map<Long, Integer>
-end note
+repo -down-> db: SELECT s FROM Shoes s
 
-' Repositories to Database
-repo -down-> db: Query #1: SELECT DISTINCT s\nLEFT JOIN FETCH images
-varRepo -down-> db: Query #2: SELECT shoes_id,\nSUM(stock) GROUP BY
+db -up-> repo: Page<Shoes>
 
-' Database returns data
-db -up-> repo: Page<Shoes> (12 products)
-db -up-> varRepo: Map<Long, Integer> (stock data)
+repo -up-> service: 1.1.1.2: Page<Shoes>
 
-' Return path
-repo -up-> service: Shoes entities with images
-varRepo -up-> service: Stock map for all products
+service -down-> repo: 1.1.1.3: findAllByIdsWithImages(shoeIds)
 
-' Service processing
-service -right-> service: 6. Loop 12 products\nconvertToSummaryDto()\nwith Map lookup (NO DB)
-note on link
-  ✅ KEY: In-memory Map.get()\n  NO additional queries!
-end note
+repo -down-> db: SELECT DISTINCT s\nLEFT JOIN FETCH s.images\nWHERE s.shoeId IN ids
 
-' Return to Controller
-service -up-> controller: 7. Return ShoesListDto
+db -up-> repo: List<Shoes>
 
-' Controller to View
-controller -up-> view: 8. model.addAttribute()\nproducts, pagination
+repo -up-> service: List<Shoes> with images
 
-' View to User
-view -up-> user: 9. Render shoes-list.html\nwith product cards
+service -right-> service: 1.1.1.4: convertToSummaryDto(shoes)
 
-note over user, db
-    🟢 OPTIMIZATIONS:
-    • Batch stock loading: 1 query for all products
-    • Join fetch: Images loaded with products
-    • No N+1 problem: In-memory lookup
-    • Total queries: 2 (was 13)
-end note
+service -up-> controller: 1.1.2: ShoesListDto
+
+controller -up-> ui: 1.2: render(model)
+
+ui -up-> user: Hien thi giao dien danh sach
 
 @enduml

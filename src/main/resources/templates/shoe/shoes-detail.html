@@ -150,17 +150,21 @@
                             </button>
                         </div>
 
-                        <button type="submit" class="btn-add-cart">
+                        <button type="submit" class="btn-add-cart"
+                                th:disabled="${product.totalStock <= 0}"
+                                th:classappend="${product.totalStock <= 0} ? 'disabled'">
                             <i class="fas fa-shopping-bag me-2"></i>
-                            Thêm vào giỏ
+                            <span th:text="${product.totalStock <= 0} ? 'Hết hàng' : 'Thêm vào giỏ'">Thêm vào giỏ</span>
                         </button>
                     </div>
                 </form>
 
                 <!-- Nút Mua Ngay -->
-                <button type="button" class="btn-buy-now mt-3" onclick="buyNow()">
+                <button type="button" class="btn-buy-now mt-3" onclick="buyNow()"
+                        th:disabled="${product.totalStock <= 0}"
+                        th:classappend="${product.totalStock <= 0} ? 'disabled'">
                     <i class="fas fa-bolt me-2"></i>
-                    Mua Ngay
+                    <span th:text="${product.totalStock <= 0} ? 'Hết hàng' : 'Mua Ngay'">Mua Ngay</span>
                 </button>
 
                 <div class="product-details-section">
@@ -394,12 +398,20 @@
         updateStockDisplay(null);
     }
     
+    // Biến lưu stock của variant đang chọn
+    let currentStock = 10;
+    
     /**
      * Xử lý khi người dùng chọn size
      */
     function onSizeSelected(variantId, stock) {
         selectedVariantId = variantId;
         document.getElementById('selectedVariantId').value = variantId;
+        currentStock = stock || 10; // Lưu stock để giới hạn quantity
+        
+        // Reset quantity về 1 khi đổi size
+        document.getElementById('quantity').value = 1;
+        
         updateStockDisplay(stock);
     }
     
@@ -426,8 +438,12 @@
 
     function increaseQty() {
         const input = document.getElementById('quantity');
-        if (parseInt(input.value) < 10) 
-        input.value = parseInt(input.value) + 1;
+        const currentQty = parseInt(input.value);
+        // Giới hạn theo stock (tối đa 10 hoặc stock, chọn cái nhỏ hơn)
+        const maxQty = Math.min(currentStock, 10);
+        if (currentQty < maxQty) {
+            input.value = currentQty + 1;
+        }
     }
 
     function decreaseQty() {
