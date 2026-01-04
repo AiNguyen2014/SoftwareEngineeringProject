@@ -30,15 +30,20 @@ public class CustomerPromotionController {
      * Hiển thị trang danh sách vouchers khả dụng cho customer
      */
     @GetMapping
-    public String listVouchers(HttpSession session, Model model) {
-        Long userId = (Long) session.getAttribute("USER_ID");
-        
+    public String listVouchers(
+            @RequestParam(value = "returnUrl", required = false) String returnUrl,
+            HttpSession session,
+            Model model) {
         // Lấy tất cả vouchers đang hoạt động (không filter theo minOrderValue)
         // để customer có thể xem tất cả vouchers hiện có
         List<Voucher> allVouchers = customerPromotionService.getAllActiveVouchers();
-        
         model.addAttribute("vouchers", allVouchers);
         model.addAttribute("pageTitle", "Mã giảm giá");
+
+        // Tính backUrl an toàn: nếu returnUrl rỗng/null thì về trang chủ
+        String backUrl = (returnUrl != null && !returnUrl.isBlank()) ? returnUrl : "/";
+        model.addAttribute("backUrl", backUrl);
+        model.addAttribute("backLabel", backUrl.equals("/") ? "Quay lại trang chủ" : "Quay lại trang trước");
         
         return "user/voucher-list";
     }

@@ -26,7 +26,6 @@ public class PromotionAdminController {
     private final PromotionService promotionService;
     private final ShoesRepository shoesRepository;
     private final CategoryRepository categoryRepository;
-    private final PromotionTargetRepository promotionTargetRepository;
 
     /* ===== Campaign ===== */
     @GetMapping("/campaigns")

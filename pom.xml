@@ -127,6 +127,9 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <mainClass>ecommerce.shoestore.BackendApplication</mainClass>
+                    <jvmArguments>
+                        -Xms96m -Xmx192m -XX:+UseSerialGC -XX:MaxMetaspaceSize=192m -XX:ReservedCodeCacheSize=32m
+                    </jvmArguments>
                 </configuration>
             </plugin>
         </plugins>

@@ -215,6 +215,14 @@
 <div th:replace="~{fragments :: header}"></div>
 
 <div class="voucher-page">
+    <!-- Back button -->
+    <div style="margin-bottom: 20px;">
+        <a th:href="@{/}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i>
+            Quay lại trang chủ
+        </a>
+    </div>
+    
     <div class="voucher-header">
         <h1>🎁 Mã giảm giá</h1>
         <p>Sử dụng mã giảm giá để tiết kiệm chi phí khi mua hàng</p>
@@ -255,9 +263,10 @@
                     
                     <div class="voucher-detail-item" th:if="${voucher.maxDiscountValue != null}">
                         <strong>Giảm tối đa:</strong>
-                        <span>
+                        <span th:if="${voucher.maxDiscountValue > 0}">
                             <span th:text="${#numbers.formatDecimal(voucher.maxDiscountValue, 0, 'COMMA', 0, 'POINT')}">50,000</span>₫
                         </span>
+                        <span th:if="${voucher.maxDiscountValue <= 0}">Không giới hạn</span>
                     </div>
                     
                     <div class="voucher-detail-item" th:if="${voucher.maxRedeemPerCustomer != null}">

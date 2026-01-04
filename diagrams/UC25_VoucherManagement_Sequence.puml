@@ -1,0 +1,151 @@
+@startuml UC25_CreateVoucher_Sequence
+title UC25: Tạo Voucher mới (Create Voucher)
+
+actor Admin
+participant "PromotionAdminController" as Controller
+participant "PromotionService" as Service
+participant "VoucherRepository" as VoucherRepo
+participant "PromotionCampaignRepository" as CampaignRepo
+database "Database" as DB
+
+Admin -> Controller: POST /admin/promotions/vouchers/create\n(VoucherForm)
+activate Controller
+
+Controller -> Controller: Validate form data\n(code, dates, discountValue > 0)
+
+Controller -> Service: saveVoucher(form)
+activate Service
+
+Service -> VoucherRepo: existsByCode(code)
+activate VoucherRepo
+VoucherRepo -> DB: SELECT EXISTS(SELECT 1 FROM voucher\nWHERE code = ?)
+DB --> VoucherRepo: false
+VoucherRepo --> Service: false
+deactivate VoucherRepo
+
+Service -> CampaignRepo: findById(campaignId)
+activate CampaignRepo
+CampaignRepo -> DB: SELECT * FROM promotion_campaign\nWHERE campaign_id = ?
+CampaignRepo --> Service: PromotionCampaign
+deactivate CampaignRepo
+
+Service -> Service: validateVoucherDatesWithinCampaign()
+note right
+  Check:
+  - voucherStartDate >= campaignStartDate
+  - voucherEndDate <= campaignEndDate
+  
+  If validation fails:
+  throw Exception("Ngày voucher phải nằm trong chiến dịch")
+end note
+
+Service -> Service: Apply fallback for null values
+note right
+  if (maxDiscountValue == null) {
+    maxDiscountValue = campaign.maxDiscountAmount ?? 0
+  }
+  if (minOrderValue == null) {
+    minOrderValue = campaign.minOrderValue ?? 0
+  }
+end note
+
+Service -> VoucherRepo: save(voucher)
+activate VoucherRepo
+VoucherRepo -> DB: INSERT INTO voucher\n(code, title, description, campaign_id,\ndiscount_type, discount_value,\nmax_discount_value, min_order_value,\nstart_date, end_date,\nmax_redeem_per_customer, enabled)
+DB --> VoucherRepo: Voucher entity
+VoucherRepo --> Service: Saved Voucher
+deactivate VoucherRepo
+
+Service --> Controller: Voucher
+deactivate Service
+
+Controller --> Admin: Redirect to /admin/promotions/vouchers/{id}\n(Success message)
+deactivate Controller
+
+@enduml
+
+@startuml UC25_UpdateVoucher_Sequence
+title UC25: Cập nhật Voucher (Update Voucher)
+
+actor Admin
+participant "PromotionAdminController" as Controller
+participant "PromotionService" as Service
+participant "VoucherRepository" as VoucherRepo
+participant "PromotionCampaignRepository" as CampaignRepo
+database "Database" as DB
+
+Admin -> Controller: POST /admin/promotions/vouchers/{id}/edit\n(VoucherForm)
+activate Controller
+
+Controller -> Service: saveVoucher(form)
+activate Service
+
+Service -> VoucherRepo: findByIdWithCampaign(voucherId)
+activate VoucherRepo
+VoucherRepo -> DB: SELECT v.*, c.*\nFROM voucher v\nJOIN promotion_campaign c ON v.campaign_id = c.campaign_id\nWHERE v.voucher_id = ?
+VoucherRepo --> Service: Existing Voucher with Campaign
+deactivate VoucherRepo
+
+Service -> Service: Check code uniqueness\n(if code changed)
+alt code changed
+    Service -> VoucherRepo: existsByCode(newCode)
+    activate VoucherRepo
+    VoucherRepo -> DB: SELECT EXISTS(SELECT 1 FROM voucher\nWHERE code = ?)
+    VoucherRepo --> Service: boolean
+    deactivate VoucherRepo
+end
+
+Service -> Service: validateVoucherDatesWithinCampaign()
+
+Service -> Service: Update voucher properties
+
+Service -> VoucherRepo: save(voucher)
+activate VoucherRepo
+VoucherRepo -> DB: UPDATE voucher SET\ncode = ?, title = ?, description = ?,\ndiscount_type = ?, discount_value = ?,\nmax_discount_value = ?, min_order_value = ?,\nstart_date = ?, end_date = ?,\nmax_redeem_per_customer = ?, enabled = ?\nWHERE voucher_id = ?
+VoucherRepo --> Service: Updated Voucher
+deactivate VoucherRepo
+
+Service --> Controller: Voucher
+deactivate Service
+
+Controller --> Admin: Redirect to /admin/promotions/vouchers/{id}\n(Success message)
+deactivate Controller
+
+@enduml
+
+@startuml UC25_ToggleVoucher_Sequence
+title UC25: Bật/Tắt Voucher (Toggle Voucher)
+
+actor Admin
+participant "PromotionAdminController" as Controller
+participant "PromotionService" as Service
+participant "VoucherRepository" as VoucherRepo
+database "Database" as DB
+
+Admin -> Controller: POST /admin/promotions/vouchers/{id}/toggle
+activate Controller
+
+Controller -> Service: toggleVoucherEnabled(voucherId)
+activate Service
+
+Service -> VoucherRepo: findById(voucherId)
+activate VoucherRepo
+VoucherRepo -> DB: SELECT * FROM voucher\nWHERE voucher_id = ?
+VoucherRepo --> Service: Voucher
+deactivate VoucherRepo
+
+Service -> Service: Toggle enabled\n(true → false, false → true)
+
+Service -> VoucherRepo: save(voucher)
+activate VoucherRepo
+VoucherRepo -> DB: UPDATE voucher SET enabled = ?\nWHERE voucher_id = ?
+VoucherRepo --> Service: Updated Voucher
+deactivate VoucherRepo
+
+Service --> Controller: void
+deactivate Service
+
+Controller --> Admin: Redirect back\n(Success message)
+deactivate Controller
+
+@enduml

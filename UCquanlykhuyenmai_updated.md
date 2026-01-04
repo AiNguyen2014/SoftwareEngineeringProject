@@ -96,6 +96,14 @@ Trạng thái hiệu lực (Status) được tự động tính toán dựa trê
    - Lưu đối tượng áp dụng mới (như bước 2.6)
    - Tính toán lại trạng thái hiệu lực
    - Cập nhật thông tin chiến dịch
+   - **Tự động điều chỉnh các voucher liên kết:**
+     - Nếu ngày voucher nằm ngoài phạm vi campaign mới → điều chỉnh về ngày campaign
+     - Nếu ngày voucher không hợp lệ (start > end) → tắt voucher (enabled = false)
+     - Đồng bộ quy tắc giảm giá từ campaign sang voucher:
+       - discountType
+       - discountValue
+       - maxDiscountAmount (nếu campaign có)
+       - minOrderValue (nếu campaign có)
 7. Hệ thống hiển thị thông báo "Lưu chiến dịch thành công" và redirect về danh sách.
 
 ### 4. Bật/Tắt trạng thái chiến dịch
@@ -168,7 +176,10 @@ Admin quản lý danh sách voucher: xem/tìm kiếm/lọc, xem chi tiết, tạ
 Voucher là mã khuyến mãi cụ thể để khách hàng nhập khi đặt hàng. Mỗi voucher:
 - Thuộc về một chiến dịch (Campaign)
 - Có các thông tin riêng: Mã, Tiêu đề, Mô tả, Thời gian hiệu lực, Số lần sử dụng tối đa/khách hàng
-- Có quy tắc giảm giá riêng (discount type, value, max, min) độc lập với campaign
+- Có quy tắc giảm giá (discount type, value, max, min) có thể:
+  - Nhập riêng độc lập với campaign, HOẶC
+  - Kế thừa từ campaign nếu không nhập (fallback)
+  - Được tự động cập nhật khi campaign thay đổi quy tắc giảm giá
 
 ## Pre-Conditions
 - Admin đã đăng nhập và có quyền quản trị khuyến mãi.
@@ -207,10 +218,10 @@ Voucher là mã khuyến mãi cụ thể để khách hàng nhập khi đặt h�
    - Chiến dịch* (dropdown, bắt buộc)
    - Loại giảm giá* (PERCENTAGE/FIXED_AMOUNT)
    - Giá trị giảm* (> 0)
-   - Mức giảm tối đa
-   - Giá trị đơn hàng tối thiểu
-   - Ngày bắt đầu* (bắt buộc)
-   - Ngày kết thúc* (bắt buộc)
+   - Mức giảm tối đa (nếu không nhập, fallback từ campaign hoặc = 0)
+   - Giá trị đơn hàng tối thiểu (nếu không nhập, fallback từ campaign hoặc = 0)
+   - Ngày bắt đầu* (bắt buộc, phải >= ngày bắt đầu campaign)
+   - Ngày kết thúc* (bắt buộc, phải <= ngày kết thúc campaign)
    - Số lần sử dụng tối đa/khách hàng
    - Trạng thái bật/tắt (mặc định: Bật)
 3. Admin nhập thông tin và nhấn **Lưu**.
@@ -219,9 +230,13 @@ Voucher là mã khuyến mãi cụ thể để khách hàng nhập khi đặt h�
    - Mã voucher chưa tồn tại (unique check: `voucherRepository.existsByCode`)
    - Giá trị giảm > 0
    - Ngày kết thúc >= ngày bắt đầu
+   - Ngày voucher phải nằm trong phạm vi ngày campaign
    - Campaign tồn tại
 5. Nếu hợp lệ:
    - Trim code và title
+   - Áp dụng fallback cho maxDiscountValue và minOrderValue:
+     - Nếu không nhập, lấy từ campaign
+     - Nếu campaign cũng không có, mặc định = 0
    - Lưu voucher với enabled = true, liên kết với campaign
 6. Hệ thống hiển thị thông báo "Lưu voucher thành công" và redirect về danh sách.
 
@@ -289,12 +304,19 @@ Voucher là mã khuyến mãi cụ thể để khách hàng nhập khi đặt h�
 - Hệ thống throw exception: "Không tìm thấy chiến dịch".
 - Hiển thị error message, giữ nguyên form.
 
-### EF4. Không thể xóa do voucher đã được sử dụng (khi implement)
+### EF4. Ngày voucher nằm ngoài phạm vi campaign
+- Khi ngày bắt đầu voucher < ngày bắt đầu campaign:
+  - Hệ thống throw exception: "Ngày bắt đầu voucher ({voucherStart}) không được trước ngày bắt đầu chiến dịch ({campaignStart}). Voucher chỉ có thể hoạt động trong phạm vi thời gian của chiến dịch."
+- Khi ngày kết thúc voucher > ngày kết thúc campaign:
+  - Hệ thống throw exception: "Ngày kết thúc voucher ({voucherEnd}) không được sau ngày kết thúc chiến dịch ({campaignEnd}). Voucher chỉ có thể hoạt động trong phạm vi thời gian của chiến dịch."
+- Hiển thị error message, giữ nguyên form.
+
+### EF5. Không thể xóa do voucher đã được sử dụng (khi implement)
 - Khi voucher đã được sử dụng trong order (`orderVoucherRepository.existsByVoucher_VoucherId(id) == true`).
 - Hệ thống throw exception: "Voucher đã được sử dụng, không thể xóa".
 - Hiển thị error message, không thực hiện xóa.
 
-### EF5. Lỗi lưu dữ liệu
+### EF6. Lỗi lưu dữ liệu
 - Khi có exception trong quá trình save (database error, constraint violation, etc.).
 - Hệ thống log error và hiển thị thông báo lỗi chung.
 - Không lưu thay đổi, giữ nguyên form để admin thử lại.
