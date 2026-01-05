@@ -2,7 +2,7 @@ package ecommerce.shoestore.inventory;
 import ecommerce.shoestore.inventory.dto.InventoryResponseDto;
 import ecommerce.shoestore.inventory.dto.InventoryUpdateDto;
 import lombok.RequiredArgsConstructor;
-
+import org.springframework.http.ResponseEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -11,8 +11,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/admin/inventory")
@@ -47,7 +49,7 @@ public class InventoryController {
         model.addAttribute("activeMenu", "inventory");
         model.addAttribute("content", "admin/inventory/inventory-import :: import-form");
         model.addAttribute("pageTitle", "Nhập hàng mới");
-        return "admin/inventory/inventory-main";
+        return "admin/layout";
     }
 
     @PostMapping("/update")
@@ -75,6 +77,21 @@ public class InventoryController {
 
     public InventoryService getInventoryService() {
         return inventoryService;
+    }
+
+    @GetMapping("/api/variants/{shoeId}")
+    @ResponseBody
+    public ResponseEntity<List<Map<String, Object>>> getVariantsByShoeId(@PathVariable Long shoeId) {
+        List<Map<String, Object>> variants = inventoryService.getVariantsForDropdown(shoeId);
+        return ResponseEntity.ok(variants);
+    }
+    @PostMapping("/quick-update")
+    public String quickUpdateStock(@RequestParam Long variantId,
+                                  @RequestParam Long amount,
+                                  @RequestParam String type,
+                                  @RequestParam(required = false) String note) {
+        inventoryService.updateVariantStock(variantId, amount, type, note);
+        return "redirect:/admin/inventory";
     }
 }
 

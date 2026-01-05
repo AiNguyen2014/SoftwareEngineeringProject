@@ -3,6 +3,7 @@ import ecommerce.shoestore.inventory.dto.InventoryResponseDto;
 import ecommerce.shoestore.inventory.dto.InventoryUpdateDto;
 import ecommerce.shoestore.inventory.InventoryTransaction;
 import ecommerce.shoestore.shoes.ShoesRepository;
+import ecommerce.shoestore.shoesvariant.ShoesVariant;
 import ecommerce.shoestore.shoesvariant.ShoesVariantRepository;
 import ecommerce.shoestore.shoes.Shoes;
 import ecommerce.shoestore.order.OrderItem;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -135,5 +137,53 @@ public class InventoryService {
             }
         }
     }
-
+    public List<Map<String, Object>> getVariantsForDropdown(Long shoeId) {
+        return shoesVariantRepository.findByShoes_ShoeId(shoeId).stream()
+            .map(v -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("variantId", v.getVariantId());
+                // Hiển thị: Size 40 - Màu Trắng (Tồn: 10)
+                String label = String.format("Size %s - %s (Tồn: %d)", 
+                        v.getSize().name(), v.getColor().name(), v.getStock());
+                map.put("label", label);
+                return map;
+            })
+            .collect(Collectors.toList());
+    }
+    @Transactional
+    public void updateVariantStock(Long variantId, Long amount, String typeStr, String note){
+        ShoesVariant variant = shoesVariantRepository.findById(variantId)
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy biến thể giày với ID: " + variantId));
+        InventoryTransaction type = InventoryTransaction.valueOf(typeStr);
+        int currentStock = variant.getStock() != null ? variant.getStock() : 0;
+        int changeAmount = amount.intValue();
+        if (type == InventoryTransaction.IMPORT || type == InventoryTransaction.RETURN) {
+            variant.setStock(currentStock + changeAmount);
+        } else if (type == InventoryTransaction.EXPORT) {
+            if (currentStock < changeAmount) throw new RuntimeException("Không đủ hàng để xuất");
+            variant.setStock(currentStock - changeAmount);
+        }
+        shoesVariantRepository.save(variant);
+        syncInventoryFromVariant(variant.getShoes().getShoeId());
+    }
+    private void syncInventoryFromVariant(Long shoeId) {
+        // Gọi sang hàm chính với type và note là null
+        syncInventoryFromVariant(shoeId, null, null);
+    }
+    private void syncInventoryFromVariant(Long shoeId, InventoryTransaction type, String note) {
+        Inventory inventory = inventoryRepository.findByShoeId(shoeId).orElse(null);
+        if (inventory != null) {
+            Integer total = shoesVariantRepository.getTotalStockByShoeId(shoeId);
+            inventory.setQuantity(total != null ? total.longValue() : 0L);
+            inventory.setUpdateAt(LocalDateTime.now());
+            if (type != null) inventory.setType(type);
+            if (note != null && !note.isEmpty()) inventory.setNote(note);
+            // Cập nhật trạng thái
+            if (total <= 0) inventory.setStatus(InventoryStatus.OUT_OF_STOCK);
+            else if (total <= 5) inventory.setStatus(InventoryStatus.ALMOST_OUT_OF_STOCK);
+            else inventory.setStatus(InventoryStatus.IN_STOCK);
+            
+            inventoryRepository.save(inventory);
+        }
+    }
 }
