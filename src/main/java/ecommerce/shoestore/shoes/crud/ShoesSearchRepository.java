@@ -15,9 +15,6 @@ import java.util.List;
 @Repository
 public interface ShoesSearchRepository extends JpaRepository<Shoes, Long> {
 
-    /**
-     * Search + Sort theo keyword (tìm theo tên hoặc brand)
-     */
     @Query("""
         SELECT s FROM Shoes s
         WHERE s.name ILIKE CONCAT('%', :kw, '%')
@@ -28,9 +25,6 @@ public interface ShoesSearchRepository extends JpaRepository<Shoes, Long> {
             Pageable pageable
     );
 
-    /**
-     * Gợi ý search autocomplete
-     */
     @Query("""
         SELECT s.name
         FROM Shoes s
@@ -39,9 +33,7 @@ public interface ShoesSearchRepository extends JpaRepository<Shoes, Long> {
     """)
     List<String> findSuggestions(@Param("kw") String keyword);
 
-    /**
-     * Search và Filter với nhiều tiêu chí + Sort động
-     */
+
     @Query(value = """
         SELECT *
         FROM shoes s
@@ -86,9 +78,7 @@ public interface ShoesSearchRepository extends JpaRepository<Shoes, Long> {
             Pageable pageable
     );
 
-    /**
-     * Lấy danh sách brands (không filter theo type)
-     */
+
     @Query("""
         SELECT DISTINCT s.brand
         FROM Shoes s
@@ -96,9 +86,6 @@ public interface ShoesSearchRepository extends JpaRepository<Shoes, Long> {
     """)
     List<String> findDistinctBrands();
 
-    /**
-     * Lấy danh sách brands theo type
-     */
     @Query("""
         SELECT DISTINCT s.brand
         FROM Shoes s
@@ -107,9 +94,6 @@ public interface ShoesSearchRepository extends JpaRepository<Shoes, Long> {
     """)
     List<String> findDistinctBrandsByType(@Param("type") ShoesType type);
 
-    /**
-     * Tìm sản phẩm bán chạy nhất (sort theo số lượng bán)
-     */
     @Query(value = """
             SELECT s.*
             FROM shoes s
