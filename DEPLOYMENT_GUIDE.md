@@ -70,7 +70,7 @@ SPRING_PROFILES_ACTIVE=prod
 DATABASE_URL=jdbc:postgresql://aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require&prepareThreshold=0
 DATABASE_USERNAME=postgres.qouzchgauycrjclcdfta
 DATABASE_PASSWORD=Shoestorewebsite
-
+postgresql://postgres.qouzchgauycrjclcdfta:[YOUR-PASSWORD]@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres
 # Email
 MAIL_USERNAME=webshoestore17@gmail.com
 MAIL_PASSWORD=quziuvvngrwrjzkp
@@ -163,7 +163,7 @@ heroku config:set CLOUDINARY_API_SECRET=YPvKEOV7wpZ9sD3vVFcw08yS-7w
 heroku config:set VNPAY_TMN_CODE=YZ312VU8
 heroku config:set VNPAY_HASH_SECRET=X4U66DPG2T18ZYWPBSUNOABBP1JFZBF6
 ```
-
+postgresql://postgres.qouzchgauycrjclcdfta:[YOUR-PASSWORD]@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres
 #### Bước 4: Deploy
 ```bash
 git push heroku main

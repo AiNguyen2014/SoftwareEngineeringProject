@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 /**
@@ -32,10 +34,22 @@ public class ShoesService {
      */
     @Transactional(readOnly = true)
     public ShoesListDto getShoesList(int page, int size) {
+        // Validate page: nếu < 1 thì mặc định về 1
+        if (page < 1) {
+            page = 1;
+        }
         Pageable pageable = PageRequest.of(page - 1, size);
 
         // Bước 1: Lấy danh sách ID (có phân trang, không bị lặp)
         Page<Shoes> shoesPage = shoesRepository.findAllPaged(pageable);
+
+        // Validate: nếu page > totalPages, chuyển về trang cuối
+        int totalPages = shoesPage.getTotalPages();
+        if (totalPages > 0 && page > totalPages) {
+            page = totalPages;
+            pageable = PageRequest.of(page - 1, size);
+            shoesPage = shoesRepository.findAllPaged(pageable);
+        }
 
         // Bước 2: Lấy danh sách ID từ kết quả
         List<Long> shoeIds = new ArrayList<>();
@@ -45,8 +59,24 @@ public class ShoesService {
 
         // Bước 3: Lấy chi tiết giày theo IDs (chỉ kèm images)
         List<Shoes> shoesList = new ArrayList<>();
+        Map<Long, Shoes> shoesWithVariantsMap = new HashMap<>();
+        
         if (!shoeIds.isEmpty()) {
             shoesList = shoesRepository.findAllByIdsWithImages(shoeIds);
+            
+            // Lấy variants riêng để tính stock (query riêng tránh tích Descartes)
+            List<Shoes> shoesWithVariants = shoesRepository.findAllByIdsWithVariants(shoeIds);
+            for (Shoes s : shoesWithVariants) {
+                shoesWithVariantsMap.put(s.getShoeId(), s);
+            }
+            
+            // Merge variants vào shoesList
+            for (Shoes s : shoesList) {
+                Shoes withVariants = shoesWithVariantsMap.get(s.getShoeId());
+                if (withVariants != null) {
+                    s.setVariants(withVariants.getVariants());
+                }
+            }
             
             // Sắp xếp lại theo thứ tự của shoeIds (vì database không đảm bảo thứ tự)
             List<Shoes> sortedList = new ArrayList<>();
@@ -114,8 +144,22 @@ public class ShoesService {
             }
         }
 
-        // Không cần tính stock cho trang danh sách (đơn giản hóa)
-        int totalStock = 1; // Mặc định là còn hàng
+        // Tính tổng stock thực tế từ variants
+        int totalStock = 0;
+        if (shoes.getVariants() != null) {
+            for (ShoesVariant variant : shoes.getVariants()) {
+                if (variant.getStock() != null) {
+                    totalStock += variant.getStock();
+                }
+            }
+        }
+
+        // Kiểm tra sản phẩm mới (trong vòng 14 ngày)
+        boolean isNew = false;
+        if (shoes.getCreatedAt() != null) {
+            long daysSinceCreated = ChronoUnit.DAYS.between(shoes.getCreatedAt(), OffsetDateTime.now());
+            isNew = daysSinceCreated <= 14;
+        }
 
         return ShoesSummaryDto.builder()
                 .shoeId(shoes.getShoeId())
@@ -124,6 +168,7 @@ public class ShoesService {
                 .price(shoes.getBasePrice() != null ? shoes.getBasePrice() : BigDecimal.ZERO)
                 .thumbnailUrl(thumbnailUrl)
                 .outOfStock(totalStock <= 0)
+                .isNew(isNew)
                 .type(shoes.getType() != null ? shoes.getType().name() : null)
                 .build();
     }

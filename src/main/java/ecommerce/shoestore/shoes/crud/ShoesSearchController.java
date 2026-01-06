@@ -49,6 +49,11 @@ public class ShoesSearchController {
             @RequestParam(defaultValue = "12") int size,
             Model model
     ) {
+        // Validate page: nếu < 1 thì chuyển về trang 1
+        if (page < 1) {
+            page = 1;
+        }
+
         ShoesType shoesType = parseGender(gender);
 
         // Hiển thị tất cả category (kể cả chưa có sản phẩm)

@@ -6,7 +6,10 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Global exception handler cho toàn bộ application
@@ -16,6 +19,25 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 @Slf4j
 
 public class GlobalExceptionHandler {
+
+    /**
+     * Xử lý lỗi tham số không hợp lệ (ví dụ: ?page=abc)
+     * Redirect về trang 1 theo SRS Exception E1
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public String handleTypeMismatch(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
+        String paramName = ex.getName();
+        log.warn("Invalid parameter '{}': {} - redirecting to page 1", paramName, ex.getValue());
+        
+        // Nếu lỗi ở tham số page, redirect về page=1
+        if ("page".equals(paramName)) {
+            String uri = request.getRequestURI();
+            return "redirect:" + uri + "?page=1";
+        }
+        
+        // Các tham số khác, redirect về trang chủ
+        return "redirect:/";
+    }
 
     /**
      * Xử lý NotFoundException

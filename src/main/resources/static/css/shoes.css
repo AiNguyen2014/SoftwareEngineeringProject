@@ -485,6 +485,144 @@
     cursor: not-allowed;
 }
 
+/* ============================================
+   VARIANT FORM - Pure CSS Show/Hide
+   ============================================ */
+
+/* Hide color radio inputs (use label for styling) */
+.color-radio {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* Color selector layout */
+.color-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+/* Hide all size containers by default */
+.size-container {
+    display: none;
+}
+
+/* Hide notice when any color is selected */
+.variant-form:has(.color-radio:checked) .select-color-notice {
+    display: none;
+}
+
+/* Show size container when corresponding color is checked */
+.variant-form:has(#color-0:checked) .size-container[data-color-index="0"],
+.variant-form:has(#color-1:checked) .size-container[data-color-index="1"],
+.variant-form:has(#color-2:checked) .size-container[data-color-index="2"],
+.variant-form:has(#color-3:checked) .size-container[data-color-index="3"],
+.variant-form:has(#color-4:checked) .size-container[data-color-index="4"],
+.variant-form:has(#color-5:checked) .size-container[data-color-index="5"] {
+    display: block;
+}
+
+/* Style for selected color */
+.color-radio:checked + .color-item span {
+    border-color: var(--primary-blue);
+    background: var(--primary-blue);
+    color: white;
+    box-shadow: 0 4px 12px rgba(0,102,204,0.3);
+    transform: translateY(-2px);
+}
+
+/* Notice styling */
+.select-color-notice {
+    font-size: 0.9rem;
+    padding: 15px 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin: 0;
+    color: #666;
+}
+
+/* ============================================
+   VARIANT GRID - Thuần HTML/Thymeleaf
+   ============================================ */
+.variant-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+}
+
+.variant-item {
+    cursor: pointer;
+}
+
+.variant-item input {
+    display: none;
+}
+
+.variant-item .variant-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 10px;
+    border: 2px solid var(--border-color);
+    background: white;
+    border-radius: 10px;
+    transition: var(--transition);
+    text-align: center;
+    min-height: 80px;
+}
+
+.variant-item .variant-color {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--text-dark);
+    text-transform: uppercase;
+}
+
+.variant-item .variant-size {
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 3px;
+}
+
+.variant-item .variant-stock {
+    font-size: 0.7rem;
+    color: #28a745;
+    margin-top: 4px;
+}
+
+.variant-item input:checked + .variant-label {
+    border-color: var(--primary-blue);
+    background: var(--primary-blue);
+    box-shadow: 0 4px 12px rgba(0,102,204,0.3);
+    transform: translateY(-2px);
+}
+
+.variant-item input:checked + .variant-label .variant-color,
+.variant-item input:checked + .variant-label .variant-size {
+    color: white;
+}
+
+.variant-item input:checked + .variant-label .variant-stock {
+    color: rgba(255,255,255,0.9);
+}
+
+.variant-item .variant-label:hover {
+    border-color: var(--primary-blue);
+}
+
+.variant-item.out-of-stock .variant-label {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f5f5f5;
+}
+
+.variant-item.out-of-stock .variant-label:hover {
+    border-color: var(--border-color);
+}
+
 /* Select color first message */
 #selectColorFirst {
     font-size: 0.9rem;

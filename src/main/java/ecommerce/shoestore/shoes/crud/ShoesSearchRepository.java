@@ -128,4 +128,15 @@ public interface ShoesSearchRepository extends JpaRepository<Shoes, Long> {
             @Param("maxPrice") BigDecimal maxPrice,
             Pageable pageable
     );
+
+    /**
+     * Lấy tổng stock cho danh sách shoe IDs
+     */
+    @Query(value = """
+            SELECT sv."shoeId", COALESCE(SUM(sv.stock), 0) as totalStock
+            FROM shoes_variant sv
+            WHERE sv."shoeId" IN :shoeIds
+            GROUP BY sv."shoeId"
+            """, nativeQuery = true)
+    List<Object[]> findStockByShoeIds(@Param("shoeIds") List<Long> shoeIds);
 }

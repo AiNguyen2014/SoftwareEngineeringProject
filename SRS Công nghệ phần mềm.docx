@@ -1,0 +1,194 @@
+1.1 View Product List - Xem danh sách sản phẩm
+[20]
+View Shoe List
+Actor
+Registered Customer, Unregistered Customer.
+Trigger
+Actor truy cập trang chủ hoặc trang danh sách sản phẩm trên giao diện chính.
+Description
+Use case này cho phép Actor xem danh sách sản phẩm giày với thông tin cơ bản (hình ảnh, tên, thương hiệu, giá, trạng thái kho) và có phân trang.
+Pre-Conditions
+Không có
+Post-Conditions
+Danh sách sản phẩm được hiển thị trên giao diện tương ứng với số trang được chọn.
+Main Flow
+Hệ thống nhận yêu cầu xem danh sách từ Actor.
+Hệ thống kiểm tra Session.
+Hệ thống truy vấn danh sách sản phẩm từ Database theo phân trang.
+Hệ thống xử lý dữ liệu cho từng sản phẩm:
+4.1. Xác định ảnh đại diện (ưu tiên ảnh thumbnail, nếu không có thì lấy ảnh đầu tiên).
+4.2. Kiểm tra trạng thái "Sản phẩm mới" (Sản phẩm được tạo trong vòng 14 ngày).
+4.3. Xác định trạng thái tồn kho để hiển thị nhãn "Hết hàng" nếu cần.
+Hệ thống hiển thị giao diện danh sách gồm:
+Banner quảng cáo chính (Hero Banner) với tiêu đề và nút "Mua Ngay".
+Danh sách thẻ sản phẩm: Ảnh đại diện, Tên, Thương hiệu, Giá, Nhãn "New", Nhãn "Hết hàng" (nếu có).
+Thanh phân trang: Các nút số trang, nút Trước/Sau.
+Actor có thể thực hiện:
+6.A. Xem danh sách sản phẩm.
+6.B. Nhấn vào sản phẩm
+6.B.1. Hệ thống sẽ thực hiện Use case "View Product Detail".
+6.C. Nhấn vào số trang khác
+6.C.1. Hệ thống tải lại danh sách của trang đó (Quay lại bước 3).
+6.D. Nhấn nút Previous (Trước):
+6.D.1. Hệ thống chuyển về trang trước đó (Quay lại bước 3).
+6.E. Nhấn nút Next (Sau):
+6.E.1. Hệ thống chuyển sang trang tiếp theo (Quay lại bước 3).
+Alternate Flow
+2.1. Nếu trang hiện tại không có sản phẩm nào, hệ thống hiển thị thông báo "Chưa có sản phẩm nào" và danh sách trống.
+Exception Flow
+E1. Lỗi tham số trang: Actor cố tình nhập số trang âm, bằng 0, hoặc chữ cái trên URL. Hệ thống tự động điều hướng về trang 1.
+E2. Lỗi kết nối Database: Hệ thống hiển thị trang lỗi "Không thể tải dữ liệu, vui lòng thử lại sau".
+
+4.1.21 View Product Detail (Xem chi tiết sản phẩm)
+
+[21]
+View Product Detail
+Actor
+Registered Customer, Unregistered Customer.
+Trigger
+Actor nhấn chọn một sản phẩm được hiển thị từ danh sách sản phẩm giày trên website.
+Description
+Use case này hiển thị thông tin chi tiết (hình ảnh, giá, mô tả, các tùy chọn size/màu, tồn kho) của sản phẩm mà Actor đã chọn và danh sách sản phẩm tương tự.
+Pre-Conditions
+Actor đã xem được danh sách sản phẩm hoặc truy cập trực tiếp URL sản phẩm.
+Post-Conditions
+Actor xem được các thông tin chi tiết và có thể chọn biến thể để thêm vào giỏ hàng hoặc mua ngay.
+Main Flow
+Hệ thống nhận yêu cầu xem chi tiết với tham số shoeId.
+Hệ thống truy vấn thông tin chi tiết sản phẩm:
+2.1. Thông tin chung (tên, thương hiệu, giá, mô tả, phân loại).
+2.2. Danh sách hình ảnh (Gallery).
+2.3. Danh sách biến thể Size/Màu và tồn kho của từng biến thể.
+2.4. Tính tổng tồn kho từ tất cả các biến thể.
+Hệ thống truy vấn danh sách sản phẩm liên quan (Cùng Category, tối đa 5 sản phẩm).
+Hệ thống truy vấn danh sách đánh giá từ khách hàng (Reviews) và tính điểm trung bình.
+Hệ thống truy vấn các chương trình khuyến mãi đang áp dụng cho sản phẩm này (nếu có).
+Hệ thống hiển thị giao diện chi tiết gồm:
+Gallery ảnh: Ảnh lớn chính và danh sách ảnh nhỏ để chuyển đổi.
+Thông tin sản phẩm: Thương hiệu, Tên, Giá, Phân loại (Nam/Nữ/Unisex).
+Khuyến mãi đang áp dụng (nếu có): Badge giảm giá và tên chương trình.
+Trạng thái kho: Hiển thị "Còn X sản phẩm" hoặc "Hết hàng".
+Bộ chọn biến thể: Selector chọn Màu sắc và Size.
+Chọn số lượng: Input với nút tăng/giảm (Min = 1, Max = 10).
+Nút hành động: "Thêm vào giỏ hàng" và "Mua Ngay".
+Thông tin bổ sung: Mô tả chi tiết, Thông tin thương hiệu, Bộ sưu tập.
+Section đánh giá: Danh sách reviews từ khách hàng và điểm trung bình.
+Sản phẩm tương tự: Danh sách 5 sản phẩm cùng danh mục.
+Actor xem thông tin và thao tác trên giao diện:
+7.A. Chọn màu sắc:
+7.A.1. Hệ thống highlight màu được chọn.
+7.A.2. Hệ thống hiển thị danh sách size tương ứng với màu đã chọn.
+7.A.3. Hệ thống ẩn thông báo "Vui lòng chọn màu sắc trước".
+7.B. Chọn size:
+7.B.1. Hệ thống highlight size được chọn.
+7.B.2. Hệ thống cập nhật hiển thị tồn kho theo biến thể được chọn.
+7.B.3. Hệ thống reset số lượng về 1.
+7.C. Điều chỉnh số lượng muốn mua:
+7.C.1. Actor nhấn nút tăng (+) hoặc giảm (-).
+7.C.2. Hệ thống kiểm tra giới hạn (Min = 1, Max = min(10, tồn kho)).
+7.C.3. Hệ thống cập nhật hiển thị số lượng.
+7.D. Nhấn nút "Thêm vào giỏ hàng":
+7.D.1. Hệ thống kiểm tra Actor đã chọn đầy đủ màu và size chưa.
+7.D.2. Hệ thống kiểm tra số lượng hợp lệ.
+7.D.3. Hệ thống thực hiện Use case "Manage Cart".
+7.E. Nhấn nút "Mua Ngay":
+7.E.1. Hệ thống kiểm tra Actor đã chọn đầy đủ màu và size chưa.
+7.E.2. Hệ thống kiểm tra số lượng hợp lệ.
+7.E.3. Hệ thống chuyển hướng đến trang Thanh toán.
+7.F. Nhấn vào ảnh thumbnail:
+7.F.1. Hệ thống thay đổi ảnh chính thành ảnh được chọn.
+7.F.2. Hệ thống highlight thumbnail được chọn.
+7.G. Nhấn vào sản phẩm liên quan:
+7.G.1. Hệ thống hiển thị thông tin chi tiết của sản phẩm đó (Quay lại bước 1).
+Alternate Flow
+2.1. Nếu sản phẩm ở trạng thái "Hết hàng" (tổng tồn kho = 0). Hệ thống:
+2.1.A. Hiển thị nhãn "Hết hàng" màu đỏ.
+2.1.B. Hiển thị "Hết hàng" tại phần trạng thái kho.
+2.1.C. Vô hiệu hóa nút "Thêm vào giỏ" và "Mua Ngay" với text "Hết hàng".
+2.1.D. Actor vẫn có thể xem thông tin, reviews và sản phẩm liên quan.
+3.1. Nếu không có sản phẩm liên quan (không cùng category), hệ thống không hiển thị section "Sản phẩm tương tự".
+4.1. Nếu sản phẩm chưa có đánh giá nào, hệ thống hiển thị thông báo "Sản phẩm chưa có đánh giá" và khuyến khích khách hàng mua hàng để đánh giá.
+7.A.2.1. Nếu sau khi chọn màu mà size nào cũng hết hàng, hệ thống hiển thị tất cả size nhưng đều bị vô hiệu hóa (gạch ngang, mờ đi) với hiển thị "Hết hàng".
+Exception Flow
+E1. Không tìm thấy sản phẩm: Hệ thống hiển thị trang thông báo lỗi "Sản phẩm không tồn tại" (Error 404).
+E2. Sản phẩm bị vô hiệu hóa (status = false): Hệ thống xử lý giống E1, hiển thị "Sản phẩm không tồn tại".
+E3. Actor chưa chọn màu sắc khi nhấn "Thêm vào giỏ" hoặc "Mua Ngay":
+E3.1. Hệ thống hiển thị thông báo "Vui lòng chọn màu sắc!".
+E3.2. Actor quay lại bước 7.A để chọn màu.
+E4. Actor chưa chọn size khi nhấn "Thêm vào giỏ" hoặc "Mua Ngay":
+E4.1. Hệ thống hiển thị thông báo "Vui lòng chọn kích thước!".
+E4.2. Actor quay lại bước 7.B để chọn size.
+E5. Actor nhập shoeId không hợp lệ trên URL (ví dụ: chữ cái, số âm):
+E5.1. Hệ thống hiển thị trang lỗi "Yêu cầu không hợp lệ" (Error 400).
+
+
+Bảng 1. Một số thông tin đính kèm trong mô tả Use case
+Use case
+Thông tin đính kèm
+View Product List
+Thông tin hiển thị cho mỗi thẻ sản phẩm:
+- Hình ảnh đại diện (Thumbnail)
+- Tên sản phẩm
+- Thương hiệu (Brand)
+- Giá bán (Giá gốc - basePrice)
+- Trạng thái tồn kho (Nhãn "Hết hàng" nếu tổng stock = 0)
+- Badge: "New" (Hiển thị cho sản phẩm tạo trong vòng 14 ngày)
+
+Phân trang:
+- Mặc định 12 sản phẩm mỗi trang
+- Hiển thị số trang hiện tại, tổng số trang
+- Nút Previous/Next (Trước/Sau)
+- Các nút số trang (1, 2, 3, ...)
+
+Hero Banner:
+- Tiêu đề: "ĐẲNG CẤP THỜI THƯỢNG"
+- Subtitle: "NEW ARRIVALS 2025"
+- Mô tả ngắn
+- Nút CTA: "Mua Ngay"
+
+
+Bảng 2. Thông tin đính kèm Use case View Product Detail
+Use case
+Thông tin đính kèm
+View Product Detail
+Thông tin chi tiết sản phẩm:
+- Gallery hình ảnh (Ảnh lớn chính và danh sách ảnh nhỏ để chuyển đổi)
+- Tên sản phẩm
+- Thương hiệu
+- Giá bán (basePrice)
+- Phân loại (Nam/Nữ/Unisex) - Badge ở góc ảnh
+- Mô tả chi tiết (Description)
+- Bộ sưu tập (Collection)
+- Thông tin thương hiệu
+
+Khuyến mãi (nếu có):
+- Badge giảm giá (%, VNĐ)
+- Tên chương trình khuyến mãi
+- Giảm tối đa (nếu là giảm theo %)
+
+Biến thể và tồn kho:
+- Danh sách Màu sắc có sẵn (để chọn) - Required
+- Danh sách Size có sẵn (để chọn) - Required, hiển thị sau khi chọn màu
+- Tình trạng kho tổng quát: "Còn X sản phẩm" hoặc "Hết hàng"
+- Tồn kho theo từng biến thể (cập nhật khi chọn size)
+- Size hết hàng bị vô hiệu hóa (gạch ngang, mờ)
+
+Chọn số lượng:
+- Input number với nút +/-
+- Min = 1, Max = min(10, tồn kho của biến thể)
+
+Nút hành động:
+- "Thêm vào giỏ hàng" (Disabled nếu hết hàng)
+- "Mua Ngay" (Disabled nếu hết hàng)
+
+Đánh giá từ khách hàng:
+- Tổng số đánh giá
+- Điểm trung bình (Average rating)
+- Danh sách reviews: User, Rating stars, Comment, Date, Phân loại đã mua
+- Thông báo nếu chưa có đánh giá
+
+Thông tin liên quan:
+- Danh sách tối đa 5 sản phẩm tương tự (Cùng danh mục)
+- Mỗi sản phẩm hiển thị: Ảnh, Tên, Thương hiệu, Giá, Badge phân loại
+
+

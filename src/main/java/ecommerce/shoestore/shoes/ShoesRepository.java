@@ -34,6 +34,15 @@ public interface ShoesRepository extends JpaRepository<Shoes, Long> {
     List<Shoes> findAllByIdsWithImages(@Param("ids") List<Long> ids);
 
     /**
+     * Lấy danh sách giày theo IDs kèm variants (để tính stock)
+     * Chỉ lấy sản phẩm đang hoạt động
+     */
+    @Query("SELECT DISTINCT s FROM Shoes s "
+            + "LEFT JOIN FETCH s.variants "
+            + "WHERE s.shoeId IN :ids AND s.status = true")
+    List<Shoes> findAllByIdsWithVariants(@Param("ids") List<Long> ids);
+
+    /**
      * Lấy chi tiết giày theo ID (cho trang chi tiết) - fetch riêng từng collection
      * Chỉ lấy sản phẩm đang hoạt động
      */

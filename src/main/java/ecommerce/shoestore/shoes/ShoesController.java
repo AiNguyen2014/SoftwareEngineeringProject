@@ -39,6 +39,11 @@ public class ShoesController {
         // Session attributes (isLoggedIn, fullname, role, avatar)
         // được tự động thêm bởi SessionModelAdvice
 
+        // Validate page: nếu < 1 thì chuyển về trang 1
+        if (page < 1) {
+            page = 1;
+        }
+
         ShoesListDto data = shoesService.getShoesList(page, size);
 
         model.addAttribute("products", data.getProducts());

@@ -23,7 +23,7 @@
 <main class="container my-5" id="shop">
     <div class="section-header">
         <div>
-            <h2 class="section-title">Sản Phẩm Mới</h2>
+            <h2 class="section-title">Tất Cả Sản Phẩm</h2>
             <p class="section-subtitle">Cập nhật những mẫu giày hot nhất hiện nay</p>
         </div>
 
@@ -154,8 +154,9 @@
                      loading="lazy"
                      onerror="this.src='https://placehold.co/400x400?text=No+Image'">
                 <div class="badge-overlay">
-                    <span class="badge-new" th:if="${product.isNew}">NEW</span>
+                    <!-- Ưu tiên: Hết hàng > New (chỉ hiện 1 badge) -->
                     <span class="badge-soldout" th:if="${product.outOfStock}">HẾT HÀNG</span>
+                    <span class="badge-new" th:if="${product.isNew and !product.outOfStock}">NEW</span>
                 </div>
             </a>
             <div class="product-info">
