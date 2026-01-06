@@ -20,9 +20,6 @@ public class ShoesSearchController {
     private final ShoesSearchService shoesSearchService;
     private final CategoryRepository categoryRepository;
 
-    /**
-     * API GỢI Ý TÌM KIẾM (Autocomplete, trả về JSON)
-     */
     @GetMapping("/api/search-suggestions")
     @ResponseBody
     public List<String> searchSuggestions(@RequestParam String keyword) {
@@ -39,9 +36,6 @@ public class ShoesSearchController {
         return suggestions;
     }
 
-    /**
-     * Trang danh sách sản phẩm với filter và search
-     */
     @GetMapping("/products")
     public String listProducts(
             @RequestParam(required = false) String keyword,
@@ -99,9 +93,6 @@ public class ShoesSearchController {
         return "shoe/shoes-list";
     }
 
-    /**
-     * Parse gender string thành ShoesType enum
-     */
     private ShoesType parseGender(String gender) {
         if (gender == null || gender.isBlank()) return null;
 

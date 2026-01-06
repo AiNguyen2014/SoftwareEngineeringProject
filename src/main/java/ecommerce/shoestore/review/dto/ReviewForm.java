@@ -8,5 +8,5 @@ import java.util.List;
 @Data
 public class ReviewForm {
     private Long orderId;
-    private List<ReviewItemRequest> items; // Chứa productId, rate, comment cho từng món
+    private List<ReviewRequest> items;
 }

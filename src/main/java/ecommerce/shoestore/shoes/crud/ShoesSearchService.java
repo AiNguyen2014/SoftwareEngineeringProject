@@ -23,10 +23,6 @@ public class ShoesSearchService {
 
     private final ShoesSearchRepository shoesSearchRepository;
 
-    /**
-     * Gợi ý tìm kiếm (brand + product name)
-     * Dùng cho autocomplete dropdown
-     */
     @Transactional(readOnly = true)
     public List<String> getSearchSuggestions(String keyword) {
         List<String> suggestions = shoesSearchRepository.findSuggestions(keyword);
@@ -42,9 +38,6 @@ public class ShoesSearchService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Tìm kiếm sản phẩm với filter và sort
-     */
     @Transactional(readOnly = true)
     public ShoesListDto searchProducts(
             String keyword,
@@ -111,9 +104,6 @@ public class ShoesSearchService {
                 .build();
     }
 
-    /**
-     * Tìm kiếm sản phẩm với sort theo số lượng bán
-     */
     @Transactional(readOnly = true)
     public ShoesListDto searchProductsWithSoldSort(
             String keyword,
@@ -153,9 +143,6 @@ public class ShoesSearchService {
                 .build();
     }
 
-    /**
-     * Lấy danh sách brands
-     */
     public List<String> findAllBrands(ShoesType type) {
         if (type == null) {
             return shoesSearchRepository.findDistinctBrands();
@@ -163,9 +150,6 @@ public class ShoesSearchService {
         return shoesSearchRepository.findDistinctBrandsByType(type);
     }
 
-    /**
-     * Build sort key hợp lệ
-     */
     private String buildSortKey(String sortKey) {
         if (sortKey == null || sortKey.isBlank()) {
             return "name_asc"; // mặc định
@@ -181,9 +165,6 @@ public class ShoesSearchService {
         };
     }
 
-    /**
-     * Chuyển đổi Shoes -> ShoesSummaryDto (dùng cho danh sách)
-     */
     private ShoesSummaryDto convertToSummaryDto(Shoes shoes) {
         // Lấy ảnh thumbnail
         String thumbnailUrl = "https://placehold.co/400x400?text=No+Image";

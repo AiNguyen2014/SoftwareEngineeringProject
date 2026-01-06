@@ -4,7 +4,6 @@ import ecommerce.shoestore.order.Order;
 import ecommerce.shoestore.order.OrderItem;
 import ecommerce.shoestore.order.OrderService;
 import ecommerce.shoestore.review.dto.ReviewForm;
-import ecommerce.shoestore.review.dto.ReviewItemRequest;
 import ecommerce.shoestore.review.dto.ReviewRequest;
 import ecommerce.shoestore.shoes.ShoesRepository;
 import jakarta.servlet.http.HttpSession;
@@ -47,8 +46,8 @@ public class ReviewController {
         ReviewForm reviewForm = new ReviewForm();
         reviewForm.setOrderId(orderId);
 
-        List<ReviewItemRequest> requests = orderItems.stream().map(oi -> {
-            ReviewItemRequest req = new ReviewItemRequest();
+        List<ReviewRequest> requests = orderItems.stream().map(oi -> {
+            ReviewRequest req = new ReviewRequest();
             req.setOrderItemId(oi.getOrderItemId());
             req.setShoeId(oi.getShoeId());
             req.setRate(5);
@@ -95,7 +94,7 @@ public class ReviewController {
                 throw new RuntimeException("Không có sản phẩm nào để đánh giá.");
             }
 
-            for (ReviewItemRequest item : reviewForm.getItems()) {
+            for (ReviewRequest item : reviewForm.getItems()) {
                 ReviewRequest req = new ReviewRequest();
                 req.setOrderItemId(item.getOrderItemId());
                 req.setShoeId(item.getShoeId());

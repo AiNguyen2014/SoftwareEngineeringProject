@@ -4,10 +4,12 @@ import ecommerce.shoestore.auth.email.EmailService;
 import ecommerce.shoestore.auth.user.dto.ChangePasswordRequest;
 import ecommerce.shoestore.auth.user.dto.UpdateProfileRequest;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -48,18 +50,26 @@ public class UserController {
     }
 
     @PostMapping("/update")
-    public String updateProfile(@ModelAttribute UpdateProfileRequest request,
-                                HttpSession session,
-                                RedirectAttributes redirectAttributes) {
+    public String updateProfile(
+            @Valid @ModelAttribute("profile") UpdateProfileRequest request,
+            BindingResult bindingResult,
+            HttpSession session,
+            RedirectAttributes redirectAttributes,
+            Model model) {
 
         String email = (String) session.getAttribute("EMAIL");
         if (email == null) return "redirect:/auth/login";
+
+        // Nếu dữ liệu không hợp lệ quay lại trang profile  và hiển thị lỗi
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("activeTab", "profile");
+            return "user/profile";
+        }
 
         try {
             userService.updateProfile(email, request);
 
             session.setAttribute("FULLNAME", request.getFullname());
-
             User updatedUser = userService.getCurrentUser(email);
             session.setAttribute("AVATAR", updatedUser.getAvatar());
 
@@ -72,6 +82,7 @@ public class UserController {
         return "redirect:/user/profile";
     }
 
+
     @PostMapping("/send-otp-password")
     @ResponseBody // Trả về JSON/String cho JavaScript xử lý
     public ResponseEntity<String> sendOtpForPasswordChange(HttpSession session) {
@@ -80,7 +91,7 @@ public class UserController {
             return ResponseEntity.status(401).body("Vui lòng đăng nhập lại.");
         }
 
-        // Tạo mã OTP ngẫu nhiên (Giống logic Register của bạn)
+        // Tạo mã OTP ngẫu nhiên
         String code = String.valueOf(new Random().nextInt(900000) + 100000);
 
         // Lưu OTP vào Session

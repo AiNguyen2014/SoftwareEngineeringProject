@@ -58,3 +58,16 @@ header, .navbar {
     position: relative;
     z-index: 1055 !important; /* Bootstrap Modal thường là 1050, ta đặt cao hơn chút để an toàn */
 }
+
+.profile-input[type="radio"]:disabled {
+    border: 1px solid #b0b0b0; /* Viền xám rõ hơn chút */
+    background-color: #fff;    /* Nền trắng */
+}
+
+.profile-input[type="radio"]:checked:disabled {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    opacity: 1;
+
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='2' fill='%23fff'/%3e%3c/svg%3e");
+}
