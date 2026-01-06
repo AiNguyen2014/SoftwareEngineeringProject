@@ -16,7 +16,7 @@ Hướng dẫn deploy ứng dụng Spring Boot Shoe Store lên Render.
 
 ### 2. render.yaml
 - Cấu hình Blueprint cho Render
-- Định nghĩa web service và PostgreSQL database
+- Định nghĩa web service (sử dụng Supabase database hiện tại)
 - Environment variables và settings
 
 ### 3. application-prod.properties
@@ -42,27 +42,21 @@ Hướng dẫn deploy ứng dụng Spring Boot Shoe Store lên Render.
    - Chọn repository chứa ứng dụng
    - Render sẽ tự động detect file `render.yaml` và tạo services
 
-### Phương pháp 2: Manual Setup
+### Phương pháp 2: Manual Setup (Sử dụng Supabase Database hiện tại)
 
-1. **Tạo Database:**
-   - Trong Render Dashboard: New → PostgreSQL
-   - Database Name: `shoestore-db`
-   - Plan: Free
-   - Region: Singapore
-
-2. **Tạo Web Service:**
+1. **Tạo Web Service:**
    - New → Web Service
    - Connect GitHub repository
    - Build Command: `docker build -t shoestore .`
    - Start Command: Để trống (sử dụng CMD trong Dockerfile)
    - Plan: Free
 
-3. **Environment Variables:**
+2. **Environment Variables:**
    ```
    SPRING_PROFILES_ACTIVE=prod
-   DATABASE_URL=[từ PostgreSQL service]
-   SPRING_DATASOURCE_USERNAME=[từ PostgreSQL service]
-   SPRING_DATASOURCE_PASSWORD=[từ PostgreSQL service]
+   SPRING_DATASOURCE_URL=jdbc:postgresql://aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require&currentSchema=public
+   SPRING_DATASOURCE_USERNAME=postgres.qouzchgauycrjclcdfta
+   SPRING_DATASOURCE_PASSWORD=Shoestorewebsite
    SPRING_MAIL_USERNAME=webshoestore17@gmail.com
    SPRING_MAIL_PASSWORD=quziuvvngrwrjzkp
    CLOUDINARY_CLOUD_NAME=dd4v8svrk
@@ -72,9 +66,10 @@ Hướng dẫn deploy ứng dụng Spring Boot Shoe Store lên Render.
 
 ## Sau khi deploy
 
-1. **Database Migration:**
-   - Render sẽ tự động chạy ứng dụng với `spring.jpa.hibernate.ddl-auto=validate`
-   - Nếu cần tạo tables, tạm thời đổi thành `create-drop` hoặc `update`
+1. **Database Connection:**
+   - Ứng dụng sẽ kết nối với Supabase database hiện tại
+   - Sử dụng `spring.jpa.hibernate.ddl-auto=validate` để đảm bảo schema không thay đổi
+   - Database và tables đã có sẵn, không cần migration
 
 2. **Health Check:**
    - URL: `https://your-app-name.onrender.com/actuator/health`
