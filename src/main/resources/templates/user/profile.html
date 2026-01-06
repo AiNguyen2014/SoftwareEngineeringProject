@@ -8,7 +8,7 @@
 
 </head>
 <body class="bg-light">
-<div th:replace="fragments :: header"></div>
+<div th:replace="~{fragments :: header}"></div>
 
 
 <div class="container py-5">
@@ -92,12 +92,20 @@
 
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">Họ và tên</label>
-                                        <input type="text" class="form-control profile-input" th:field="*{fullname}" disabled>
+                                        <input type="text"
+                                               class="form-control profile-input"
+                                               th:field="*{fullname}"
+                                               th:classappend="${#fields.hasErrors('fullname')} ? 'is-invalid' : ''"
+                                               disabled>
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('fullname')}" th:errors="*{fullname}"></div>
                                     </div>
 
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">Số điện thoại</label>
-                                        <input type="text" class="form-control profile-input" th:field="*{phone}" disabled>
+                                        <input type="text" class="form-control profile-input" th:field="*{phone}"
+                                               th:classappend="${#fields.hasErrors('phone')} ? 'is-invalid' : ''"
+                                               disabled>
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></div>
                                     </div>
 
                                     <div class="mb-3">
@@ -120,9 +128,10 @@
                                                class="form-control profile-input"
                                                th:field="*{dateOfBirth}"
                                                th:value="${#temporals.format(profile.dateOfBirth, 'yyyy-MM-dd')}"
+                                               th:classappend="${#fields.hasErrors('dateOfBirth')} ? 'is-invalid' : ''"
                                                disabled>
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('dateOfBirth')}" th:errors="*{dateOfBirth}"></div>
                                     </div>
-
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">Địa chỉ</label>
                                         <div class="row g-2">
@@ -158,7 +167,6 @@
                                         <label for="imageUpload" class="form-label small fw-bold text-muted mb-2"><i class="fas fa-camera me-1"></i> Tải ảnh lên</label>
                                         <input type='file' class="form-control form-control-sm" id="imageUpload" name="avatarFile" accept=".png, .jpg, .jpeg" />
                                         <div class="text-muted small mt-2 fst-italic">
-                                            Định dạng: .JPEG, .PNG <br> Dung lượng < 1MB
                                         </div>
                                     </div>
                                 </div>
@@ -211,9 +219,8 @@
         </div>
     </div>
 </div>
-</div>
 
-<div th:replace="fragments :: footer"></div>
+<div th:replace="~{fragments :: footer}"></div>
 <th:block th:replace="~{user/modalOtp :: otp-component}"></th:block>
 
 <script>
@@ -229,7 +236,24 @@
             }
         });
     }
+    document.addEventListener("DOMContentLoaded", function() {
+        const btnEdit = document.getElementById('btnEditProfile');
+        const saveGroup = document.getElementById('saveButtonGroup');
+        const form = document.getElementById('profileForm');
+        const inputs = document.querySelectorAll('.profile-input');
 
+        const hasError = document.querySelector('.is-invalid');
+
+        if (hasError) {
+            // Nếu có lỗi, tự động bật chế độ chỉnh sửa ngay khi load trang
+            if (btnEdit) {
+                inputs.forEach(input => input.removeAttribute('disabled'));
+                saveGroup.classList.remove('d-none');
+                btnEdit.classList.add('d-none');
+                form.classList.remove('view-mode');
+            }
+        }
+    });
     const btnEdit = document.getElementById('btnEditProfile');
     const btnCancel = document.getElementById('btnCancelEdit');
     const saveGroup = document.getElementById('saveButtonGroup');
@@ -248,11 +272,25 @@
 
     if (btnCancel) {
         btnCancel.addEventListener('click', function() {
+            if (!confirm("Bạn có chắc chắn muốn hủy bỏ thay đổi? Dữ liệu chưa lưu sẽ bị mất.")) {
+                return;
+            }
+
             inputs.forEach(input => input.setAttribute('disabled', 'true'));
             saveGroup.classList.add('d-none');
             btnEdit.classList.remove('d-none');
             form.classList.add('view-mode');
+
             form.reset();
+
+            const errorInputs = document.querySelectorAll('.is-invalid');
+            errorInputs.forEach(input => input.classList.remove('is-invalid'));
+
+            const originalAvatarImg = document.querySelector('.sidebar-avatar-img');
+            const previewImg = document.getElementById('imagePreview');
+            if (originalAvatarImg && previewImg) {
+                previewImg.src = originalAvatarImg.src;
+            }
         });
     }
 </script>
