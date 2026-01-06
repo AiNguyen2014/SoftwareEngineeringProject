@@ -2,13 +2,11 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Đăng nhập - WebShoe</title>
-    <!-- Nhúng CSS chung -->
     <th:block th:replace="~{fragments :: head_header}"></th:block>
     <link th:href="@{/css/auth.css}" rel="stylesheet">
 </head>
 <body>
 
-    <!-- Header tối giản -->
     <nav class="navbar bg-white shadow-sm">
         <div class="container justify-content-center">
             <a class="navbar-brand fw-bold" href="/" style="font-size: 1.5rem;">👟 WEBSHOE</a>
@@ -23,7 +21,6 @@
             </div>
 
             <div class="auth-body">
-                <!-- Thông báo lỗi/thành công -->
                 <div th:if="${param.error}" class="alert alert-danger text-center small py-2">
                     <i class="fas fa-exclamation-circle me-1"></i> Tài khoản hoặc mật khẩu không đúng!
                 </div>

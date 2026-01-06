@@ -91,6 +91,26 @@ public class AuthController {
         }
     }
 
+
+    @GetMapping("/resend-code")
+    public String resendCode(@RequestParam String email, Model model) {
+        try {
+            // Viết hàm resendCode trong AuthService (tạo mã mới, update DB, gửi mail)
+            authService.resendVerificationCode(email);
+            
+            // Quay lại trang verify với thời gian mới
+            VerifyEmailRequest verifyReq = new VerifyEmailRequest();
+            verifyReq.setEmail(email);
+            model.addAttribute("verifyRequest", verifyReq);
+            model.addAttribute("expiryTime", System.currentTimeMillis() + 60 * 1000);
+            model.addAttribute("message", "Đã gửi lại mã mới!");
+            
+            return "auth/verify-email";
+        } catch (Exception e) {
+            // Xử lý lỗi...
+            return "auth/login";
+        }
+    }
     // ================= LOGIN =================
 
     @GetMapping("/login")
