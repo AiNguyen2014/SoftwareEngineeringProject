@@ -25,17 +25,11 @@ public class UserController {
 
     @GetMapping
     public String viewProfile(HttpSession session, Model model) {
-        System.out.println("DEBUG PROFILE:");
-        System.out.println(" - Session ID: " + session.getId());
 
         Long userId = (Long) session.getAttribute("USER_ID");
         String email = (String) session.getAttribute("EMAIL");
 
-        System.out.println(" - USER_ID trong Session: " + userId);
-        System.out.println(" - EMAIL trong Session: " + email);
-
         if (userId == null || email == null) {
-            System.out.println(">>> THẤT BẠI: Session thiếu dữ liệu -> Redirect về Login");
             return "redirect:/auth/login";
         }
 

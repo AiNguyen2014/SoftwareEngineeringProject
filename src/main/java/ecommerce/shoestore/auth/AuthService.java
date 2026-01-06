@@ -54,6 +54,7 @@ public class AuthService {
         try {
             user.setGender(UserGender.valueOf(req.getGender()));
         } catch (Exception e) {
+            // Mặc định hoặc xử lý lỗi nếu cần
         }
         user.setAddress(address);
         user.setAccount(account);
@@ -84,48 +85,19 @@ public class AuthService {
     }
 
     public User login(LoginRequest req) {
-        System.out.println("============== BẮT ĐẦU DEBUG LOGIN ==============");
-        System.out.println("1. Username nhập vào: [" + req.getUsername() + "]");
-        System.out.println("2. Password nhập vào: [" + req.getPassword() + "]");
-
         Account account = accountRepository.findByUsername(req.getUsername())
-                .orElse(null);
+                .orElseThrow(() -> new RuntimeException("Tài khoản hoặc mật khẩu không đúng.")); 
         
-        if (account == null) {
-            System.out.println(">>> LỖI: Không tìm thấy Username trong bảng Account!");
-            throw new RuntimeException("Tài khoản không tồn tại.");
-        }
-        System.out.println("3. Tìm thấy Account ID: " + account.getAccountId()); // Hoặc getId() tùy bạn đặt tên
-        System.out.println("   - Hash trong DB: " + account.getPassword());
-        System.out.println("   - Enabled: " + account.isEnabled());
-
-        boolean isMatch = passwordEncoder.matches(req.getPassword(), account.getPassword());
-        System.out.println("4. Kết quả so khớp Pass: " + isMatch);
-        
-        if (!isMatch) {
-            System.out.println(">>> LỖI: Mật khẩu không khớp!");
-            throw new RuntimeException("Sai mật khẩu.");
+        if (!passwordEncoder.matches(req.getPassword(), account.getPassword())) {
+            throw new RuntimeException("Tài khoản hoặc mật khẩu không đúng.");
         }
 
         if (!account.isEnabled()) {
-            System.out.println(">>> LỖI: Tài khoản chưa kích hoạt (Enabled = false)!");
-            throw new RuntimeException("Tài khoản chưa kích hoạt.");
+            throw new RuntimeException("Tài khoản chưa được kích hoạt. Vui lòng kiểm tra email.");
         }
 
-        System.out.println("5. Đang tìm User Info theo Account Username...");
-        User user = userRepository.findByAccount_Username(req.getUsername())
-                .orElse(null);
-
-        if (user == null) {
-            System.out.println(">>> LỖI CHẾT NGƯỜI: Có Account nhưng không tìm thấy User tương ứng!");
-            System.out.println("    Nguyên nhân: Cột account_id trong bảng Users bị Null hoặc không khớp ID bên bảng Account.");
-            throw new RuntimeException("Lỗi dữ liệu hệ thống (Missing User Profile).");
-        }
-
-        System.out.println("6. Thành công! User ID: " + user.getUserId()); 
-        System.out.println("============== KẾT THÚC DEBUG LOGIN ==============");
-        
-        return user;
+        return userRepository.findByAccount_Username(req.getUsername())
+                .orElseThrow(() -> new RuntimeException("Lỗi dữ liệu: Không tìm thấy thông tin người dùng."));
     }
     
     public void forgotPassword(String email) {

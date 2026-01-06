@@ -42,7 +42,7 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .securityContext(context -> context
-                .requireExplicitSave(false)  // Tự động lưu SecurityContext vào session
+                .requireExplicitSave(false)  
             )
             .sessionManagement(session
                     -> session.sessionFixation().none()
@@ -54,7 +54,7 @@ public class SecurityConfig {
                         "/auth/**", "/user/**", "/cart/**", "/order/**", "/vouchers/**",
                         "/css/**", "/js/**", "/images/**",
                         "/error", "/api/search-suggestions", "/search/**", "/products",
-                        "/order/history", "/order/tracking/**" // Keep order pages access
+                        "/order/history", "/order/tracking/**" 
                 ).permitAll()
                 // ADMIN
                 .requestMatchers("/admin/**").hasRole("ADMIN")
