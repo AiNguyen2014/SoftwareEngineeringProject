@@ -1,0 +1,45 @@
+# Ignore target directory
+target/
+
+# Ignore IDE files
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+.settings/
+.project
+.classpath
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore logs
+*.log
+
+# Ignore Git
+.git/
+.gitignore
+
+# Ignore documentation
+*.md
+diagrams/
+*.puml
+
+# Ignore test files when building for production
+src/test/
+
+# Ignore Maven wrapper (optional, depending on preference)
+.mvn/
+mvnw
+mvnw.cmd
+
+# Ignore backup files
+*~
+*.tmp
+*.bak
+
+# Node modules (if any frontend dependencies)
+node_modules/
+npm-debug.log*

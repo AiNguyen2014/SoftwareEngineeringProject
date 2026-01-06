@@ -1,0 +1,206 @@
+@startuml UC24_CreateCampaign_Sequence
+title UC24: Tạo Chiến dịch khuyến mãi (Create Campaign)
+
+actor Admin
+participant "PromotionAdminController" as Controller
+participant "PromotionService" as Service
+participant "PromotionCampaignRepository" as CampaignRepo
+participant "PromotionTargetRepository" as TargetRepo
+participant "ShoesRepository" as ShoesRepo
+participant "CategoryRepository" as CategoryRepo
+database "Database" as DB
+
+Admin -> Controller: POST /admin/promotions/campaigns/create\n(CampaignForm + shoeIds/categoryIds)
+activate Controller
+
+Controller -> Controller: Validate form data\n(dates, discountValue > 0, ...)
+
+Controller -> Service: saveCampaign(form)
+activate Service
+
+Service -> Service: validateDateRange()\n(endDate >= startDate)
+
+Service -> CampaignRepo: save(campaign)
+activate CampaignRepo
+CampaignRepo -> DB: INSERT INTO promotion_campaign\n(name, description, start_date, end_date,\ndiscount_type, discount_value, ...)
+DB --> CampaignRepo: PromotionCampaign entity
+CampaignRepo --> Service: Saved campaign
+deactivate CampaignRepo
+
+Service -> Service: saveTargets(campaign, targetType,\nshoeIds, categoryIds)
+
+alt targetType = ALL
+    Service -> TargetRepo: save(target)
+    activate TargetRepo
+    TargetRepo -> DB: INSERT INTO promotion_target\n(campaign_id, target_type)\nVALUES (?, 'ALL')
+    deactivate TargetRepo
+    
+else targetType = PRODUCT
+    loop for each shoeId
+        Service -> ShoesRepo: findById(shoeId)
+        activate ShoesRepo
+        ShoesRepo -> DB: SELECT * FROM shoes WHERE shoe_id = ?
+        ShoesRepo --> Service: Shoes
+        deactivate ShoesRepo
+        
+        Service -> TargetRepo: save(target)
+        activate TargetRepo
+        TargetRepo -> DB: INSERT INTO promotion_target\n(campaign_id, target_type, shoe_id)\nVALUES (?, 'PRODUCT', ?)
+        deactivate TargetRepo
+    end
+    
+else targetType = CATEGORY
+    loop for each categoryId
+        Service -> CategoryRepo: findById(categoryId)
+        activate CategoryRepo
+        CategoryRepo -> DB: SELECT * FROM category WHERE category_id = ?
+        CategoryRepo --> Service: Category
+        deactivate CategoryRepo
+        
+        Service -> TargetRepo: save(target)
+        activate TargetRepo
+        TargetRepo -> DB: INSERT INTO promotion_target\n(campaign_id, target_type, category_id)\nVALUES (?, 'CATEGORY', ?)
+        deactivate TargetRepo
+    end
+end
+
+Service --> Controller: PromotionCampaign
+deactivate Service
+
+Controller --> Admin: Redirect to /admin/promotions/campaigns/{id}\n(Success message)
+deactivate Controller
+
+@enduml
+
+@startuml UC24_UpdateCampaign_WithVoucherSync_Sequence
+title UC24: Cập nhật Chiến dịch với đồng bộ Voucher (Update Campaign)
+
+actor Admin
+participant "PromotionAdminController" as Controller
+participant "PromotionService" as Service
+participant "PromotionCampaignRepository" as CampaignRepo
+participant "VoucherRepository" as VoucherRepo
+participant "PromotionTargetRepository" as TargetRepo
+database "Database" as DB
+
+Admin -> Controller: POST /admin/promotions/campaigns/{id}/edit\n(CampaignForm)
+activate Controller
+
+Controller -> Service: saveCampaign(form)
+activate Service
+
+Service -> CampaignRepo: findByIdWithTargets(campaignId)
+activate CampaignRepo
+CampaignRepo -> DB: SELECT c.*, t.*\nFROM promotion_campaign c\nLEFT JOIN promotion_target t ON c.campaign_id = t.campaign_id\nWHERE c.campaign_id = ?
+CampaignRepo --> Service: Existing campaign
+deactivate CampaignRepo
+
+Service -> Service: Check if dates changed
+
+alt dates changed
+    Service -> Service: validateAndAdjustVouchersForCampaignDateChange()
+    
+    Service -> VoucherRepo: findByCampaign_CampaignId(campaignId)
+    activate VoucherRepo
+    VoucherRepo -> DB: SELECT * FROM voucher\nWHERE campaign_id = ?
+    VoucherRepo --> Service: List<Voucher>
+    deactivate VoucherRepo
+    
+    loop for each voucher
+        alt voucher dates outside campaign range
+            Service -> Service: Adjust voucher dates\n(clamp to campaign range)
+            Service -> Service: Set voucher.enabled = false\n(if dates invalid)
+            
+            Service -> VoucherRepo: save(voucher)
+            activate VoucherRepo
+            VoucherRepo -> DB: UPDATE voucher SET\nstart_date = ?, end_date = ?,\nenabled = ?\nWHERE voucher_id = ?
+            deactivate VoucherRepo
+        end
+    end
+end
+
+alt discount rules changed
+    Service -> Service: Sync discount rules to vouchers
+    note right
+      For each voucher:
+      - Set discountType from campaign
+      - Set discountValue from campaign
+      - Set maxDiscountAmount from campaign
+      - Set minOrderValue from campaign
+    end note
+    
+    loop for each voucher
+        Service -> VoucherRepo: save(voucher)
+        activate VoucherRepo
+        VoucherRepo -> DB: UPDATE voucher SET\ndiscount_type = ?,\ndiscount_value = ?,\nmax_discount_value = ?,\nmin_order_value = ?\nWHERE voucher_id = ?
+        deactivate VoucherRepo
+    end
+end
+
+Service -> Service: Update campaign basic info
+
+Service -> CampaignRepo: save(campaign)
+activate CampaignRepo
+CampaignRepo -> DB: UPDATE promotion_campaign SET\nname = ?, description = ?, ...\nWHERE campaign_id = ?
+CampaignRepo --> Service: Updated campaign
+deactivate CampaignRepo
+
+Service -> TargetRepo: deleteByCampaignId(campaignId)
+activate TargetRepo
+TargetRepo -> DB: DELETE FROM promotion_target\nWHERE campaign_id = ?
+deactivate TargetRepo
+
+Service -> Service: saveTargets()\n(same as create)
+
+Service --> Controller: PromotionCampaign
+deactivate Service
+
+Controller --> Admin: Redirect to /admin/promotions/campaigns/{id}\n(Success + "Đã đồng bộ vouchers")
+deactivate Controller
+
+@enduml
+
+@startuml UC24_DeleteCampaign_Sequence
+title UC24: Xóa Chiến dịch (Delete Campaign)
+
+actor Admin
+participant "PromotionAdminController" as Controller
+participant "PromotionService" as Service
+participant "VoucherRepository" as VoucherRepo
+participant "PromotionCampaignRepository" as CampaignRepo
+database "Database" as DB
+
+Admin -> Controller: POST /admin/promotions/campaigns/{id}/delete
+activate Controller
+
+Controller -> Service: deleteCampaign(campaignId)
+activate Service
+
+Service -> VoucherRepo: existsByCampaign_CampaignId(campaignId)
+activate VoucherRepo
+VoucherRepo -> DB: SELECT EXISTS(SELECT 1 FROM voucher\nWHERE campaign_id = ?)
+DB --> VoucherRepo: boolean
+VoucherRepo --> Service: hasVouchers
+deactivate VoucherRepo
+
+alt hasVouchers = true
+    Service --> Controller: throw Exception\n("Không thể xóa campaign có voucher")
+    Controller --> Admin: Error message
+else hasVouchers = false
+    Service -> CampaignRepo: deleteById(campaignId)
+    activate CampaignRepo
+    CampaignRepo -> DB: DELETE FROM promotion_target\nWHERE campaign_id = ?
+    note right: Cascade delete targets first
+    CampaignRepo -> DB: DELETE FROM promotion_campaign\nWHERE campaign_id = ?
+    CampaignRepo --> Service: void
+    deactivate CampaignRepo
+    
+    Service --> Controller: void
+    deactivate Service
+    
+    Controller --> Admin: Redirect to /admin/promotions/campaigns\n(Success: "Đã xóa campaign")
+end
+
+deactivate Controller
+
+@enduml

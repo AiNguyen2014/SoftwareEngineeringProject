@@ -675,7 +675,10 @@
                     
                     <!-- Danh sách voucher có thể dùng -->
                     <div th:if="${vouchers != null and !vouchers.isEmpty()}" class="voucher-available-section">
-                        <p class="voucher-section-title">Hoặc chọn mã giảm giá:</p>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <p class="voucher-section-title" style="margin-bottom: 0;">Hoặc chọn mã giảm giá:</p>
+                            <a th:href="@{/vouchers(returnUrl='/order/payment')}" class="btn-view-all-vouchers" style="font-size: 0.9rem; color: #e53935; text-decoration: none;">Xem tất cả →</a>
+                        </div>
                         <div class="voucher-list">
                             <div th:each="voucher : ${vouchers}" 
                                  class="voucher-item"
@@ -723,7 +726,7 @@
                     
                     <div th:if="${vouchers == null or vouchers.isEmpty()}" class="no-voucher">
                         <p>Không có mã giảm giá khả dụng cho đơn hàng này</p>
-                        <a th:href="@{/vouchers}" class="btn-view-vouchers">Xem tất cả mã giảm giá</a>
+                        <a th:href="@{/vouchers(returnUrl='/order/payment')}" class="btn-view-vouchers">Xem tất cả mã giảm giá</a>
                     </div>
                 </div>
                 

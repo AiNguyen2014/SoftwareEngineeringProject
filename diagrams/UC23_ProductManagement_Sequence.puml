@@ -1,0 +1,173 @@
+@startuml UC23_CreateProduct_Sequence
+title UC23: Tạo Sản phẩm mới (Create Product)
+
+actor Admin
+participant "AdminProductController" as Controller
+participant "AdminProductService" as Service
+participant "AdminShoesRepository" as ShoesRepo
+participant "CategoryRepository" as CategoryRepo
+database "Database" as DB
+
+Admin -> Controller: POST /admin/products/create\n(CreateShoesRequest)
+activate Controller
+
+Controller -> Controller: Validate form data\n(@Valid binding)
+alt validation fails
+    Controller --> Admin: Return with errors
+else validation success
+    Controller -> CategoryRepo: findById(categoryId)
+    activate CategoryRepo
+    CategoryRepo -> DB: SELECT * FROM category\nWHERE category_id = ?
+    DB --> CategoryRepo: Category
+    CategoryRepo --> Controller: Category
+    deactivate CategoryRepo
+    
+    Controller -> Service: createShoes(request)
+    activate Service
+    
+    Service -> Service: Check duplicate name
+    Service -> ShoesRepo: existsByName(name)
+    activate ShoesRepo
+    ShoesRepo -> DB: SELECT EXISTS(SELECT 1 FROM shoes\nWHERE name = ?)
+    DB --> ShoesRepo: false
+    ShoesRepo --> Service: false
+    deactivate ShoesRepo
+    
+    Service -> Service: Normalize sizes\n(e.g., "42" → "SIZE_42")
+    Service -> Service: Check duplicate variants\n(color + size unique)
+    
+    Service -> ShoesRepo: save(shoes)
+    activate ShoesRepo
+    ShoesRepo -> DB: INSERT INTO shoes\n(name, brand, type, ...)
+    DB --> ShoesRepo: Shoes entity
+    
+    loop for each image
+        ShoesRepo -> DB: INSERT INTO shoes_image\n(shoe_id, url, is_thumbnail)
+    end
+    
+    loop for each variant
+        ShoesRepo -> DB: INSERT INTO shoes_variant\n(shoe_id, color, size)
+    end
+    
+    ShoesRepo --> Service: Saved Shoes
+    deactivate ShoesRepo
+    
+    Service --> Controller: shoeId (Long)
+    deactivate Service
+    
+    Controller --> Admin: Redirect to /admin/products/{id}\n(Success message)
+end
+
+deactivate Controller
+
+@enduml
+
+@startuml UC23_UpdateProduct_Sequence
+title UC23: Cập nhật Sản phẩm (Update Product)
+
+actor Admin
+participant "AdminProductController" as Controller
+participant "AdminProductService" as Service
+participant "AdminShoesRepository" as ShoesRepo
+database "Database" as DB
+
+Admin -> Controller: POST /admin/products/{id}/edit\n(UpdateShoesRequest)
+activate Controller
+
+Controller -> Controller: Validate form data
+
+Controller -> Service: updateShoes(shoeId, request)
+activate Service
+
+Service -> ShoesRepo: findByIdWithAllDetails(shoeId)
+activate ShoesRepo
+ShoesRepo -> DB: SELECT s.*, c.*, i.*, v.*\nFROM shoes s\nJOIN category c ON s.category_id = c.category_id\nLEFT JOIN shoes_image i ON s.shoe_id = i.shoe_id\nLEFT JOIN shoes_variant v ON s.shoe_id = v.shoe_id\nWHERE s.shoe_id = ?
+DB --> ShoesRepo: Shoes with images & variants
+ShoesRepo --> Service: Shoes entity
+deactivate ShoesRepo
+
+Service -> Service: Update basic info\n(name, brand, price, ...)
+
+Service -> Service: Handle orphan removal for images
+note right
+  Compare existing images with request.images
+  - Keep: images with imageId in request
+  - Delete: images not in request (orphan removal)
+  - Add: images with imageId = null
+end note
+
+loop for each image to delete
+    Service -> DB: DELETE FROM shoes_image\nWHERE image_id = ?
+end
+
+loop for each new image
+    Service -> DB: INSERT INTO shoes_image\n(shoe_id, url, is_thumbnail)
+end
+
+Service -> Service: Handle orphan removal for variants
+note right
+  Compare existing variants with request.variants
+  - Keep: variants with variantId in request
+  - Delete: variants not in request (orphan removal)
+  - Add: variants with variantId = null
+end note
+
+loop for each variant to delete
+    Service -> DB: DELETE FROM shoes_variant\nWHERE variant_id = ?
+end
+
+loop for each new variant
+    Service -> DB: INSERT INTO shoes_variant\n(shoe_id, color, size)
+end
+
+Service -> ShoesRepo: save(shoes)
+activate ShoesRepo
+ShoesRepo -> DB: UPDATE shoes SET\nname = ?, brand = ?, ...\nWHERE shoe_id = ?
+ShoesRepo --> Service: Updated Shoes
+deactivate ShoesRepo
+
+Service --> Controller: void
+deactivate Service
+
+Controller --> Admin: Redirect to /admin/products/{id}\n(Success message)
+deactivate Controller
+
+@enduml
+
+@startuml UC23_ToggleProductStatus_Sequence
+title UC23: Bật/Tắt trạng thái Sản phẩm (Toggle Product Status)
+
+actor Admin
+participant "AdminProductController" as Controller
+participant "AdminProductService" as Service
+participant "AdminShoesRepository" as ShoesRepo
+database "Database" as DB
+
+Admin -> Controller: POST /admin/products/{id}/toggle-status
+activate Controller
+
+Controller -> Service: toggleStatus(shoeId)
+activate Service
+
+Service -> ShoesRepo: findById(shoeId)
+activate ShoesRepo
+ShoesRepo -> DB: SELECT * FROM shoes\nWHERE shoe_id = ?
+DB --> ShoesRepo: Shoes
+ShoesRepo --> Service: Shoes entity
+deactivate ShoesRepo
+
+Service -> Service: Toggle status\n(true → false, false → true)
+
+Service -> ShoesRepo: save(shoes)
+activate ShoesRepo
+ShoesRepo -> DB: UPDATE shoes SET status = ?\nWHERE shoe_id = ?
+ShoesRepo --> Service: Updated Shoes
+deactivate ShoesRepo
+
+Service --> Controller: void
+deactivate Service
+
+Controller --> Admin: Redirect back\n(Success: "Đã cập nhật trạng thái")
+deactivate Controller
+
+@enduml

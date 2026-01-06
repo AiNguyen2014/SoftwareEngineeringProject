@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: shoestore-backend
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: singapore
+    branch: main
+    healthCheckPath: /
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: JAVA_OPTS
+        value: "-Xms256m -Xmx512m"
+      - key: SPRING_DATASOURCE_URL
+        value: jdbc:postgresql://aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require&currentSchema=public
+      - key: SPRING_DATASOURCE_USERNAME
+        value: postgres.qouzchgauycrjclcdfta
+      - key: SPRING_DATASOURCE_PASSWORD
+        value: Shoestorewebsite
+      - key: SPRING_MAIL_USERNAME
+        value: webshoestore17@gmail.com
+      - key: SPRING_MAIL_PASSWORD
+        value: quziuvvngrwrjzkp
+      - key: CLOUDINARY_CLOUD_NAME
+        value: dd4v8svrk
+      - key: CLOUDINARY_API_KEY
+        value: 533865834927859
+      - key: CLOUDINARY_API_SECRET
+        value: YPvKEOV7wpZ9sD3vVFcw08yS-7w

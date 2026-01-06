@@ -1,0 +1,796 @@
+@startuml UC23_CreateProduct_Sequence
+title UC23: Tạo Sản phẩm mới (Create Product)
+
+actor Admin
+participant "AdminProductController" as Controller
+participant "AdminProductService" as Service
+participant "AdminShoesRepository" as ShoesRepo
+participant "CategoryRepository" as CategoryRepo
+database "Database" as DB
+
+Admin -> Controller: POST /admin/products/create\n(CreateShoesRequest)
+activate Controller
+
+Controller -> Controller: Validate form data\n(@Valid binding)
+alt validation fails
+    Controller --> Admin: Return with errors
+else validation success
+    Controller -> CategoryRepo: findById(categoryId)
+    activate CategoryRepo
+    CategoryRepo -> DB: SELECT * FROM category\nWHERE category_id = ?
+    DB --> CategoryRepo: Category
+    CategoryRepo --> Controller: Category
+    deactivate CategoryRepo
+    
+    Controller -> Service: createShoes(request)
+    activate Service
+    
+    Service -> Service: Check duplicate name
+    Service -> ShoesRepo: existsByName(name)
+    activate ShoesRepo
+    ShoesRepo -> DB: SELECT EXISTS(SELECT 1 FROM shoes\nWHERE name = ?)
+    DB --> ShoesRepo: false
+    ShoesRepo --> Service: false
+    deactivate ShoesRepo
+    
+    Service -> Service: Normalize sizes\n(e.g., "42" → "SIZE_42")
+    Service -> Service: Check duplicate variants\n(color + size unique)
+    
+    Service -> ShoesRepo: save(shoes)
+    activate ShoesRepo
+    ShoesRepo -> DB: INSERT INTO shoes\n(name, brand, type, ...)
+    DB --> ShoesRepo: Shoes entity
+    
+    loop for each image
+        ShoesRepo -> DB: INSERT INTO shoes_image\n(shoe_id, url, is_thumbnail)
+    end
+    
+    loop for each variant
+        ShoesRepo -> DB: INSERT INTO shoes_variant\n(shoe_id, color, size)
+    end
+    
+    ShoesRepo --> Service: Saved Shoes
+    deactivate ShoesRepo
+    
+    Service --> Controller: shoeId (Long)
+    deactivate Service
+    
+    Controller --> Admin: Redirect to /admin/products/{id}\n(Success message)
+end
+
+deactivate Controller
+
+@enduml
+
+@startuml UC23_UpdateProduct_Sequence
+title UC23: Cập nhật Sản phẩm (Update Product)
+
+actor Admin
+participant "AdminProductController" as Controller
+participant "AdminProductService" as Service
+participant "AdminShoesRepository" as ShoesRepo
+database "Database" as DB
+
+Admin -> Controller: POST /admin/products/{id}/edit\n(UpdateShoesRequest)
+activate Controller
+
+Controller -> Controller: Validate form data
+
+Controller -> Service: updateShoes(shoeId, request)
+activate Service
+
+Service -> ShoesRepo: findByIdWithAllDetails(shoeId)
+activate ShoesRepo
+ShoesRepo -> DB: SELECT s.*, c.*, i.*, v.*\nFROM shoes s\nJOIN category c ON s.category_id = c.category_id\nLEFT JOIN shoes_image i ON s.shoe_id = i.shoe_id\nLEFT JOIN shoes_variant v ON s.shoe_id = v.shoe_id\nWHERE s.shoe_id = ?
+DB --> ShoesRepo: Shoes with images & variants
+ShoesRepo --> Service: Shoes entity
+deactivate ShoesRepo
+
+Service -> Service: Update basic info\n(name, brand, price, ...)
+
+Service -> Service: Handle orphan removal for images
+note right
+  Compare existing images with request.images
+  - Keep: images with imageId in request
+  - Delete: images not in request (orphan removal)
+  - Add: images with imageId = null
+end note
+
+loop for each image to delete
+    Service -> DB: DELETE FROM shoes_image\nWHERE image_id = ?
+end
+
+loop for each new image
+    Service -> DB: INSERT INTO shoes_image\n(shoe_id, url, is_thumbnail)
+end
+
+Service -> Service: Handle orphan removal for variants
+note right
+  Compare existing variants with request.variants
+  - Keep: variants with variantId in request
+  - Delete: variants not in request (orphan removal)
+  - Add: variants with variantId = null
+end note
+
+loop for each variant to delete
+    Service -> DB: DELETE FROM shoes_variant\nWHERE variant_id = ?
+end
+
+loop for each new variant
+    Service -> DB: INSERT INTO shoes_variant\n(shoe_id, color, size)
+end
+
+Service -> ShoesRepo: save(shoes)
+activate ShoesRepo
+ShoesRepo -> DB: UPDATE shoes SET\nname = ?, brand = ?, ...\nWHERE shoe_id = ?
+ShoesRepo --> Service: Updated Shoes
+deactivate ShoesRepo
+
+Service --> Controller: void
+deactivate Service
+
+Controller --> Admin: Redirect to /admin/products/{id}\n(Success message)
+deactivate Controller
+
+@enduml
+
+@startuml UC23_ToggleProductStatus_Sequence
+title UC23: Bật/Tắt trạng thái Sản phẩm (Toggle Product Status)
+
+actor Admin
+participant "AdminProductController" as Controller
+participant "AdminProductService" as Service
+participant "AdminShoesRepository" as ShoesRepo
+database "Database" as DB
+
+Admin -> Controller: POST /admin/products/{id}/toggle-status
+activate Controller
+
+Controller -> Service: toggleStatus(shoeId)
+activate Service
+
+Service -> ShoesRepo: findById(shoeId)
+activate ShoesRepo
+ShoesRepo -> DB: SELECT * FROM shoes\nWHERE shoe_id = ?
+DB --> ShoesRepo: Shoes
+ShoesRepo --> Service: Shoes entity
+deactivate ShoesRepo
+
+Service -> Service: Toggle status\n(true → false, false → true)
+
+Service -> ShoesRepo: save(shoes)
+activate ShoesRepo
+ShoesRepo -> DB: UPDATE shoes SET status = ?\nWHERE shoe_id = ?
+ShoesRepo --> Service: Updated Shoes
+deactivate ShoesRepo
+
+Service --> Controller: void
+deactivate Service
+
+Controller --> Admin: Redirect back\n(Success: "Đã cập nhật trạng thái")
+deactivate Controller
+
+@enduml
+
+@startuml UC24_CreateCampaign_Sequence
+title UC24: Tạo Chiến dịch khuyến mãi (Create Campaign)
+
+actor Admin
+participant "PromotionAdminController" as Controller
+participant "PromotionService" as Service
+participant "PromotionCampaignRepository" as CampaignRepo
+participant "PromotionTargetRepository" as TargetRepo
+participant "ShoesRepository" as ShoesRepo
+participant "CategoryRepository" as CategoryRepo
+database "Database" as DB
+
+Admin -> Controller: POST /admin/promotions/campaigns/create\n(CampaignForm + shoeIds/categoryIds)
+activate Controller
+
+Controller -> Controller: Validate form data\n(dates, discountValue > 0, ...)
+
+Controller -> Service: saveCampaign(form)
+activate Service
+
+Service -> Service: validateDateRange()\n(endDate >= startDate)
+
+Service -> CampaignRepo: save(campaign)
+activate CampaignRepo
+CampaignRepo -> DB: INSERT INTO promotion_campaign\n(name, description, start_date, end_date,\ndiscount_type, discount_value, ...)
+DB --> CampaignRepo: PromotionCampaign entity
+CampaignRepo --> Service: Saved campaign
+deactivate CampaignRepo
+
+Service -> Service: saveTargets(campaign, targetType,\nshoeIds, categoryIds)
+
+alt targetType = ALL
+    Service -> TargetRepo: save(target)
+    activate TargetRepo
+    TargetRepo -> DB: INSERT INTO promotion_target\n(campaign_id, target_type)\nVALUES (?, 'ALL')
+    deactivate TargetRepo
+    
+else targetType = PRODUCT
+    loop for each shoeId
+        Service -> ShoesRepo: findById(shoeId)
+        activate ShoesRepo
+        ShoesRepo -> DB: SELECT * FROM shoes WHERE shoe_id = ?
+        ShoesRepo --> Service: Shoes
+        deactivate ShoesRepo
+        
+        Service -> TargetRepo: save(target)
+        activate TargetRepo
+        TargetRepo -> DB: INSERT INTO promotion_target\n(campaign_id, target_type, shoe_id)\nVALUES (?, 'PRODUCT', ?)
+        deactivate TargetRepo
+    end
+    
+else targetType = CATEGORY
+    loop for each categoryId
+        Service -> CategoryRepo: findById(categoryId)
+        activate CategoryRepo
+        CategoryRepo -> DB: SELECT * FROM category WHERE category_id = ?
+        CategoryRepo --> Service: Category
+        deactivate CategoryRepo
+        
+        Service -> TargetRepo: save(target)
+        activate TargetRepo
+        TargetRepo -> DB: INSERT INTO promotion_target\n(campaign_id, target_type, category_id)\nVALUES (?, 'CATEGORY', ?)
+        deactivate TargetRepo
+    end
+end
+
+Service --> Controller: PromotionCampaign
+deactivate Service
+
+Controller --> Admin: Redirect to /admin/promotions/campaigns/{id}\n(Success message)
+deactivate Controller
+
+@enduml
+
+@startuml UC24_UpdateCampaign_WithVoucherSync_Sequence
+title UC24: Cập nhật Chiến dịch với đồng bộ Voucher (Update Campaign)
+
+actor Admin
+participant "PromotionAdminController" as Controller
+participant "PromotionService" as Service
+participant "PromotionCampaignRepository" as CampaignRepo
+participant "VoucherRepository" as VoucherRepo
+participant "PromotionTargetRepository" as TargetRepo
+database "Database" as DB
+
+Admin -> Controller: POST /admin/promotions/campaigns/{id}/edit\n(CampaignForm)
+activate Controller
+
+Controller -> Service: saveCampaign(form)
+activate Service
+
+Service -> CampaignRepo: findByIdWithTargets(campaignId)
+activate CampaignRepo
+CampaignRepo -> DB: SELECT c.*, t.*\nFROM promotion_campaign c\nLEFT JOIN promotion_target t ON c.campaign_id = t.campaign_id\nWHERE c.campaign_id = ?
+CampaignRepo --> Service: Existing campaign
+deactivate CampaignRepo
+
+Service -> Service: Check if dates changed
+
+alt dates changed
+    Service -> Service: validateAndAdjustVouchersForCampaignDateChange()
+    
+    Service -> VoucherRepo: findByCampaign_CampaignId(campaignId)
+    activate VoucherRepo
+    VoucherRepo -> DB: SELECT * FROM voucher\nWHERE campaign_id = ?
+    VoucherRepo --> Service: List<Voucher>
+    deactivate VoucherRepo
+    
+    loop for each voucher
+        alt voucher dates outside campaign range
+            Service -> Service: Adjust voucher dates\n(clamp to campaign range)
+            Service -> Service: Set voucher.enabled = false\n(if dates invalid)
+            
+            Service -> VoucherRepo: save(voucher)
+            activate VoucherRepo
+            VoucherRepo -> DB: UPDATE voucher SET\nstart_date = ?, end_date = ?,\nenabled = ?\nWHERE voucher_id = ?
+            deactivate VoucherRepo
+        end
+    end
+end
+
+alt discount rules changed
+    Service -> Service: Sync discount rules to vouchers
+    note right
+      For each voucher:
+      - Set discountType from campaign
+      - Set discountValue from campaign
+      - Set maxDiscountAmount from campaign
+      - Set minOrderValue from campaign
+    end note
+    
+    loop for each voucher
+        Service -> VoucherRepo: save(voucher)
+        activate VoucherRepo
+        VoucherRepo -> DB: UPDATE voucher SET\ndiscount_type = ?,\ndiscount_value = ?,\nmax_discount_value = ?,\nmin_order_value = ?\nWHERE voucher_id = ?
+        deactivate VoucherRepo
+    end
+end
+
+Service -> Service: Update campaign basic info
+
+Service -> CampaignRepo: save(campaign)
+activate CampaignRepo
+CampaignRepo -> DB: UPDATE promotion_campaign SET\nname = ?, description = ?, ...\nWHERE campaign_id = ?
+CampaignRepo --> Service: Updated campaign
+deactivate CampaignRepo
+
+Service -> TargetRepo: deleteByCampaignId(campaignId)
+activate TargetRepo
+TargetRepo -> DB: DELETE FROM promotion_target\nWHERE campaign_id = ?
+deactivate TargetRepo
+
+Service -> Service: saveTargets()\n(same as create)
+
+Service --> Controller: PromotionCampaign
+deactivate Service
+
+Controller --> Admin: Redirect to /admin/promotions/campaigns/{id}\n(Success + "Đã đồng bộ vouchers")
+deactivate Controller
+
+@enduml
+
+@startuml UC24_DeleteCampaign_Sequence
+title UC24: Xóa Chiến dịch (Delete Campaign)
+
+actor Admin
+participant "PromotionAdminController" as Controller
+participant "PromotionService" as Service
+participant "VoucherRepository" as VoucherRepo
+participant "PromotionCampaignRepository" as CampaignRepo
+database "Database" as DB
+
+Admin -> Controller: POST /admin/promotions/campaigns/{id}/delete
+activate Controller
+
+Controller -> Service: deleteCampaign(campaignId)
+activate Service
+
+Service -> VoucherRepo: existsByCampaign_CampaignId(campaignId)
+activate VoucherRepo
+VoucherRepo -> DB: SELECT EXISTS(SELECT 1 FROM voucher\nWHERE campaign_id = ?)
+DB --> VoucherRepo: boolean
+VoucherRepo --> Service: hasVouchers
+deactivate VoucherRepo
+
+alt hasVouchers = true
+    Service --> Controller: throw Exception\n("Không thể xóa campaign có voucher")
+    Controller --> Admin: Error message
+else hasVouchers = false
+    Service -> CampaignRepo: deleteById(campaignId)
+    activate CampaignRepo
+    CampaignRepo -> DB: DELETE FROM promotion_target\nWHERE campaign_id = ?
+    note right: Cascade delete targets first
+    CampaignRepo -> DB: DELETE FROM promotion_campaign\nWHERE campaign_id = ?
+    CampaignRepo --> Service: void
+    deactivate CampaignRepo
+    
+    Service --> Controller: void
+    deactivate Service
+    
+    Controller --> Admin: Redirect to /admin/promotions/campaigns\n(Success: "Đã xóa campaign")
+end
+
+deactivate Controller
+
+@enduml
+
+@startuml UC25_CreateVoucher_Sequence
+title UC25: Tạo Voucher mới (Create Voucher)
+
+actor Admin
+participant "PromotionAdminController" as Controller
+participant "PromotionService" as Service
+participant "VoucherRepository" as VoucherRepo
+participant "PromotionCampaignRepository" as CampaignRepo
+database "Database" as DB
+
+Admin -> Controller: POST /admin/promotions/vouchers/create\n(VoucherForm)
+activate Controller
+
+Controller -> Controller: Validate form data\n(code, dates, discountValue > 0)
+
+Controller -> Service: saveVoucher(form)
+activate Service
+
+Service -> VoucherRepo: existsByCode(code)
+activate VoucherRepo
+VoucherRepo -> DB: SELECT EXISTS(SELECT 1 FROM voucher\nWHERE code = ?)
+DB --> VoucherRepo: false
+VoucherRepo --> Service: false
+deactivate VoucherRepo
+
+Service -> CampaignRepo: findById(campaignId)
+activate CampaignRepo
+CampaignRepo -> DB: SELECT * FROM promotion_campaign\nWHERE campaign_id = ?
+CampaignRepo --> Service: PromotionCampaign
+deactivate CampaignRepo
+
+Service -> Service: validateVoucherDatesWithinCampaign()
+note right
+  Check:
+  - voucherStartDate >= campaignStartDate
+  - voucherEndDate <= campaignEndDate
+  
+  If validation fails:
+  throw Exception("Ngày voucher phải nằm trong chiến dịch")
+end note
+
+Service -> Service: Apply fallback for null values
+note right
+  if (maxDiscountValue == null) {
+    maxDiscountValue = campaign.maxDiscountAmount ?? 0
+  }
+  if (minOrderValue == null) {
+    minOrderValue = campaign.minOrderValue ?? 0
+  }
+end note
+
+Service -> VoucherRepo: save(voucher)
+activate VoucherRepo
+VoucherRepo -> DB: INSERT INTO voucher\n(code, title, description, campaign_id,\ndiscount_type, discount_value,\nmax_discount_value, min_order_value,\nstart_date, end_date,\nmax_redeem_per_customer, enabled)
+DB --> VoucherRepo: Voucher entity
+VoucherRepo --> Service: Saved Voucher
+deactivate VoucherRepo
+
+Service --> Controller: Voucher
+deactivate Service
+
+Controller --> Admin: Redirect to /admin/promotions/vouchers/{id}\n(Success message)
+deactivate Controller
+
+@enduml
+
+@startuml UC25_UpdateVoucher_Sequence
+title UC25: Cập nhật Voucher (Update Voucher)
+
+actor Admin
+participant "PromotionAdminController" as Controller
+participant "PromotionService" as Service
+participant "VoucherRepository" as VoucherRepo
+participant "PromotionCampaignRepository" as CampaignRepo
+database "Database" as DB
+
+Admin -> Controller: POST /admin/promotions/vouchers/{id}/edit\n(VoucherForm)
+activate Controller
+
+Controller -> Service: saveVoucher(form)
+activate Service
+
+Service -> VoucherRepo: findByIdWithCampaign(voucherId)
+activate VoucherRepo
+VoucherRepo -> DB: SELECT v.*, c.*\nFROM voucher v\nJOIN promotion_campaign c ON v.campaign_id = c.campaign_id\nWHERE v.voucher_id = ?
+VoucherRepo --> Service: Existing Voucher with Campaign
+deactivate VoucherRepo
+
+Service -> Service: Check code uniqueness\n(if code changed)
+alt code changed
+    Service -> VoucherRepo: existsByCode(newCode)
+    activate VoucherRepo
+    VoucherRepo -> DB: SELECT EXISTS(SELECT 1 FROM voucher\nWHERE code = ?)
+    VoucherRepo --> Service: boolean
+    deactivate VoucherRepo
+end
+
+Service -> Service: validateVoucherDatesWithinCampaign()
+
+Service -> Service: Update voucher properties
+
+Service -> VoucherRepo: save(voucher)
+activate VoucherRepo
+VoucherRepo -> DB: UPDATE voucher SET\ncode = ?, title = ?, description = ?,\ndiscount_type = ?, discount_value = ?,\nmax_discount_value = ?, min_order_value = ?,\nstart_date = ?, end_date = ?,\nmax_redeem_per_customer = ?, enabled = ?\nWHERE voucher_id = ?
+VoucherRepo --> Service: Updated Voucher
+deactivate VoucherRepo
+
+Service --> Controller: Voucher
+deactivate Service
+
+Controller --> Admin: Redirect to /admin/promotions/vouchers/{id}\n(Success message)
+deactivate Controller
+
+@enduml
+
+@startuml UC25_ToggleVoucher_Sequence
+title UC25: Bật/Tắt Voucher (Toggle Voucher)
+
+actor Admin
+participant "PromotionAdminController" as Controller
+participant "PromotionService" as Service
+participant "VoucherRepository" as VoucherRepo
+database "Database" as DB
+
+Admin -> Controller: POST /admin/promotions/vouchers/{id}/toggle
+activate Controller
+
+Controller -> Service: toggleVoucherEnabled(voucherId)
+activate Service
+
+Service -> VoucherRepo: findById(voucherId)
+activate VoucherRepo
+VoucherRepo -> DB: SELECT * FROM voucher\nWHERE voucher_id = ?
+VoucherRepo --> Service: Voucher
+deactivate VoucherRepo
+
+Service -> Service: Toggle enabled\n(true → false, false → true)
+
+Service -> VoucherRepo: save(voucher)
+activate VoucherRepo
+VoucherRepo -> DB: UPDATE voucher SET enabled = ?\nWHERE voucher_id = ?
+VoucherRepo --> Service: Updated Voucher
+deactivate VoucherRepo
+
+Service --> Controller: void
+deactivate Service
+
+Controller --> Admin: Redirect back\n(Success message)
+deactivate Controller
+
+@enduml
+
+@startuml UC26_ViewVoucherList_Sequence
+title UC26: Xem danh sách Voucher (Customer - View Voucher List)
+
+actor Customer
+participant "CustomerPromotionController" as Controller
+participant "CustomerPromotionService" as Service
+participant "VoucherRepository" as VoucherRepo
+participant "OrderVoucherRepository" as OrderVoucherRepo
+database "Database" as DB
+
+Customer -> Controller: GET /vouchers\n(HttpSession)
+activate Controller
+
+Controller -> Controller: Get userId from session
+
+Controller -> Service: getVouchersForDisplay(userId, orderSubTotal)
+activate Service
+
+Service -> VoucherRepo: findAllWithCampaign()
+activate VoucherRepo
+VoucherRepo -> DB: SELECT v.*, c.*\nFROM voucher v\nJOIN promotion_campaign c ON v.campaign_id = c.campaign_id\nWHERE v.enabled = true\nAND c.enabled = true
+DB --> VoucherRepo: List<Voucher>
+VoucherRepo --> Service: Active vouchers
+deactivate VoucherRepo
+
+loop for each voucher
+    Service -> Service: Check time validity\n(current date within voucher dates\nAND campaign dates)
+    
+    alt userId is present
+        Service -> OrderVoucherRepo: countByVoucher_VoucherIdAndUserId(voucherId, userId)
+        activate OrderVoucherRepo
+        OrderVoucherRepo -> DB: SELECT COUNT(*) FROM order_voucher\nWHERE voucher_id = ?\nAND user_id = ?
+        DB --> OrderVoucherRepo: count
+        OrderVoucherRepo --> Service: userUsageCount
+        deactivate OrderVoucherRepo
+    end
+    
+    Service -> Service: Check applicability
+    note right
+      For each voucher, check:
+      1. Voucher enabled
+      2. Campaign enabled
+      3. Voucher dates valid
+      4. Campaign dates valid
+      5. orderSubTotal >= minOrderValue
+      6. userUsageCount < maxRedeemPerCustomer
+      
+      Set applicable = true/false
+      Set reason if not applicable
+    end note
+    
+    Service -> Service: Create VoucherDisplayDTO\n(with applicable flag + reason)
+end
+
+Service --> Controller: List<VoucherDisplayDTO>
+deactivate Service
+
+Controller -> Controller: Add list to model
+
+Controller --> Customer: Render vouchers.html\n(với danh sách voucher + applicable status)
+deactivate Controller
+
+@enduml
+
+@startuml UC26_ApplyVoucher_Sequence
+title UC26: Áp dụng Voucher (Customer - Apply Voucher)
+
+actor Customer
+participant "CustomerPromotionController" as Controller
+participant "CustomerPromotionService" as Service
+participant "VoucherRepository" as VoucherRepo
+participant "PromotionCampaignRepository" as CampaignRepo
+participant "OrderVoucherRepository" as OrderVoucherRepo
+database "Database" as DB
+
+Customer -> Controller: POST /vouchers/api/validate\n(voucherCode, orderSubTotal, session)
+activate Controller
+
+Controller -> Controller: Get userId from session
+
+Controller -> Service: validateVoucher(voucherCode, userId, orderSubTotal)
+activate Service
+
+' Step 1: Check voucher exists
+Service -> VoucherRepo: findByCode(voucherCode)
+activate VoucherRepo
+VoucherRepo -> DB: SELECT v.*, c.*\nFROM voucher v\nJOIN promotion_campaign c ON v.campaign_id = c.campaign_id\nWHERE v.code = ?
+alt not found
+    VoucherRepo --> Service: Optional.empty()
+    Service --> Controller: VoucherValidationResult.fail(\n"Mã voucher không tồn tại")
+    Controller --> Customer: JSON {valid: false, errorMessage}
+else found
+    VoucherRepo --> Service: Voucher with Campaign
+    deactivate VoucherRepo
+    
+    ' Step 2: Check voucher enabled
+    Service -> Service: Check voucher.enabled
+    alt not enabled
+        Service --> Controller: fail("Voucher đã bị vô hiệu hóa")
+        Controller --> Customer: JSON {valid: false, errorMessage}
+    else enabled
+        ' Step 3: Check campaign enabled
+        Service -> Service: Check campaign.enabled
+        alt not enabled
+            Service --> Controller: fail("Chiến dịch đã bị vô hiệu hóa")
+            Controller --> Customer: JSON {valid: false, errorMessage}
+        else enabled
+            ' Step 4: Check voucher dates
+            Service -> Service: Check current date\nbetween voucher dates
+            alt dates invalid
+                Service --> Controller: fail("Voucher chưa bắt đầu\nhoặc đã hết hạn")
+                Controller --> Customer: JSON {valid: false, errorMessage}
+            else dates valid
+                ' Step 5: Check campaign dates
+                Service -> Service: Check current date\nbetween campaign dates
+                alt dates invalid
+                    Service --> Controller: fail("Chiến dịch chưa bắt đầu\nhoặc đã kết thúc")
+                    Controller --> Customer: JSON {valid: false, errorMessage}
+                else dates valid
+                    ' Step 6: Check min order value
+                    Service -> Service: Check orderSubTotal >= minOrderValue
+                    alt less than min
+                        Service --> Controller: fail("Đơn hàng chưa đủ\ngiá trị tối thiểu")
+                        Controller --> Customer: JSON {valid: false, errorMessage}
+                    else sufficient
+                        ' Step 7: Check max redeem per customer
+                        alt maxRedeemPerCustomer is not null
+                            Service -> OrderVoucherRepo: countByVoucher_VoucherIdAndUserId(voucherId, userId)
+                            activate OrderVoucherRepo
+                            OrderVoucherRepo -> DB: SELECT COUNT(*) FROM order_voucher\nWHERE voucher_id = ?\nAND user_id = ?
+                            DB --> OrderVoucherRepo: usageCount
+                            OrderVoucherRepo --> Service: usageCount
+                            deactivate OrderVoucherRepo
+                            
+                            Service -> Service: Check usageCount < maxRedeemPerCustomer
+                            alt limit exceeded
+                                Service --> Controller: fail("Bạn đã dùng hết\nsố lần cho phép")
+                                Controller --> Customer: JSON {valid: false, errorMessage}
+                            end
+                        end
+                        
+                        ' Step 8: Calculate discount
+                        Service -> Service: calculateDiscount(voucher, orderSubTotal)
+                        note right
+                          if (discountType == PERCENT) {
+                            discount = (orderSubTotal × discountValue / 100)
+                            if (maxDiscountValue > 0) {
+                              discount = min(discount, maxDiscountValue)
+                            }
+                          } else { // FIXED_AMOUNT
+                            discount = discountValue
+                          }
+                          discount = min(discount, orderSubTotal)
+                        end note
+                        
+                        Service --> Controller: VoucherValidationResult.success(\nvoucher, discountAmount)
+                        deactivate Service
+                        
+                        Controller -> Controller: Save voucherCode to session\nsession.setAttribute("appliedVoucherCode", code)
+                        
+                        Controller --> Customer: JSON {\n  valid: true,\n  voucher: {...},\n  discountAmount: xxx\n}
+                    end
+                end
+            end
+        end
+    end
+end
+
+deactivate Controller
+
+@enduml
+
+@startuml UC26_RemoveVoucher_Sequence
+title UC26: Xóa Voucher đã áp dụng (Customer - Remove Voucher)
+
+actor Customer
+participant "CustomerPromotionController" as Controller
+
+Customer -> Controller: POST /vouchers/api/remove\n(HttpSession)
+activate Controller
+
+Controller -> Controller: Remove voucher from session\nsession.removeAttribute("appliedVoucherCode")
+
+Controller --> Customer: JSON {\n  success: true,\n  message: "Đã xóa voucher"\n}
+deactivate Controller
+
+@enduml
+
+@startuml UC26_CheckVoucherUsage_Sequence
+title UC26: Kiểm tra số lần đã sử dụng Voucher (Customer)
+
+actor Customer
+participant "CustomerPromotionController" as Controller
+participant "CustomerPromotionService" as Service
+participant "OrderVoucherRepository" as OrderVoucherRepo
+database "Database" as DB
+
+Customer -> Controller: GET /vouchers/api/usage/{voucherId}\n(HttpSession)
+activate Controller
+
+Controller -> Controller: Get userId from session
+
+Controller -> Service: countVoucherUsage(voucherId, userId)
+activate Service
+
+Service -> OrderVoucherRepo: countByVoucher_VoucherIdAndUserId(voucherId, userId)
+activate OrderVoucherRepo
+OrderVoucherRepo -> DB: SELECT COUNT(*) FROM order_voucher\nWHERE voucher_id = ?\nAND user_id = ?
+DB --> OrderVoucherRepo: count
+OrderVoucherRepo --> Service: usageCount (long)
+deactivate OrderVoucherRepo
+
+Service --> Controller: usageCount
+deactivate Service
+
+Controller --> Customer: JSON {\n  voucherId: xxx,\n  userId: yyy,\n  usageCount: zzz\n}
+deactivate Controller
+
+@enduml
+
+@startuml UC26_ApplyVoucherToOrder_Sequence
+title UC26: Lưu Voucher vào Order (Apply Voucher to Order - After Payment)
+
+participant "OrderController" as OrderController
+participant "OrderService" as OrderService
+participant "CustomerPromotionService" as PromotionService
+participant "OrderVoucherRepository" as OrderVoucherRepo
+database "Database" as DB
+
+OrderController -> OrderController: After order created successfully\n(payment completed)
+activate OrderController
+
+OrderController -> OrderController: Get appliedVoucherCode from session
+
+alt voucherCode exists
+    OrderController -> PromotionService: validateVoucher(voucherCode, userId, orderSubTotal)
+    activate PromotionService
+    PromotionService --> OrderController: VoucherValidationResult (valid)
+    deactivate PromotionService
+    
+    alt validation success
+        OrderController -> PromotionService: applyVoucherToOrder(order, voucher, userId)
+        activate PromotionService
+        
+        PromotionService -> PromotionService: Calculate discount amount
+        
+        PromotionService -> OrderVoucherRepo: save(OrderVoucher)
+        activate OrderVoucherRepo
+        OrderVoucherRepo -> DB: INSERT INTO order_voucher\n(order_id, voucher_id, user_id,\napplied_amount, applied_at)\nVALUES (?, ?, ?, ?, NOW())
+        DB --> OrderVoucherRepo: OrderVoucher entity
+        OrderVoucherRepo --> PromotionService: Saved OrderVoucher
+        deactivate OrderVoucherRepo
+        
+        PromotionService --> OrderController: void
+        deactivate PromotionService
+        
+        OrderController -> OrderController: Clear voucher from session\nsession.removeAttribute("appliedVoucherCode")
+    end
+end
+
+deactivate OrderController
+
+@enduml

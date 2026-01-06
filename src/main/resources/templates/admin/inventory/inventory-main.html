@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Quản lý tồn kho | WebShoe Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" th:href="@{/css/admin.css}"/>
     <link rel="stylesheet" th:href="@{/css/inventory.css}"/>
     <link rel="stylesheet" th:href="@{/css/common.css}"/>
@@ -71,7 +72,7 @@
                                     0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5z"/>
                                 </svg>
                             </span>
-                            Quản lý sản phẩm
+                            Thêm sản phẩm
                         </a>
                     </div>
                 </div>
@@ -123,6 +124,12 @@
                                 </td>
                                 
                                 <td class="inventory-text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-success me-1" 
+                                            th:data-id="${item.shoeId}"
+                                            th:data-name="${item.shoeName}"
+                                            onclick="openUpdateModal(this.getAttribute('data-id'), this.getAttribute('data-name'))">
+                                        <i class="bi bi-pencil-square"></i> Cập nhật
+                                    </button>
                                     <a th:href="@{/admin/inventory/detail/{id}(id=${item.inventoryId})}" class="btn-detail">Chi tiết</a>
                                 </td>
                             </tr>
@@ -165,5 +172,87 @@
         </main>
     </div>
 </div>
+<div class="modal fade" id="updateStockModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form th:action="@{/admin/inventory/quick-update}" method="post">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title">📦 Cập nhật kho: <span id="modalShoeName" class="fw-bold text-primary"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- 1. Chọn Biến thể -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Chọn phân loại (Size/Màu):</label>
+                        <select class="form-select" name="variantId" id="variantSelect" required>
+                            <option value="">Đang tải dữ liệu...</option>
+                        </select>
+                    </div>
+
+                    <div class="row">
+                        <!-- 2. Loại giao dịch -->
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-bold">Hành động:</label>
+                            <select class="form-select" name="type">
+                                <option value="IMPORT">📥 Nhập thêm</option>
+                                <option value="EXPORT">📤 Xuất bớt</option>
+                            </select>
+                        </div>
+                        <!-- 3. Số lượng -->
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-bold">Số lượng:</label>
+                            <input type="number" class="form-control" name="amount" min="1" value="1" required />
+                        </div>
+                    </div>
+
+                    <!-- 4. Ghi chú -->
+                    <div class="mb-3">
+                        <label class="form-label">Ghi chú:</label>
+                        <input type="text" class="form-control" name="note" placeholder="VD: Nhập hàng bổ sung..." />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-success">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function openUpdateModal(shoeId, shoeName) {
+        document.getElementById('modalShoeName').innerText = shoeName;
+        const select = document.getElementById('variantSelect');
+        select.innerHTML = '<option value="">Đang tải...</option>';
+        const modal = new bootstrap.Modal(document.getElementById('updateStockModal'));
+        modal.show();
+        fetch(`/admin/inventory/api/variants/${shoeId}`)
+            .then(response => {
+                if (!response.ok) {
+                throw new Error("HTTP error " + response.status);
+                }
+            return response.json();
+        })
+            .then(data => {
+                select.innerHTML = ''; 
+                if (data.length === 0) {
+                    select.innerHTML = '<option value="">Sản phẩm này chưa có biến thể</option>';
+                    return;
+                }
+                data.forEach(v => {
+                    const option = document.createElement('option');
+                    option.value = v.variantId;
+                    option.text = v.label; 
+                    select.appendChild(option);
+                });
+            })
+            .catch(err => {
+                console.error(err);
+                select.innerHTML = '<option value="">Lỗi tải dữ liệu</option>';
+            });
+    }
+</script>
 </body>
 </html>
