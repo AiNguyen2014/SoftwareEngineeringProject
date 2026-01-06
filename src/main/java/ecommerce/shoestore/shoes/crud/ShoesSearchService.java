@@ -194,26 +194,25 @@ public class ShoesSearchService {
         }
 
         return switch (sortKey) {
-            case "newest",
-                 "price_asc",
-                 "price_desc",
-                 "name_asc",
-                 "name_desc" -> sortKey;
-            default -> "name_asc";
+            case "newest", "price_asc", "price_desc", "name_asc", "name_desc" ->
+                sortKey;
+            default ->
+                "name_asc";
         };
     }
 
-<<<<<<< HEAD
     private ShoesSummaryDto convertToSummaryDto(Shoes shoes) {
-=======
+    
+
     /**
      * Lấy map stock cho danh sách shoe IDs
      */
+
     private Map<Long, Integer> getStockMap(List<Long> shoeIds) {
         if (shoeIds == null || shoeIds.isEmpty()) {
             return Collections.emptyMap();
         }
-        
+
         Map<Long, Integer> stockMap = new HashMap<>();
         List<Object[]> results = shoesSearchRepository.findStockByShoeIds(shoeIds);
         for (Object[] row : results) {
@@ -226,11 +225,12 @@ public class ShoesSearchService {
 
     /**
      * Chuyển đổi Shoes -> ShoesSummaryDto (dùng cho danh sách)
+     *
      * @param shoes entity
      * @param totalStock tổng stock đã tính sẵn
      */
     private ShoesSummaryDto convertToSummaryDto(Shoes shoes, int totalStock) {
->>>>>>> a0c22da (Sửa file)
+
         // Lấy ảnh thumbnail
         String thumbnailUrl = "https://placehold.co/400x400?text=No+Image";
         if (shoes.getImages() != null) {
