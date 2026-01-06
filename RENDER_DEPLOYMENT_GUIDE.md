@@ -26,37 +26,47 @@ Hướng dẫn deploy ứng dụng Spring Boot Shoe Store lên Render.
 
 ## Cách deploy trên Render
 
-### Phương pháp 1: Sử dụng Blueprint (Khuyên dùng)
+### Phương pháp 1: Sử dụng Blueprint với Render Database (Khuyên dùng)
 
 1. **Commit và push code:**
    ```bash
    git add .
-   git commit -m "Add Render deployment configuration"
+   git commit -m "Update config for Render PostgreSQL database"
    git push origin main
    ```
 
 2. **Tạo Blueprint trên Render:**
    - Đăng nhập vào [Render Dashboard](https://dashboard.render.com)
-   - Click "New" → "Blueprint"
+   - Click "New" → "Blueprint" (KHÔNG phải Web Service!)
    - Connect GitHub repository
    - Chọn repository chứa ứng dụng
-   - Render sẽ tự động detect file `render.yaml` và tạo services
+   - Render sẽ tự động detect file `render.yaml` và tạo:
+     - PostgreSQL Database
+     - Web Service với connection tự động
+   - Bạn chỉ cần click "Apply" là xong!
 
-### Phương pháp 2: Manual Setup (Sử dụng Supabase Database hiện tại)
+3. **Migration dữ liệu:**
+   - Xem hướng dẫn chi tiết trong [DATABASE_MIGRATION_GUIDE.md](DATABASE_MIGRATION_GUIDE.md)
 
-1. **Tạo Web Service:**
+### Phương pháp 2: Manual Setup với Render Database
+
+1. **Tạo PostgreSQL Database:**
+   - New → PostgreSQL
+   - Database Name: `shoestore-db`
+   - Plan: Free
+   - Region: Singapore
+
+2. **Tạo Web Service:**
    - New → Web Service
    - Connect GitHub repository
-   - Build Command: `docker build -t shoestore .`
-   - Start Command: Để trống (sử dụng CMD trong Dockerfile)
    - Plan: Free
 
-2. **Environment Variables:**
+3. **Environment Variables:** (Render tự động set từ database)
    ```
    SPRING_PROFILES_ACTIVE=prod
-   SPRING_DATASOURCE_URL=jdbc:postgresql://aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require&currentSchema=public
-   SPRING_DATASOURCE_USERNAME=postgres.qouzchgauycrjclcdfta
-   SPRING_DATASOURCE_PASSWORD=Shoestorewebsite
+   SPRING_DATASOURCE_URL=[auto từ database]
+   SPRING_DATASOURCE_USERNAME=[auto từ database]
+   SPRING_DATASOURCE_PASSWORD=[auto từ database]
    SPRING_MAIL_USERNAME=webshoestore17@gmail.com
    SPRING_MAIL_PASSWORD=quziuvvngrwrjzkp
    CLOUDINARY_CLOUD_NAME=dd4v8svrk

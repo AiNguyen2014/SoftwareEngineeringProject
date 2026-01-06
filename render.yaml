@@ -13,11 +13,17 @@ services:
       - key: JAVA_OPTS
         value: "-Xms256m -Xmx512m"
       - key: SPRING_DATASOURCE_URL
-        value: jdbc:postgresql://aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require&currentSchema=public
+        fromDatabase:
+          name: shoestore-db
+          property: connectionString
       - key: SPRING_DATASOURCE_USERNAME
-        value: postgres.qouzchgauycrjclcdfta
+        fromDatabase:
+          name: shoestore-db
+          property: user
       - key: SPRING_DATASOURCE_PASSWORD
-        value: Shoestorewebsite
+        fromDatabase:
+          name: shoestore-db
+          property: password
       - key: SPRING_MAIL_USERNAME
         value: webshoestore17@gmail.com
       - key: SPRING_MAIL_PASSWORD
@@ -28,3 +34,10 @@ services:
         value: 533865834927859
       - key: CLOUDINARY_API_SECRET
         value: YPvKEOV7wpZ9sD3vVFcw08yS-7w
+
+databases:
+  - name: shoestore-db
+    databaseName: postgres
+    user: postgres
+    plan: free
+    region: singapore
