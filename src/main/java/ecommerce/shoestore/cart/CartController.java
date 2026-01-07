@@ -30,10 +30,10 @@ public class CartController {
             return "redirect:/auth/login";
         }
 
-        User customer = userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        CartSummaryView cartView = cartService.getCartSummaryForView(customer);
+        CartSummaryView cartView = cartService.getCartSummaryForView(user);
 
         model.addAttribute("cartItems", cartView.items());
         model.addAttribute("cartSubtotal", cartView.subtotal());
@@ -68,10 +68,10 @@ public class CartController {
             return "redirect:" + referer;
         }
 
-        User customer = userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        cartService.addItem(customer, variantId, quantity);
+        cartService.addItem(user, variantId, quantity);
 
         redirectAttributes.addFlashAttribute(
                 "successMessage",

@@ -21,7 +21,7 @@ public class Cart {
 
     @ManyToOne
     @JoinColumn(name = "\"userId\"", nullable = false)
-    private User customer;
+    private User user;
 
     @OneToMany(
             mappedBy = "cart",
@@ -32,7 +32,7 @@ public class Cart {
 
     private List<CartItem> items = new ArrayList<>();
 
-    public Cart(User customer) {
-        this.customer = customer;
+    public Cart(User user) {
+        this.user = user;
     }
 }

@@ -16,11 +16,11 @@ public interface CartRepository extends JpaRepository<Cart, Long> {
             + "left join fetch i.variant v "
             + "left join fetch v.shoes s "
             + "left join fetch s.category "
-            + "where c.customer = :customer")
-    Optional<Cart> findCartWithItems(@Param("customer") User customer);
+            + "where c.user = :user")
+    Optional<Cart> findCartWithItems(@Param("user") User user);
 
     @Query("select coalesce(sum(i.quantity), 0) from Cart c "
             + "join c.items i "
-            + "where c.customer = :customer")
-    int countItemsByUser(@Param("customer") User customer);
+            + "where c.user = :user")
+    int countItemsByUser(@Param("user") User user);
 }
