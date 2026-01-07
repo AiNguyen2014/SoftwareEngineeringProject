@@ -9,7 +9,8 @@ import java.util.Optional;
 
 public interface CartRepository extends JpaRepository<Cart, Long> {
 
-    Optional<Cart> findByCustomer(User customer);
+    @Query("select c from Cart c where c.user = :user")
+    Optional<Cart> findByCustomer(@Param("user") User user);
 
     @Query("select c from Cart c "
             + "left join fetch c.items i "
