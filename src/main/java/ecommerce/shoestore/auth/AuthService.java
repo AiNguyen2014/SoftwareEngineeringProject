@@ -84,6 +84,24 @@ public class AuthService {
         accountRepository.save(account);
     }
 
+    public void resendVerificationCode(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Email không tồn tại."));
+        Account account = user.getAccount();
+
+        if (account.isEnabled()) {
+            throw new RuntimeException("Tài khoản đã kích hoạt, vui lòng đăng nhập.");
+        }
+
+        String code = String.valueOf(new Random().nextInt(900000) + 100000);
+        account.setVerificationCode(code);
+        // Cài đặt lại 60s
+        account.setVerificationCodeExpiry(System.currentTimeMillis() + 60 * 1000);
+        
+        accountRepository.save(account);
+        emailService.sendEmail(email, "Gửi lại mã xác thực", "Mã mới của bạn là: " + code);
+    }
+
     public User login(LoginRequest req) {
         Account account = accountRepository.findByUsername(req.getUsername())
                 .orElseThrow(() -> new RuntimeException("Tài khoản hoặc mật khẩu không đúng.")); 
@@ -107,7 +125,7 @@ public class AuthService {
         Account account = user.getAccount();
         String code = String.valueOf(new Random().nextInt(900000) + 100000);
         account.setVerificationCode(code);
-        account.setVerificationCodeExpiry(System.currentTimeMillis() + 120 * 1000); // 120s
+        account.setVerificationCodeExpiry(System.currentTimeMillis() + 60 * 1000); // 60s
         accountRepository.save(account);
 
         emailService.sendEmail(email, "Reset Mật khẩu", "Mã xác thực để đặt lại mật khẩu: " + code);
