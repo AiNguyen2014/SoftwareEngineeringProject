@@ -115,7 +115,6 @@ public class ShoesSearchService {
                 .map(this::convertToSummaryDto)
                 .toList();
 
-
         return ShoesListDto.builder()
                 .products(dtos)
                 .currentPage(page)
@@ -169,7 +168,6 @@ public class ShoesSearchService {
                 .map(this::convertToSummaryDto)
                 .toList();
 
-
         return ShoesListDto.builder()
                 .products(dtos)
                 .currentPage(page)
@@ -199,32 +197,7 @@ public class ShoesSearchService {
     }
 
     private ShoesSummaryDto convertToSummaryDto(Shoes shoes) {
-=======
-    /**
-     * Lấy map stock cho danh sách shoe IDs
-     */
-    private Map<Long, Integer> getStockMap(List<Long> shoeIds) {
-        if (shoeIds == null || shoeIds.isEmpty()) {
-            return Collections.emptyMap();
-        }
-        
-        Map<Long, Integer> stockMap = new HashMap<>();
-        List<Object[]> results = shoesSearchRepository.findStockByShoeIds(shoeIds);
-        for (Object[] row : results) {
-            Long shoeId = ((Number) row[0]).longValue();
-            Integer stock = ((Number) row[1]).intValue();
-            stockMap.put(shoeId, stock);
-        }
-        return stockMap;
-    }
 
-    /**
-     * Chuyển đổi Shoes -> ShoesSummaryDto (dùng cho danh sách)
-     * @param shoes entity
-     * @param totalStock tổng stock đã tính sẵn
-     */
-    private ShoesSummaryDto convertToSummaryDto(Shoes shoes, int totalStock) {
->>>>>>> a0c22da (Sửa file)
         // Lấy ảnh thumbnail
         String thumbnailUrl = "https://placehold.co/400x400?text=No+Image";
         if (shoes.getImages() != null) {
