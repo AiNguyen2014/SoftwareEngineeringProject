@@ -59,7 +59,7 @@ public class CartService {
 
     // ================== INCREASE ==================
     @Transactional
-    public void increaseQuantity(User user, Long cartItemId) {
+    public boolean increaseQuantity(User user, Long cartItemId) {
 
         Cart cart = cartRepository.findByCustomer(user)
                 .orElseThrow(() -> new RuntimeException("Cart không tồn tại"));
@@ -75,10 +75,11 @@ public class CartService {
         int newQty = item.getQuantity() + 1;
 
         if (newQty > variant.getStock()) {
-            throw new RuntimeException("Vượt quá tồn kho");
+            return false;
         }
 
         item.setQuantity(newQty);
+        return true;
     }
 
     // ================== DECREASE ==================

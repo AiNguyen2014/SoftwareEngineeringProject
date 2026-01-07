@@ -86,7 +86,8 @@ public class CartController {
     public String updateQuantity(
             HttpSession session,
             @RequestParam Long cartItemId,
-            @RequestParam String action
+            @RequestParam String action,
+            RedirectAttributes redirectAttributes
     ) {
         //Check login
         Long userId = (Long) session.getAttribute("USER_ID");
@@ -99,7 +100,13 @@ public class CartController {
 
         //Handle action increase/decrease
         if ("increase".equals(action)) {
-            cartService.increaseQuantity(customer, cartItemId);
+            boolean increased = cartService.increaseQuantity(customer, cartItemId);
+            if (!increased) {
+                redirectAttributes.addFlashAttribute(
+                        "errorMessage",
+                        "Số lượng vượt quá tồn kho"
+                );
+            }
 
         } else if ("decrease".equals(action)) {
             cartService.decreaseQuantity(customer, cartItemId);

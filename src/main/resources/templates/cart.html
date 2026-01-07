@@ -31,6 +31,12 @@
          th:text="${successMessage}">
     </div>
 
+    <!-- ERROR MESSAGE -->
+    <div class="alert alert-danger"
+     th:if="${errorMessage}"
+     th:text="${errorMessage}">
+    </div>
+
     <!-- ================== CART EMPTY ================== -->
     <section th:if="${cartItems == null || #lists.isEmpty(cartItems)}">
         <div class="cart-empty">
