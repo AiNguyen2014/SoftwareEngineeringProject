@@ -71,6 +71,7 @@ public class AuthController {
     @GetMapping("/verify-email")
     public String showVerifyForm(Model model) {
         model.addAttribute("verifyRequest", new VerifyEmailRequest());
+        model.addAttribute("expiryTime", System.currentTimeMillis() + 60000); // 60s countdown
         return "auth/verify-email";
     }
 

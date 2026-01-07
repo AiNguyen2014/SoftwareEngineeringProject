@@ -41,8 +41,7 @@
                 <div class="mt-3 small">
                     <span class="text-muted">Chưa nhận được mã?</span> 
                     
-                    <!-- --- [QUAN TRỌNG] ĐÂY LÀ CHỖ BẠN BỊ LỖI --- -->
-                    <!-- Phải dùng th:href (có chữ th:) -->
+
                     <a th:href="@{/auth/resend-code(email=${verifyRequest.email})}" 
                        id="resendLink" 
                        class="text-decoration-none disabled-link" 
@@ -56,7 +55,10 @@
     </div>
 
     <script th:inline="javascript">        
-        var expiryTime = /*[[${expiryTime}]]*/ null || (new Date().getTime() + 60000);
+        var expiryTime = /*[[${expiryTime}]]*/ -1;
+        if(!expiryTime || isNaN(expiryTime) || expiryTime < 0){
+            expiryTime = new Date().getTime() + 60000;
+        }
 
         var countdownElement = document.getElementById('countdown-timer');
         var resendLink = document.getElementById('resendLink');
