@@ -124,3 +124,4 @@ mvn spring-boot:run
 
 ## License
 This project is developed for educational purposes as part of a university course.
+--------------------------
